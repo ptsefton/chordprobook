@@ -148,6 +148,12 @@ class cp_song_book:
     def __init__(self, songs = [], keep_order = False):
         self.songs = songs
         self.keep_order = keep_order
+
+    def to_md(self):
+        md = ""
+        for song in self.songs:
+            md += song.md
+        return md
         
     def order_by_setlist(self, setlist):
         new_order = []
@@ -424,40 +430,32 @@ div {
         return web_template % (title, script % {'cols': cols}, title, contents, html)
         
         
-def to_markdown(f, out_dir, transpose = 0):
-    song = f.read()
-    s = ""
-    outname = os.path.split(f.name)[1]
-    if transpose != 0:
-        outname = outname + str(transpose)
-    out_path = os.path.join(out_dir,"%s.md" % outname)
-    
+
     
 output = "markdown"
 
-def process_list(files, out_dir):
-    #TODO: get title and rememeber
-    songs = []
-    for f in files:
-        songs.append(to_markdown(f, out_dir))
-    return songs
+
     
 def convert():
+    default_output_file = "songbook"
     parser = argparse.ArgumentParser()
     parser.add_argument('files', type=argparse.FileType('r'), nargs="*", default=None, help='List of files')
-    parser.add_argument('-d', '--directory', default=".", help='Directory to process')
-    parser.add_argument('-a', '--alphabetically', action='store_true', help='Preserve song order for playing as a setlist (inserts blank pages to keep multi page songs on facing pages')
-    parser.add_argument('-k', '--keep_order', action='store_true', help='Sort songs alphabetically')
+    parser.add_argument('-a', '--alphabetically', action='store_true', help='Sort songs alphabetically')
+    parser.add_argument('-k',
+                        '--keep_order',
+                        action='store_true',
+                        help='Preserve song order for playing as a setlist (inserts blank pages to keep multi page songs on facing pages')
     parser.add_argument('--a4', action='store_true', help='Format for printing (web page output)')
-    parser.add_argument('-e', '--epub-file', default=None, help='Output epub book')
-    parser.add_argument('-m', '--html-file', default=None, help='Output HTML book, defaults to screen-formatting use --a4 option for printing')
-    parser.add_argument('-w', '--word-file', default=None, help='Output word book')
-    parser.add_argument('-p', '--pdf-file', default=None, help='Output pdf book')
-    parser.add_argument('-i', '--odp-file', default=None, help='Output impress (.odp)')
-    parser.add_argument("-t", '--odp-template', default='songbook-template.odp', help='Impress (.odp) template to use')
-    parser.add_argument('-b', '--input-is-book', action='store_true', help ='First file contains a list of files, each line optionally followed by a transposition (+|-)\d\d?')
-    parser.add_argument('-s', '--setlist', default=None,
-                        help ='Use a setlist file to filter the book, one song per line. Setlist lines can be one or more words from the song title')
+    parser.add_argument('-e', '--epub', action='store_true', help='Output epub book')
+    parser.add_argument('-f', '--file-name', default=default_output_file, help='Base file name, without extension, for output files')
+    parser.add_argument( '--html', default=None, help='Output HTML book, defaults to screen-formatting use --a4 option for printing')
+    parser.add_argument('-w', '--word', action='store_true', help='Output word')
+    parser.add_argument('-p', '--pdf', action='store_true', help='Output pdf')
+    parser.add_argument('-b', '--book-file', action='store_true', help ='First file contains a list of files, each line optionally followed by a transposition (+|-)\d\d?')
+    parser.add_argument('-s',
+                        '--setlist',
+                        default=None,
+                        help ='Use a setlist file to filter the book, one song per line and keep facing pages together. Setlist lines can be one or more words from the song title')
     parser.add_argument('--title', default='Songs', help='Title to use for the book')
     
 
@@ -469,12 +467,12 @@ def convert():
     
     out_dir = "."
     os.makedirs(out_dir, exist_ok=True)
-   
+    songs = []
     if args["files"] != None:
-       if args["input_is_book"]:
-            songs = []
+       if args["book_file"]:
+            
             book_file = args["files"][0]
-            book_dir, _ = os.path.split(book_file.name)
+            book_dir, book_name = os.path.split(book_file.name)
             for line in book_file:
                 trans = re.search("((\+|-)?\d+)$", line)
                 t = 0
@@ -487,82 +485,57 @@ def convert():
                 if line != "":
                     songs.append(cp_song(open(os.path.join(book_dir, line.strip())).read(), transpose=t))
        else:
-           songs = process_list(args["files"], out_dir)
+           for f in args['files']:
+                songs.append(cp_song(f.read()))
     else:
-        in_dir = args["directory"]
-        out_dir = in_dir if out_dir == "." else outdir
-        songs = process_list(glob.glob(os.path.join(in_dir,"*.cho")), out_dir)
+        print("You need to pass one or more files to process")
         
-    book_name =  args["epub_file"]
-    word_name = args["word_file"]
-    pdf_name = args["pdf_file"]
-    odp_name = args["odp_file"]
-    html_name = args["html_file"]
-
-    
-    output_files = []
-    
+    print(songs)
+    # Make all the input files into a book object
     book = cp_song_book(songs, keep_order = args['keep_order'])
 
+    # If there;s a setlist file use it
     if args["setlist"] != None:
        list = open(args["setlist"]).read()
        book.order_by_setlist(list)
 
-       
     if args["alphabetically"]:
         songs.sort(key= lambda song: re.sub("^(the|a|\(.*?\)) ", "", song.title.lower()))
-    
-   
-    # TODO FIX IT 
-    if  book_name != None:
-        command = ["pandoc", "--toc-depth", "1", "-t", "epub", "-f", "markdown+hard_line_breaks", "-o", book_name, "--epub-chapter-level=1", "--epub-stylesheet", "songbook.css"] +  output_files
-        subprocess.call(command)
-        subprocess.call(["open", book_name])
-    # TODO FIX IT  
-    if word_name != None:
-        command = ["pandoc", "--toc", "--data-dir", ".", "--toc-depth", "1", "-t", "docx", "-f", "markdown+hard_line_breaks", "-o", word_name, "--epub-chapter-level=1",] +  output_files
-        subprocess.call(command)
-        
-        subprocess.call(["open", word_name])
-        
-    if pdf_name != None:
-        command = ["pandoc", '-s', '-V', '--document-class=memoir', "--toc", "--template", "onepage.latex", "--toc-depth", "1", "-t", "latex", "-f", "markdown+hard_line_breaks", "-o", pdf_name, "--epub-chapter-level=1",] +  output_files
-        subprocess.call(command)
-        
-        subprocess.call(["open", pdf_name])
-    title = args['title']
-    
-    if odp_name != None:
-        odp_template = args["odp_template"]
-        omnibus_md = odp_name + "temp.md"
-        contents = "# Contents\n"
-        #TODO Depends on template so should be passed as an option
-        start_page = 4
-        book.reorder(start_page)
-        all_songs = ""
-        page_count = start_page
-        for song  in book.songs:
-            if not song.blank:
-                contents += song.title +  " - " + str(page_count) + "    \n"
-                song.title = "%s" % (str(page_count), song.title)
-                song.format()
-            page_count += song.pages
-            all_songs += song.md
-        
-        open(omnibus_md, 'w').write(contents + all_songs)
-       
-        command = ["python", "odpdown/odpdown.py", "--break-master=song", "--content-master=toc",  omnibus_md, odp_template, odp_name]
-       
-        subprocess.call(command)
-        subprocess.call(["open", odp_name])
 
+    output_file =  args["file_name"]
+    if args["book_file"] and  args["file_name"] == default_output_file:
+        output_file, _ = os.path.splitext(book_name)
+  
     
-    if html_name != None:
-        pdf_path = re.sub(".html$",".pdf", html_name)
+    #PDF is generated from HTML
+    if args['pdf']:
+        args['html'] = True
+        
+    title = args['title']
+    if  args['epub']:
+        epub_path = output_file + ".epub"
+        xtra =[ "--toc-depth=1","--epub-chapter-level=1"] #, "--epub-stylesheet=songbook.css"] 
+        pypandoc.convert(book.to_md(), "epub", format="md", outputfile=epub_path, extra_args=xtra)
+        subprocess.call(["open", epub_path])
+ 
+    if  args["word"]:
+        word_path = output_file + ".docx"
+        xtra = ["--toc", "--data-dir=.", "--toc-depth=1"] 
+        print(word_path)
+        pypandoc.convert(book.to_md(), "docx", format="md", outputfile=word_path, extra_args=xtra)
+        #
+        subprocess.call(["open", word_path])
+        
+   
+    
+    if args['html'] or args['pdf']:
+        html_path = output_file + ".html"
+        
         contents = "# Contents\n<table width='100%'>\n"
+        
         #TODO Depends on template so should be passed as an option
         start_page = 4
-        book.reorder(start_page)
+        book.reorder(start_page) #TODO - really?
         all_songs = ""
         page_count = start_page
         for song  in book.songs:
@@ -577,15 +550,16 @@ def convert():
             
             #all_songs += "<table style="align:><tr><td>prev</td><td>%s</td><td>next</td></tr></table>" %  str(page_count)
         #TODO FRONTMATTER / CONTENTS!
-        open(html_name, 'w').write( html_book.format(all_songs,
+        open(html_path, 'w').write( html_book.format(all_songs,
                                                       title=title,
                                                       for_print = args['a4'],
                                                       contents=pypandoc.convert(contents,
                                                                                 "html",
                                                                                 format="md")))
         
-        if args['a4']:
-            command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', '--outline', '--outline-depth', '1', '--default-header', html_name, pdf_path]
+        if args['pdf']:
+            pdf_path = output_file + ".pdf"
+            command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', '--outline', '--outline-depth', '1', '--default-header', html_path, pdf_path]
             subprocess.call(command)
             subprocess.call(["open", pdf_path])
         
