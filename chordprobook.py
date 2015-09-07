@@ -146,12 +146,13 @@ class cp_song:
         return "(Key of %s)" % self.key if self.key != None else ""
 
 class cp_song_book:
-    def __init__(self, songs = [], keep_order = False):
+    def __init__(self, songs = [], keep_order = False, title="Songbook"):
         self.songs = songs
         self.keep_order = keep_order
+        self.title = title
 
     def to_md(self):
-        md = ""
+        md = "---\ntitle: %s\n---\n" % self.title
         for song in self.songs:
             md += song.md
         return md
@@ -181,7 +182,7 @@ class cp_song_book:
         """Reorder songs in the book so two-page songs start on an even page)
            Unless this is a set-list in which case insert blanks"""
         if old == []:
-            #TODO insert a blank page if needed or look back
+            
             if start_page % 2 == 1 and waiting != []:
                 make_blank()
             self.songs = new_order + waiting
@@ -439,6 +440,7 @@ output = "markdown"
     
 def convert():
     default_output_file = "songbook"
+    default_title = 'Songbook!'
     parser = argparse.ArgumentParser()
     parser.add_argument('files', type=argparse.FileType('r'), nargs="*", default=None, help='List of files')
     parser.add_argument('-a', '--alphabetically', action='store_true', help='Sort songs alphabetically')
@@ -450,8 +452,9 @@ def convert():
     parser.add_argument('-e', '--epub', action='store_true', help='Output epub book')
     parser.add_argument('-f', '--file-stem', default=default_output_file, help='Base file name, without extension, for output files')
     parser.add_argument( '--html', default=None, help='Output HTML book, defaults to screen-formatting use --a4 option for printing')
-    parser.add_argument('-w', '--word', action='store_true', help='Output word')
+    parser.add_argument('-w', '--word', action='store_true', help='Output .docx format')
     parser.add_argument('-p', '--pdf', action='store_true', help='Output pdf')
+    parser.add_argument('-r', '--reference-docx', default = None, help="Reference docx file to use (eg with Heading 1 having a page-break before)")
     parser.add_argument('-b',
                         '--book-file',
                         action='store_true',
@@ -462,7 +465,7 @@ def convert():
                         '--setlist',
                         default=None,
                         help ='Use a setlist file to filter the book, one song per line and keep facing pages together. Setlist lines can be one or more words from the song title')
-    parser.add_argument('--title', default='Songs', help='Title to use for the book')
+    parser.add_argument('--title', default=default_title, help='Title to use for the book')
     
 
 
@@ -495,10 +498,9 @@ def convert():
                 songs.append(cp_song(f.read()))
     else:
         print("You need to pass one or more files to process")
-        
-    print(songs)
+  
     # Make all the input files into a book object
-    book = cp_song_book(songs, keep_order = args['keep_order'])
+    book = cp_song_book(songs, keep_order = args['keep_order'], title=args["title"])
 
     # If there;s a setlist file use it
     if args["setlist"] != None:
@@ -508,14 +510,12 @@ def convert():
     if args["alphabetically"]:
         songs.sort(key= lambda song: re.sub("^(the|a|\(.*?\)) ", "", song.title.lower()))
 
-    output_file =  args["file_name"]
-    if args["book_file"] and  args["file_name"] == default_output_file:
+    output_file =  args["file_stem"]
+    if args["book_file"] and  args["file_stem"] == default_output_file:
         output_file, _ = os.path.splitext(book_name)
   
     
-    #PDF is generated from HTML
-    if args['pdf']:
-        args['html'] = True
+
         
     title = args['title']
     if  args['epub']:
@@ -526,14 +526,14 @@ def convert():
  
     if  args["word"]:
         word_path = output_file + ".docx"
-        xtra = ["--toc", "--data-dir=.", "--toc-depth=1"] 
-        print(word_path)
+        xtra = ["--toc", "--data-dir=.", "--toc-depth=1"]
+        if args["reference_docx"] != None:
+            xtra.append('--reference-docx=%s' % args["reference_docx"])
         pypandoc.convert(book.to_md(), "docx", format="md", outputfile=word_path, extra_args=xtra)
-        #
         subprocess.call(["open", word_path])
         
    
-    
+    #PDF is generated from HTML
     if args['html'] or args['pdf']:
         html_path = output_file + ".html"
         
@@ -553,9 +553,7 @@ def convert():
             
             all_songs += song.to_html()
         contents += "</table>"
-            
-            #all_songs += "<table style="align:><tr><td>prev</td><td>%s</td><td>next</td></tr></table>" %  str(page_count)
-        #TODO FRONTMATTER / CONTENTS!
+        
         open(html_path, 'w').write( html_book.format(all_songs,
                                                       title=title,
                                                       for_print = args['a4'],
