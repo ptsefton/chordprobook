@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 import glob
 import re
 import argparse
@@ -447,11 +448,16 @@ def convert():
                         help='Preserve song order for playing as a setlist (inserts blank pages to keep multi page songs on facing pages')
     parser.add_argument('--a4', action='store_true', help='Format for printing (web page output)')
     parser.add_argument('-e', '--epub', action='store_true', help='Output epub book')
-    parser.add_argument('-f', '--file-name', default=default_output_file, help='Base file name, without extension, for output files')
+    parser.add_argument('-f', '--file-stem', default=default_output_file, help='Base file name, without extension, for output files')
     parser.add_argument( '--html', default=None, help='Output HTML book, defaults to screen-formatting use --a4 option for printing')
     parser.add_argument('-w', '--word', action='store_true', help='Output word')
     parser.add_argument('-p', '--pdf', action='store_true', help='Output pdf')
-    parser.add_argument('-b', '--book-file', action='store_true', help ='First file contains a list of files, each line optionally followed by a transposition (+|-)\d\d?')
+    parser.add_argument('-b',
+                        '--book-file',
+                        action='store_true',
+                        help ="""First file contains a list of files, each line optionally followed by a transposition (+|-)\d\d?
+                                 eg to transpose up one tone:
+                                 song-file.cho +2""")
     parser.add_argument('-s',
                         '--setlist',
                         default=None,
