@@ -7,7 +7,7 @@ HTML, and word processing doc formats.
 
 Requires pandoc 1.15.0.6 or later  and wkhtmltopdf installed on on your path.
 
-On OS X install Pandoc HEAD using [brew]http://brew.sh/):
+On OS X install Pandoc HEAD using [brew](http://brew.sh/):
     brew install pandoc --HEAD
     
 
