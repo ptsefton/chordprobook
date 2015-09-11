@@ -5,6 +5,7 @@ import argparse
 import os
 import subprocess
 import pypandoc
+import tempfile
 
 class transposer:
    
@@ -30,12 +31,13 @@ class transposer:
         return self.__notes[new_note] if  note_index != None else note
     
 class cp_song:
-    def __init__(self, song, title="Song", transpose=0, blank = False):
+    def __init__(self, song, title="Song", transpose=0, blank = False, path = None):
         self.blank = blank
         self.text = re.sub("(.)\n(.)", "\\1    \\n\\2", song)
         self.key = None
         self.pages = 1
         self.title = title
+        self.path = path
         self.transposer = transposer(transpose)
         self.__find_title()
         if self.title == None:
@@ -118,7 +120,7 @@ class cp_song:
         #Chords
         song = re.sub("\[(.*?)\]",lambda m: format_chord(m.group()),song)
         key_string = self.get_key_string()
-
+        
         
         title = "%s %s" % (self.title, key_string)
         song = "<div>\n# %s\n%s\n</div>" % (title, song)
@@ -129,6 +131,7 @@ class cp_song:
         self.md = song
         
     def to_html(self):
+        #TODO STANDALONE
         self.format()
         song = """
 <div class='song'>
@@ -141,6 +144,9 @@ class cp_song:
         """ % self.md
         song = song.replace("<!-- new_page -->", "\n</div></div><div class='page'><div>")
         return pypandoc.convert(song, 'html', format='md')
+
+    def to_stand_alone_html(self):
+        return html_book.format(self.to_html(), title = self.title, stand_alone= True)
         
     def get_key_string(self):
         return "(Key of %s)" % self.key if self.key != None else ""
@@ -181,8 +187,7 @@ class cp_song_book:
             old = self.songs
         """Reorder songs in the book so two-page songs start on an even page)
            Unless this is a set-list in which case insert blanks"""
-        if old == []:
-            
+        if old == []:            
             if start_page % 2 == 1 and waiting != []:
                 make_blank()
             self.songs = new_order + waiting
@@ -213,7 +218,7 @@ class cp_song_book:
                 
 class html_book:
     
-    def format(html, contents = "",  title="Untitled", for_print= False):
+    def format(html, contents = "",  title="Untitled", for_print=True, stand_alone=False):
         script = """
 $(function() {
 
@@ -320,9 +325,17 @@ p {
 </head>
 <body>
 
+%s
+
+
+%s
+
+</body>
+</html>
+"""
+        frontmatter = """
 <div class='song'>
 <div class='page'>
-
 <div>
 <h1>%s</h1>
 </div>
@@ -331,7 +344,9 @@ p {
 
 <div class='song'>
 <div class='page'>
+<div>
 
+</div>
 </div>
 </div>
 
@@ -343,11 +358,7 @@ p {
 </div>
 </div>
 
-%s
-
-</body>
-</html>
-"""
+        """
 
         print_template = """
 <html>
@@ -396,29 +407,8 @@ div {
 </head>
 <body>
 
-<div class='song'>
-<div class='page'>
-<div>
-<h1>%s</h1>
-</div>
-</div>
-</div>
-
-<div class='song'>
-<div class='page'>
-<div>
-
-</div>
-</div>
-</div>
-
-<div class='song'>
-<div class='page'>
-
 %s
 
-</div>
-</div>
 
 %s
 </body>
@@ -429,7 +419,12 @@ div {
              cols = "1"
         else:
             cols = "2"
-        return web_template % (title, script % {'cols': cols}, title, contents, html)
+        if stand_alone:
+            frontmatter = ""
+        else:
+            frontmatter = frontmatter % (title, contents)
+            
+        return web_template % (title, script % {'cols': cols}, frontmatter, html)
         
         
 
@@ -451,10 +446,11 @@ def convert():
     parser.add_argument('--a4', action='store_true', help='Format for printing (web page output)')
     parser.add_argument('-e', '--epub', action='store_true', help='Output epub book')
     parser.add_argument('-f', '--file-stem', default=default_output_file, help='Base file name, without extension, for output files')
-    parser.add_argument( '--html', default=None, help='Output HTML book, defaults to screen-formatting use --a4 option for printing')
+    parser.add_argument( '--html', action='store_true', default=True, help='Output HTML book, defaults to screen-formatting use --a4 option for printing (PDF generation not working unless you chose --a4 for now')
     parser.add_argument('-w', '--word', action='store_true', help='Output .docx format')
     parser.add_argument('-p', '--pdf', action='store_true', help='Output pdf')
     parser.add_argument('-r', '--reference-docx', default = None, help="Reference docx file to use (eg with Heading 1 having a page-break before)")
+    parser.add_argument('-o','--one-doc', action='store_true', default='False', help='Output a single document per song: assumes you want A4 PDF')
     parser.add_argument('-b',
                         '--book-file',
                         action='store_true',
@@ -490,12 +486,14 @@ def convert():
                     t = int(trans.group(0))
                     print(t)
                     line = re.sub("((\+|-)?\d+)$", "", line)
+                line = re.sub("^#.*","", line) #Lose comments
                 line = line.strip()
                 if line != "":
-                    songs.append(cp_song(open(os.path.join(book_dir, line.strip())).read(), transpose=t))
+                    song_path = os.path.join(book_dir, line.strip())
+                    songs.append(cp_song(open(song_path).read(), transpose=t, path=song_path))
        else:
            for f in args['files']:
-                songs.append(cp_song(f.read()))
+                songs.append(cp_song(f.read(), path=f.name))
     else:
         print("You need to pass one or more files to process")
   
@@ -535,37 +533,50 @@ def convert():
    
     #PDF is generated from HTML
     if args['html'] or args['pdf']:
-        html_path = output_file + ".html"
-        
-        contents = "# Contents\n<table width='100%'>\n"
-        
-        #TODO Depends on template so should be passed as an option
-        start_page = 4
-        book.reorder(start_page) #TODO - really?
-        all_songs = ""
-        page_count = start_page
-        for song  in book.songs:
-            if not song.blank:
-                contents += "<tr><td>%s</td><td>%s</td></tr>" % (song.title, str(page_count)) 
-                song.format()
+        if args['one_doc']: #Assume standalone PDF
+            for song in book.songs:
+                if song.path != None:
+                    temp_file = tempfile.NamedTemporaryFile(suffix=".html")
+                    html_path = temp_file.name
+                    print(html_path)
+                    open(html_path, 'w').write(song.to_stand_alone_html())
+                    #temp_file.close()
+                    pdf_path = song.path +  ".pdf"
+                command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', html_path, pdf_path]
+                subprocess.call(command)
                 
-            page_count += song.pages
-            
-            all_songs += song.to_html()
-        contents += "</table>"
+        else:
+            html_path = output_file + ".html"
+
+            contents = "# Contents\n<table width='100%'>\n"
+
+            #TODO Depends on template so should be passed as an option
+            start_page = 4
+            book.reorder(start_page) #TODO - really?
+            all_songs = ""
+            page_count = start_page
+            for song  in book.songs:
+                if not song.blank:
+                    contents += "<tr><td>%s</td><td>%s</td></tr>" % (song.title, str(page_count)) 
+                    song.format()
+
+                page_count += song.pages
+
+                all_songs += song.to_html()
+            contents += "</table>"
+
+            open(html_path, 'w').write( html_book.format(all_songs,
+                                                          title=title,
+                                                          for_print = args['a4'],
+                                                          contents=pypandoc.convert(contents,
+                                                                                    "html",
+                                                                                    format="md")))
         
-        open(html_path, 'w').write( html_book.format(all_songs,
-                                                      title=title,
-                                                      for_print = args['a4'],
-                                                      contents=pypandoc.convert(contents,
-                                                                                "html",
-                                                                                format="md")))
-        
-        if args['pdf']:
-            pdf_path = output_file + ".pdf"
-            command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', '--outline', '--outline-depth', '1', '--default-header', html_path, pdf_path]
-            subprocess.call(command)
-            subprocess.call(["open", pdf_path])
+            if args['pdf']:
+                pdf_path = output_file + ".pdf"
+                command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', '--outline', '--outline-depth', '1', '--default-header', html_path, pdf_path]
+                subprocess.call(command)
+                subprocess.call(["open", pdf_path])
         
 if __name__ == "__main__":
     convert()
