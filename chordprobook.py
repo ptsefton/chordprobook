@@ -30,47 +30,64 @@ class transposer:
         new_note = (note_index + self.offset ) % 12
         return self.__notes[new_note] if  note_index != None else note
     
+def extract_title(text, title = None):
+    """Find a chordpro title and get rid of it out of a string"""
+    title_re = re.compile("{(ti:|title:) *(.*?)}", re.IGNORECASE)
+    title_search = re.search(title_re, text)
+    if title_search != None:
+        title = title_search.group(2)
+        text = re.sub(title_re, "", text)
+    return text, title
+
 class cp_song:
     def __init__(self, song, title="Song", transpose=0, blank = False, path = None):
         self.blank = blank
-        self.text = re.sub("(.)\n(.)", "\\1    \\n\\2", song)
+        self.text = song
         self.key = None
         self.pages = 1
+        self.original_key = None
         self.title = title
         self.path = path
+        self.transpose = transpose
         self.transposer = transposer(transpose)
         self.__find_title()
         if self.title == None:
             self.title = title
         self.__find_key()
+        self.__find_transpositions()
         self.__format_tab()
         self.format()    
-
+        
         self.__format_chorus()
 
     def __find_title(self):
-        self.title = None
-        title_re = "{(ti:|title:) *(.*?)}"
-        title_search = re.search(title_re, self.text)
-        if title_search != None:
-            self.title = title_search.group(2)
-            self.text = re.sub(title_re, "", self.text)
-        
+        self.text, self.title = extract_title(self.text, title=self.title)
+
+    def __find_transpositions(self):
+        tr_re = re.compile("{(tr|transpose): *(.*)}", re.IGNORECASE)
+        tr_search = re.search(tr_re, self.text)
+        self.standard_transpositions = [0]
+        if tr_search != None:
+            standard_transpositions = tr_search.group(2).split(" ")
+            self.standard_transpositions += [int(x) for x in standard_transpositions]
+            self.text = re.sub(tr_re, "", self.text)
+            
     def __find_key(self):
-        key_re = re.compile("{key: *(.*)}")
+        key_re = re.compile("{key: *(.*)}", re.IGNORECASE)
         key_search = re.search(key_re, self.text)
         if key_search != None:
-            self.key = key_search.group(1)
-            self.key = self.transposer.transpose_chord(self.key)
+            self.original_key = key_search.group(1)
+            self.key = self.transposer.transpose_chord(self.original_key)
             self.text = re.sub(key_re, "", self.text)
+            
 
     def __format_chorus(self):
         in_chorus = False
         new_text = ""
         for line in self.text.split("\n"):
-            if re.match("{(soc|start_of_chorus)}", line):
+            if re.match("{(soc|start_of_chorus|sob|start_of_bridge)}", line):
                 in_chorus = True
-            elif re.match("{(eoc|end_of_chorus)}", line):
+            elif re.match("{(eoc|end_of_chorus|eob|end_of_bridge)}", line):
                 in_chorus = False
             else:
                 if in_chorus:
@@ -92,6 +109,7 @@ class cp_song:
                 new_text += "```\n"
             else:
                 if not in_tab:
+                    #Highlight chords
                     line = line.replace("][","] [")
                     line = re.sub("\[(.*?)\]","**[\\1]**",line)
                 new_text += line + "\n"
@@ -100,31 +118,35 @@ class cp_song:
         self.text = new_text
      
         
-    def format(self):
+    def format(self, transpose=None):
+        """ Create a markdown version of the song, transposed if necessary """
+        if transpose != None:
+            self.transposer = transposer(transpose)
+            
         def format_chord(chord):
             return ("%s" % (self.transposer.transpose_chord(chord)))
         song =  self.text
-        
+        #Add four spaces to mid-stanza line ends to force Markdown to add breaks
+        song = re.sub("(.)\n(.)", "\\1    \\n\\2", song)
         
         #TAB
         #song = re.sub("{(sot|eot|start_of_tab|end_of_tab)}","```", song)
         # Subtitle
         # Remove comments (as in remarks, not {c: })
         song = re.sub("\n#.*","", song)
-        
         song = re.sub("{(st:|subtitle:) *(.*)}","\n*\\2*", song)
         
         #Comments / headings
-        song = re.sub("{(c:|comment:) *(.*)}","*\\2*", song)
-        
+        song = re.sub("{(c:|comment:) *(.*)}","**\\2**", song)
+
         #Chords
-        song = re.sub("\[(.*?)\]",lambda m: format_chord(m.group()),song)
+        if self.transposer.offset != 0:
+            song = re.sub("\[(.*?)\]",lambda m: format_chord(m.group()),song)
+            
         key_string = self.get_key_string()
-        
-        
         title = "%s %s" % (self.title, key_string)
         song = "<div>\n# %s\n%s\n</div>" % (title, song)
-        #song = "\n<div>\n%s\n</div>\n" % (song)
+       
         song, pages = re.subn("{(new_page|np)}", "<!-- new_page -->", song)
         if pages > 0:
             self.pages = pages + 1
@@ -148,7 +170,9 @@ class cp_song:
     def to_stand_alone_html(self):
         return html_book.format(self.to_html(), title = self.title, stand_alone= True)
         
-    def get_key_string(self):
+    def get_key_string(self, trans = None):
+        if self.original_key != None:
+            self.key = self.transposer.transpose_chord(self.original_key)
         return "(Key of %s)" % self.key if self.key != None else ""
 
 class cp_song_book:
@@ -166,11 +190,9 @@ class cp_song_book:
     def order_by_setlist(self, setlist):
         new_order = []
         for potential_song in setlist.split("\n"):
-            if potential_song.strip() != "":
+            if potential_song.strip() != "" and not potential_song.startswith("#"):
                 restring = potential_song.replace(" ", ".*?").lower()
-                print (restring)
-                regex = re.compile(restring)
-                print (self.songs)
+                regex = re.compile(restring, re.IGNORECASE)
                 found_song = False
                 for song in self.songs:
                     if re.search(regex, song.title.lower()):
@@ -268,6 +290,7 @@ $("div.page").each(function() {
     overflow: hidden;
     -webkit-column-count: 2;
     border-bottom: thick dotted #ff0000;
+  
 }
 
 .page p {
@@ -382,7 +405,6 @@ border-width: 1px;
 overflow: hidden;
 border-color: #FFFFFF;
 
-
 }
 h1 {
    padding: 0px 0px 0px 0px;
@@ -450,43 +472,46 @@ def convert():
     parser.add_argument('-w', '--word', action='store_true', help='Output .docx format')
     parser.add_argument('-p', '--pdf', action='store_true', help='Output pdf')
     parser.add_argument('-r', '--reference-docx', default = None, help="Reference docx file to use (eg with Heading 1 having a page-break before)")
-    parser.add_argument('-o','--one-doc', action='store_true', default='False', help='Output a single document per song: assumes you want A4 PDF')
+    parser.add_argument('-o','--one-doc', action='store_true', help='Output a single document per song: assumes you want A4 PDF')
     parser.add_argument('-b',
                         '--book-file',
                         action='store_true',
                         help ="""First file contains a list of files, each line optionally followed by a transposition (+|-)\d\d?
                                  eg to transpose up one tone:
-                                 song-file.cho +2""")
+                                 song-file.cho +2, you can also add a title line: {title: Title of book}""")
     parser.add_argument('-s',
                         '--setlist',
                         default=None,
-                        help ='Use a setlist file to filter the book, one song per line and keep facing pages together. Setlist lines can be one or more words from the song title')
-    parser.add_argument('--title', default=default_title, help='Title to use for the book')
+                        help ='Use a setlist file to filter the book, one song per line and keep facing pages together. Setlist lines can be one or more words from the song title , you can also add a setlist line: {title: Title of setlist}')
+    parser.add_argument('--title', default=default_title, help='Title to use for the book, if there is no title in a book file or setlist file')
     
 
 
    
 
     args = vars(parser.parse_args())
-    print (args["setlist"])
     
     out_dir = "."
     os.makedirs(out_dir, exist_ok=True)
     songs = []
+    output_file =  args["file_stem"]
     if args["files"] != None:
        if args["book_file"]:
-            
             book_file = args["files"][0]
             book_dir, book_name = os.path.split(book_file.name)
-            for line in book_file:
+            #base output path on book unless user passed a different name
+            if args["file_stem"] == default_output_file:
+                output_file, _ = os.path.splitext(book_name)
+                output_file = os.path.join(book_dir, output_file)
+            text = book_file.read()
+            text, args["title"] = extract_title(text, args["title"] )
+            for line in text.split("\n"):
                 trans = re.search("((\+|-)?\d+)$", line)
                 t = 0
                 if trans != None:
-                    print(trans.group(0))
                     t = int(trans.group(0))
-                    print(t)
-                    line = re.sub("((\+|-)?\d+)$", "", line)
-                line = re.sub("^#.*","", line) #Lose comments
+                    line = re.sub("(?i)((\+|-)?\d+)$", "", line)
+                line = re.sub("(?i)^#.*","", line) #Lose comments
                 line = line.strip()
                 if line != "":
                     song_path = os.path.join(book_dir, line.strip())
@@ -500,17 +525,22 @@ def convert():
     # Make all the input files into a book object
     book = cp_song_book(songs, keep_order = args['keep_order'], title=args["title"])
 
-    # If there;s a setlist file use it
+    # If there's a setlist file use it
     if args["setlist"] != None:
+       #Let the setlist override titles set elsewere
        list = open(args["setlist"]).read()
+       list, args["title"] = extract_title(list, args["title"] )
        book.order_by_setlist(list)
+       if args["book_file"] or args["file_stem"] == default_output_file:
+            set_dir, set_name = os.path.split(args["setlist"])
+            output_file, _ = os.path.splitext(set_name)
+            output_file = os.path.join(set_dir, output_file)
 
     if args["alphabetically"]:
-        songs.sort(key= lambda song: re.sub("^(the|a|\(.*?\)) ", "", song.title.lower()))
+        songs.sort(key= lambda song: re.sub("(?i)^(the|a|\(.*?\)) ", "", song.title.lower()))
 
-    output_file =  args["file_stem"]
-    if args["book_file"] and  args["file_stem"] == default_output_file:
-        output_file, _ = os.path.splitext(book_name)
+   
+   
   
     
 
@@ -520,7 +550,7 @@ def convert():
         epub_path = output_file + ".epub"
         xtra =[ "--toc-depth=1","--epub-chapter-level=1"] #, "--epub-stylesheet=songbook.css"] 
         pypandoc.convert(book.to_md(), "epub", format="md", outputfile=epub_path, extra_args=xtra)
-        subprocess.call(["open", epub_path])
+        #subprocess.call(["open", epub_path])
  
     if  args["word"]:
         word_path = output_file + ".docx"
@@ -528,55 +558,61 @@ def convert():
         if args["reference_docx"] != None:
             xtra.append('--reference-docx=%s' % args["reference_docx"])
         pypandoc.convert(book.to_md(), "docx", format="md", outputfile=word_path, extra_args=xtra)
-        subprocess.call(["open", word_path])
+        #subprocess.call(["open", word_path])
         
    
-    #PDF is generated from HTML
-    if args['html'] or args['pdf']:
-        if args['one_doc']: #Assume standalone PDF
-            for song in book.songs:
-                if song.path != None:
-                    temp_file = tempfile.NamedTemporaryFile(suffix=".html")
-                    html_path = temp_file.name
-                    print(html_path)
-                    open(html_path, 'w').write(song.to_stand_alone_html())
-                    #temp_file.close()
-                    pdf_path = song.path +  ".pdf"
+    #PDF is generated from HTML BTW
+    if args['one_doc']: #Assume standalone PDF
+      for song in book.songs:
+        if song.path != None:
+            for trans in song.standard_transpositions:
+                if trans != 0:
+                    song.format(transpose = trans)
+
+                if song.key != None:
+                        suffix_string = "_key_%s" % song.key
+                else:
+                    suffix_string = "_" + str(trans) if trans != 0 else ""
+
+                temp_file = tempfile.NamedTemporaryFile(suffix=".html")
+                html_path = temp_file.name
+                open(html_path, 'w').write(song.to_stand_alone_html())
+                pdf_path = "%s%s.pdf" % (song.path, suffix_string )
                 command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', html_path, pdf_path]
                 subprocess.call(command)
-                
-        else:
-            html_path = output_file + ".html"
-
-            contents = "# Contents\n<table width='100%'>\n"
-
-            #TODO Depends on template so should be passed as an option
-            start_page = 4
-            book.reorder(start_page) #TODO - really?
-            all_songs = ""
-            page_count = start_page
-            for song  in book.songs:
-                if not song.blank:
-                    contents += "<tr><td>%s</td><td>%s</td></tr>" % (song.title, str(page_count)) 
-                    song.format()
-
-                page_count += song.pages
-
-                all_songs += song.to_html()
-            contents += "</table>"
-
-            open(html_path, 'w').write( html_book.format(all_songs,
-                                                          title=title,
-                                                          for_print = args['a4'],
-                                                          contents=pypandoc.convert(contents,
-                                                                                    "html",
-                                                                                    format="md")))
         
-            if args['pdf']:
-                pdf_path = output_file + ".pdf"
-                command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', '--outline', '--outline-depth', '1', '--default-header', html_path, pdf_path]
-                subprocess.call(command)
-                subprocess.call(["open", pdf_path])
+    elif args['html'] or args['pdf']:
+        html_path = output_file + ".html"
+        contents = "# Contents\n<table width='100%'>\n"
+        #TODO Depends on template so should be passed as an option
+        start_page = 4
+        book.reorder(start_page) 
+        all_songs = ""
+        page_count = start_page
+        #Make a table of contents
+        #TODO - LINK!
+        #TODO - Move this to book class
+        for song  in book.songs:
+            if not song.blank:
+                contents += "<tr><td>%s</td><td>%s</td></tr>" % (song.title, str(page_count)) 
+                song.format()
+            page_count += song.pages
+            all_songs += song.to_html()
+        contents += "</table>"
+
+        open(html_path, 'w').write( html_book.format(all_songs,
+                                                      title=title,
+                                                      for_print = args['a4'],
+                                                      contents=pypandoc.convert(contents,
+                                                                                "html",
+                                                                                format="md")))
+
+        if args['pdf']:
+            pdf_path = output_file + ".pdf"
+            print(pdf_path)
+            command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', '--outline', '--outline-depth', '1', '--default-header', html_path, pdf_path]
+            subprocess.call(command)
+            #subprocess.call(["open", pdf_path])
         
 if __name__ == "__main__":
     convert()

@@ -23,7 +23,12 @@ class TestStringMethods(unittest.TestCase):
       if song.pages % 2 == 0:
         self.assertEqual(page % 2, 0)
       page += song.pages
-    
+
+  def test_auto_transpose(self):
+      song1 =  cpb.cp_song("{title: 1 page}\n{key: C}\n{transpose: +2 -3}")
+      self.assertEqual(song1.standard_transpositions, [0, 2, -3])
+
+      
   def test_parse(self):
     song = cpb.cp_song("{title: A Song!}\nSome stuff\n{key: C#}\n")
     self.assertEqual(song.key, "C#")
