@@ -1,19 +1,22 @@
 # chordprobook
 
-## What does this do?
+## What does this do? Formats song charts
 
 This is a Python 3 script to convert collections  of
 [chordpro](http://blossomassociates.net/Music/chopro.html)
 formatted song charts to PDF,
-HTML, and word processing doc formats. You can convert a direcotry full of files to a single book, or a set of song-sheets. 
+HTML, EPUB (ebook) and word processing doc formats. You can convert a directory full of files to a single book, or a set of song-sheets. 
 
-NOTE: Unlike most chordpro software this does not display chords above the text (not yet anyway). Displaying chords inline is more compact and it's good enough for Rob Weule and the [Ukulele Club Songbook](http://katoombamusic.com.au/product/ukulele-club-songbook/) it's good enough for me.
+NOTE: Unlike most chordpro software this does not display chords above the text (not yet anyway). Displaying chords inline is more compact and it's good enough for Rob Weule and his [Ukulele Club Songbook](http://katoombamusic.com.au/product/ukulele-club-songbook/) and for [Richard G](http://www.scorpexuke.com/ukulele-songs.html) it's good enough for me.
 
 ## TODO
 
-Chord charts for various intruments
-Better doco
-Maybe a GUI? Probably not.
+When I get time I'll convert these TODOs into github milestones.
+
+* Chord charts for various intruments
+* Better doco
+* Maybe a GUI? Probably not
+* Display chords above text? Probably not
 
 
 ## Audience
