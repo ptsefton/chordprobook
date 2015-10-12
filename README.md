@@ -7,6 +7,15 @@ This is a Python 3 script to convert collections  of
 formatted song charts to PDF,
 HTML, and word processing doc formats. You can convert a direcotry full of files to a single book, or a set of song-sheets. 
 
+NOTE: Unlike most chordpro software this does not display chords above the text (not yet anyway). Displaying chords inline is more compact and it's good enough for Rob Weule and the [Ukulele Club Songbook](http://katoombamusic.com.au/product/ukulele-club-songbook/) it's good enough for me.
+
+## TODO
+
+Chord charts for various intruments
+Better doco
+Maybe a GUI? Probably not.
+
+
 ## Audience
 
 This is for people running a unix-like operating system who know how
@@ -105,7 +114,7 @@ Create a PDF book from all the files in a directory.
     ```./chordprobook.py -a -b samples/sample-book.txt```
     
 * To choose a subset of the songs in a book in a particular order use a setlist file. 
-  The setlist consists of an optional {title: } directive, and optional {book: <path>} directive followed by a list of songs, one per line. Identify songs by entering one or more words from the title, in order. So "Amazing" will match "Amazin Grace" and "Slot Baby" would match "Slot Machine Baby".
+  The setlist consists of an optional {title: } directive, and optional {book: <path>} directive followed by a list of songs, one per line. Identify songs by entering one or more words from the title, in order. So "Amazing" will match "Amazing Grace" and "Slot Baby" would match "Slot Machine Baby".
 
    Use this to filter all the songs in a directory using a setlist:
 
