@@ -1,22 +1,39 @@
 # chordprobook
 
+## What does this do?
+
+This is a Python 3 script to convert collections  of
+[chordpro](http://blossomassociates.net/Music/chopro.html)
+formatted song charts to PDF,
+HTML, and word processing doc formats. You can convert a direcotry full of files to a single book, or a set of song-sheets. 
+
+## Audience
+
+This is for people running a unix-like operating system who know how
+to install packaged software scripts and python modules.
+
+
 Status: Alpha / mostly works for me  on OS X 10.10.5.
 
-Python 3 script to convert collections  of
-[chordpro](http://blossomassociates.net/Music/chopro.html). Ch
-formatted song charts to PDF,
-HTML, and word processing doc formats.
+
+## Installation on OS X (you're on your own on other platforms)
 
 Requires pandoc 1.15.0.6 or later  and wkhtmltopdf installed on on your path.
 
-On OS X install Pandoc HEAD using [brew](http://brew.sh/):
-    brew install pandoc --HEAD
-    
+* Install Pandoc HEAD using [brew](http://brew.sh/):
+
+    ```brew install pandoc --HEAD```
+* Download and install [wkhtmltopdf](http://wkhtmltopdf.org/downloads.html)
+* Install dependencies using pip3:
+
+    ```pip3 install pypandoc```
 
 ```
 ./chordprobook.py -h
 
-usage: chordprobook.py [-h] [-a] [-k] [--a4] [-e] [-f FILE_STEM] [--html] [-w]
+## usage
+
+chordprobook.py [-h] [-a] [-k] [--a4] [-e] [-f FILE_STEM] [--html] [-w]
                        [-p] [-r REFERENCE_DOCX] [-o] [-b] [-s SETLIST]
                        [--title TITLE]
                        [files [files ...]]
@@ -57,9 +74,45 @@ optional arguments:
 
 # Examples
 
-Create a PDF book from all the files in a directory. Note that PDF
-files without the A4 flag don't actually work ATM.
+Create a PDF book from all the files in a directory. 
 
-```./chordprobook --pdf --a4 --file-stem=my_book --title="My book"  my-songs/*.cho```
+* To make a PDF book (defaults to songbook.pdf) from a set of chordpro files:
 
-If you'd like it sorted 
+   ```./chordprobook samples/*.cho```
+
+    Which is equivalent to:
+
+    ```./chordprobook --pdf --a4  --title="My book" samples/*.cho```
+
+*  To add a file name and a title to the book.
+ 
+    ```./chordprobook --file-stem=my_book --title="My book"  samples/*.cho```
+
+*  If you'd like it sorted alphabetically by title:
+
+    ```./chordprobook -a --file-stem=my_book --title="My book"  samples/*.cho```
+
+*  To build a book from a list of files use a book file and the -b flag. This will preserve the order you entered the songs except that it will make sure that two-page songs appear on facing pages.
+  
+    ```./chordprobook.py -b samples/sample-book.txt```
+
+* To make sure the order of songs is preserved exactly, for example to use as a setlist, use -k or --keep-order. This will insert blank pages if necessary.
+
+    ```./chordprobook.py -k -b samples/sample-book.txt```
+
+*  To sort songs alphabetically add the -a or --alphabetical flag:
+
+    ```./chordprobook.py -a -b samples/sample-book.txt```
+    
+* To choose a subset of the songs in a book in a particular order use a setlist file. 
+  The setlist consists of an optional {title: } directive, and optional {book: <path>} directive followed by a list of songs, one per line. Identify songs by entering one or more words from the title, in order. So "Amazing" will match "Amazin Grace" and "Slot Baby" would match "Slot Machine Baby".
+
+   Use this to filter all the songs in a directory using a setlist:
+
+    ```./chordprobook.py -s samples/setlist.txt samples/*.cho```
+    
+*  Or use a book file:
+
+   Use this to filter all the songs in a directory using a setlist:
+
+    ```./chordprobook.py -s samples/setlist.txt -b samples/sample-book.txt```
