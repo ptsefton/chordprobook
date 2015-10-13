@@ -37,17 +37,20 @@ put it on the floor, unless you're viewing in on a tablet.
 * **Formats songs to fit the page** as best it can (good for ageing eyes
    and working in the dark). This feat is accompished by creating an HTML document, via Pandoc, with CSS to render the pages at A4 size then using wkhtmltopdf to create a PDF.
 
-* Generate individual song-sheets including multiple keys eg 
-  add this directive to produce two more versions of a song transposed
-  up one semitone and down two semitones.
+* **Generates individual song-sheets including multiple keys** transposed from the original.
 
-* Produces a table of contents which works well on tablets for navigation.
+* **Produces a PDF table of contents** which works well on tablets for navigation.
 
 
 ### Word output (.docx)
 
 * Gives you a start on creating a word document (via pandoc) from a set of chordpro files. Each song begins on a new page.
 * You can change the styles in the included ```reference.docx``` to your taste. At the moment it does not auto-scale the text to fit the page
+* 
+
+### HTML output
+
+This is still experimental, but the idea is to produce HTML that fills the screen for use on tablets, phones, etc with swipe navigatoin.
 
 ### TODO
 
@@ -99,7 +102,7 @@ C..G, followed by any mixture of lower case, slashes, and numbers. Eg:
 
 ```[C] [Csus4] [C/B] [Cmaj7]```
 
-Note that when transposing, and capital A...G will get transposed so
+Note that when transposing, any capital A...G inside a chord will get transposed so
 don't write [CAug] use [Caug].
 
 
