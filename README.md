@@ -5,12 +5,15 @@
 
 This is a Python 3 script to convert collections of
 [chordpro](http://blossomassociates.net/Music/chopro.html) formatted
-song charts to PDF, HTML, and word processing doc formats. You can
-convert a direcotry full of files to a single book, or a set of
-song-sheets.
+song charts to PDF, HTML, epub, and word processing doc formats. You can
+convert a directory full of files to a single book, or a set of
+song-sheets. Uses Pandoc and wkhtmltopdf to do all the hard work.
 
-
-NOTE: Unlike most chordpro software this does not display chords above the text (not yet anyway). Displaying chords inline is more compact and it's good enough for Rob Weule and his [Ukulele Club Songbook](http://katoombamusic.com.au/product/ukulele-club-songbook/) and for [Richard G](http://www.scorpexuke.com/ukulele-songs.html) it's good enough for me.
+NOTE: Unlike most chordpro software this does not display chords above
+the text (not yet anyway). Displaying chords inline is more compact. If it's good enough for Rob Weule and his
+[Ukulele Club Songbook](http://katoombamusic.com.au/product/ukulele-club-songbook/)
+and for [Richard G](http://www.scorpexuke.com/ukulele-songs.html) it's
+good enough for me.
 
 ## Features
 
@@ -23,25 +26,30 @@ selecting files
 
 *  Transpose songs
 
-
-So, if you play with a group you can maintain a songbook for the
-group, then create subsets of that book jsut by typing the titles
+If you play with a group you can maintain a songbook for the
+group to play from, then create setlists which are ordered subsets of that book by typing abbreviated titles
+into a text file, and generating a book from that. The setlist will be printed as a table of contents
+for the book, on the back of the cover page so you can rip it off an
+put it on the floor, unless you're viewing in on a tablet.
 
 ### PDF
 
-* Scales songs to fit the page as best it can (good for ageing eyes
-   and working in the dark)
+* **Formats songs to fit the page** as best it can (good for ageing eyes
+   and working in the dark). This feat is accompished by creating an HTML document, via Pandoc, with CSS to render the pages at A4 size then using wkhtmltopdf to create a PDF.
 
-* Generate individual song-sheets including multiple keys eg 
-  add this directive to produce two more versions of a song transposed
-  up one semitone and down two semitones.
+* **Generates individual song-sheets including multiple keys** transposed from the original.
 
-    ```{transpose: +1 -2}```
+* **Produces a PDF table of contents** which works well on tablets for navigation.
 
 
 ### Word output (.docx)
 
-* Gives you a start on creating a word document from a set of chordpro files
+* Gives you a start on creating a word document (via pandoc) from a set of chordpro files. Each song begins on a new page.
+* You can change the styles in the included ```reference.docx``` to your taste. At the moment it does not auto-scale the text to fit the page
+
+### HTML output
+
+This is still experimental, but the idea is to produce HTML that fills the screen for use on tablets, phones, etc with swipe navigatoin.
 
 ### TODO
 
@@ -59,7 +67,6 @@ When I get time I'll convert these TODOs into github milestones.
 * Make a GUI, but see the comment below about auto-creating PDF
 
 * Display chords above text.
-
 
 ## Audience
 
@@ -81,10 +88,70 @@ Requires pandoc 1.15.0.6 or later  and wkhtmltopdf installed on on your path.
 
     ```pip3 install pypandoc```
 
-```
-./chordprobook.py -h
+## The local dialect of Chordpro format
+
+Chordpro format has no formal definition, and many different
+implementations. Chordpro files are plain-text files with chords
+inline in square brackets, eg [C]. It uses formatting 'directives'.
+
+### Chords
+Chords are anything in square brackets that starts with a capital
+C..G, followed by any mixture of lower case, slashes, and numbers. Eg:
+
+```[C] [Csus4] [C/B] [Cmaj7]```
+
+Note that when transposing, any capital A...G inside a chord will get transposed so
+don't write [CAug] use [Caug].
+
+
+### Other formatting
+
+Directives are lines beginning and ending with { and }.
+
+None of the directives are case sensitive and they are all optional. Title, subtitle, key and transpose can be placed anywhere, but by convention are put at the top of the file.
+
+Formatting / Directive         |      Description  | Rendered as
+------------------------------ | ----------------- | -----------
+{Title: \<Song title>} {t: \<Song title>}  | Song title | A top-level heading
+{Subtitle: \<Artist / songwriter name>} | Subtitle, by convention this is the composer or artist | An second-level heading
+{key: \<A...G>} | The key of the song     | Will be added to the title in brackets like ```(Key of G)``` if present.
+{transpose: +1 +2 -2} | A space separted list of semitone deltas.  | When called in single-song mode the software will automatically produce extra versions transposed as per the directive. In this can if the song is in C it would be transposed to C#, D and Bb.
+{C: Some comment} {Comment: Some comment} | Notes on the song  | A third level heading
+{new+page} {np} | New page | A page break. When generating HTML and PDF the software will attempt to fill each page to the screen or paper size respectively as best it can.
+{start_of_chorus} {soc} | Start of chorus. Usually followed by some variant of {c: Chorus} | Chorus is rendendered as an indendented block. TODO: make this configurable via stylesheets. In .docx format the chorus is rendered using ```Block Text``` style.
+{start_of_bridge} {sob} | Start of bridge. Usually followed by some variant of {c: Bridge} | Same behaviour as chorus
+{eoc} {end_of_chorus} | End of chorus | Everything between the {soc} and {eoc} is in an indented block 
+{eob} {end_of_bridge} | End of bridge | Same behviour as chorus
+{sot} {start_of_tab} | Start of tab (tablature) | Rendered in a fixed width (monospace) font, as per the HTML \<pre> element. NOTE: Tabs that are acutal text-formatted representations of the fingerboard will not be transposed, although chords in square brackets will, so you can use tab-blocks to format intros or breaks where chords line up under each other 
+{eot} {end_of_tab} | End of tab | Finishes the fixed-width formatting
+{book: path_to_book} | For use in setlist files, a path to a book file relative to the setlist file or an absolute path | 
+
+
+### Book files
+A book file is a text file with a list of paths with and optional title (see [samples/sample-book.txt](samples/sample-book.txt)).
+
+To transpose the song, add a positive or negative integer at after the path, separated by a space. eg:
+```./songs/my-song.cho +2```
+
+TODO: Allow the book to have additional notes for songs and sub sections.
+
+### Setlist files
+
+The setlist consists of an optional {title: } directive, and optional {book: <path>} directive followed by a list of songs, one per line.   (see [samples/sample-book.txt](samples/setlist.txt)).
+
+If there is no {book: } directive then the setlist will be selected from the song files passed in as arguments:  see the examples below.
+
+Identify songs by entering one or more words from the title, in order. So "Amazing" will match "Amazing Grace" and "Slot Baby" would match "Slot Machine Baby".
+
+TODO: Allow the setlist to have transpositions, and to have additional notes for songs and sub sections.
+
 
 ## usage
+
+To see  usage info, type:
+```
+
+./chordprobook.py -h
 
 chordprobook.py [-h] [-a] [-k] [--a4] [-e] [-f FILE_STEM] [--html] [-w]
                        [-p] [-r REFERENCE_DOCX] [-o] [-b] [-s SETLIST]
@@ -125,7 +192,9 @@ optional arguments:
 
 ```
 
-# Examples
+
+
+## Examples
 
 Create a PDF book from all the files in a directory. 
 
@@ -163,14 +232,7 @@ Create a PDF book from all the files in a directory.
     ```./chordprobook.py -a -b samples/sample-book.txt```
     
 * To choose a subset of the songs in a book in a particular order use
-  a setlist file.  The setlist consists of an optional {title: }
-  directive, and optional {book: <path>} directive followed by a list
-  of songs, one per line. Identify songs by entering one or more words
-  from the title, in order. So "Amazing" will match "Amazing Grace"
-  and "Slot Baby" would match "Slot Machine Baby".
-
-* To choose a subset of the songs in a book in a particular order use a setlist file. 
-  The setlist consists of an optional {title: } directive, and optional {book: <path>} directive followed by a list of songs, one per line. Identify songs by entering one or more words from the title, in order. So "Amazing" will match "Amazing Grace" and "Slot Baby" would match "Slot Machine Baby".
+  a setlist file.  
 
    Use this to filter all the songs in a directory using a setlist:
 
