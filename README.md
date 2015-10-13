@@ -171,7 +171,6 @@ Create a PDF book from all the files in a directory.
 
 * To choose a subset of the songs in a book in a particular order use a setlist file. 
   The setlist consists of an optional {title: } directive, and optional {book: <path>} directive followed by a list of songs, one per line. Identify songs by entering one or more words from the title, in order. So "Amazing" will match "Amazing Grace" and "Slot Baby" would match "Slot Machine Baby".
->>>>>>> a5e4b075ffd87e5e2d172b2af9caaedeff29da88
 
    Use this to filter all the songs in a directory using a setlist:
 
@@ -179,12 +178,7 @@ Create a PDF book from all the files in a directory.
     
 *  Or use a book file:
 
-   Use this to filter all the songs in a directory using a setlist:
-
     ```./chordprobook.py -s samples/setlist.txt -b samples/sample-book.txt```
 
 
-## Auto creating PDF
 
-One mode I have used with a bandmates is to share the chordpro, book
-and setlist files with bandmates via Dropbox. 
