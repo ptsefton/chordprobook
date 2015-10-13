@@ -46,7 +46,6 @@ put it on the floor, unless you're viewing in on a tablet.
 
 * Gives you a start on creating a word document (via pandoc) from a set of chordpro files. Each song begins on a new page.
 * You can change the styles in the included ```reference.docx``` to your taste. At the moment it does not auto-scale the text to fit the page
-* 
 
 ### HTML output
 
@@ -68,7 +67,6 @@ When I get time I'll convert these TODOs into github milestones.
 * Make a GUI, but see the comment below about auto-creating PDF
 
 * Display chords above text.
-
 
 ## Audience
 
@@ -132,12 +130,20 @@ Formatting / Directive         |      Description  | Rendered as
 ### Book files
 A book file is a text file with a list of paths with and optional title (see [samples/sample-book.txt](samples/sample-book.txt)).
 
+To transpose the song, add a positive or negative integer at after the path, separated by a space. eg:
+```./songs/my-song.cho +2```
+
+TODO: Allow the book to have additional notes for songs and sub sections.
+
 ### Setlist files
 
-The setlist consists of an optional {title: } directive, and optional {book: <path>} directive followed by a list of songs, one per line. IF there is no {book: } directive then the setlist will be selected from the song files passed in as arguments:  see the examples below.
+The setlist consists of an optional {title: } directive, and optional {book: <path>} directive followed by a list of songs, one per line.   (see [samples/sample-book.txt](samples/setlist.txt)).
+
+If there is no {book: } directive then the setlist will be selected from the song files passed in as arguments:  see the examples below.
 
 Identify songs by entering one or more words from the title, in order. So "Amazing" will match "Amazing Grace" and "Slot Baby" would match "Slot Machine Baby".
 
+TODO: Allow the setlist to have transpositions, and to have additional notes for songs and sub sections.
 
 
 ## usage
