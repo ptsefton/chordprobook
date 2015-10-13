@@ -2,10 +2,11 @@
 
 ## What does this do?
 
-This is a Python 3 script to convert collections  of
-[chordpro](http://blossomassociates.net/Music/chopro.html)
-formatted song charts to PDF,
-HTML, and word processing doc formats. You can convert a direcotry full of files to a single book, or a set of song-sheets. 
+This is a Python 3 script to convert collections of
+[chordpro](http://blossomassociates.net/Music/chopro.html) formatted
+song charts to PDF, HTML, and word processing doc formats. You can
+convert a direcotry full of files to a single book, or a set of
+song-sheets.
 
 ## Audience
 
@@ -76,7 +77,8 @@ optional arguments:
 
 Create a PDF book from all the files in a directory. 
 
-* To make a PDF book (defaults to songbook.pdf) from a set of chordpro files:
+* To make a PDF book (defaults to songbook.pdf) from a set of chordpro
+  files:
 
    ```./chordprobook samples/*.cho```
 
@@ -92,11 +94,15 @@ Create a PDF book from all the files in a directory.
 
     ```./chordprobook -a --file-stem=my_book --title="My book"  samples/*.cho```
 
-*  To build a book from a list of files use a book file and the -b flag. This will preserve the order you entered the songs except that it will make sure that two-page songs appear on facing pages.
+* To build a book from a list of files use a book file and the -b
+   flag. This will preserve the order you entered the songs except
+   that it will make sure that two-page songs appear on facing pages.
   
     ```./chordprobook.py -b samples/sample-book.txt```
 
-* To make sure the order of songs is preserved exactly, for example to use as a setlist, use -k or --keep-order. This will insert blank pages if necessary.
+* To make sure the order of songs is preserved exactly, for example to
+  use as a setlist, use -k or --keep-order. This will insert blank
+  pages if necessary.
 
     ```./chordprobook.py -k -b samples/sample-book.txt```
 
@@ -104,8 +110,12 @@ Create a PDF book from all the files in a directory.
 
     ```./chordprobook.py -a -b samples/sample-book.txt```
     
-* To choose a subset of the songs in a book in a particular order use a setlist file. 
-  The setlist consists of an optional {title: } directive, and optional {book: <path>} directive followed by a list of songs, one per line. Identify songs by entering one or more words from the title, in order. So "Amazing" will match "Amazin Grace" and "Slot Baby" would match "Slot Machine Baby".
+* To choose a subset of the songs in a book in a particular order use
+  a setlist file.  The setlist consists of an optional {title: }
+  directive, and optional {book: <path>} directive followed by a list
+  of songs, one per line. Identify songs by entering one or more words
+  from the title, in order. So "Amazing" will match "Amazing Grace"
+  and "Slot Baby" would match "Slot Machine Baby".
 
    Use this to filter all the songs in a directory using a setlist:
 

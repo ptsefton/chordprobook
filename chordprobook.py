@@ -39,6 +39,16 @@ def extract_title(text, title = None):
         text = re.sub(title_re, "", text)
     return text, title
 
+def extract_book_filename(text, book = None):
+    """Find a custom chordpro directive {book: }"""
+    book_re = re.compile("{(book:) *(.*?)}", re.IGNORECASE)
+    book_search = re.search(book_re, text)
+    book_filename = None
+    if book_search != None:
+        book_filename = book_search.group(2)
+        text = re.sub(book_re, "", text)
+    return text, book_filename
+
 class cp_song:
     def __init__(self, song, title="Song", transpose=0, blank = False, path = None):
         self.blank = blank
@@ -56,9 +66,9 @@ class cp_song:
         self.__find_key()
         self.__find_transpositions()
         self.__format_tab()
+        self.__format_chorus()
         self.format()    
         
-        self.__format_chorus()
 
     def __find_title(self):
         self.text, self.title = extract_title(self.text, title=self.title)
@@ -192,10 +202,10 @@ class cp_song_book:
         for potential_song in setlist.split("\n"):
             if potential_song.strip() != "" and not potential_song.startswith("#"):
                 restring = potential_song.replace(" ", ".*?").lower()
-                regex = re.compile(restring, re.IGNORECASE)
+                regex = re.compile(restring)
                 found_song = False
                 for song in self.songs:
-                    if re.search(regex, song.title.lower()):
+                    if re.search(regex, song.title.lower()) != None:
                         new_order.append(song)
                         found_song = True
                 if not found_song:
@@ -203,12 +213,14 @@ class cp_song_book:
         self.songs = new_order
         
     def reorder(self, start_page, old = None, new_order=[], waiting = []):
+        """Reorder songs in the book so two-page songs start on an even page
+           Unless this is a set-list in which case insert blanks. Recursive."""
+        
         def make_blank():
             new_order.append(cp_song("{title:This page intentionally left blank}", blank=True))
         if old == None:
             old = self.songs
-        """Reorder songs in the book so two-page songs start on an even page)
-           Unless this is a set-list in which case insert blanks"""
+
         if old == []:            
             if start_page % 2 == 1 and waiting != []:
                 make_blank()
@@ -222,7 +234,7 @@ class cp_song_book:
                 start_page += s.pages
             waiting = []
             
-            #Also OK to start any song here so append head of list
+            #Also OK to start any other song here so append head of list
             new_order.append(old[0])
             start_page += old[0].pages
         elif old[0].pages % 2 == 0:
@@ -365,13 +377,7 @@ p {
 </div>
 </div>
 
-<div class='song'>
-<div class='page'>
-<div>
 
-</div>
-</div>
-</div>
 
 <div class='song'>
 <div class='page'>
@@ -462,15 +468,15 @@ def convert():
     parser.add_argument('files', type=argparse.FileType('r'), nargs="*", default=None, help='List of files')
     parser.add_argument('-a', '--alphabetically', action='store_true', help='Sort songs alphabetically')
     parser.add_argument('-k',
-                        '--keep_order',
+                        '--keep-order',
                         action='store_true',
                         help='Preserve song order for playing as a setlist (inserts blank pages to keep multi page songs on facing pages')
-    parser.add_argument('--a4', action='store_true', help='Format for printing (web page output)')
+    parser.add_argument('--a4', action='store_true', default=True, help='Format for printing (web page output)')
     parser.add_argument('-e', '--epub', action='store_true', help='Output epub book')
     parser.add_argument('-f', '--file-stem', default=default_output_file, help='Base file name, without extension, for output files')
     parser.add_argument( '--html', action='store_true', default=True, help='Output HTML book, defaults to screen-formatting use --a4 option for printing (PDF generation not working unless you chose --a4 for now')
     parser.add_argument('-w', '--word', action='store_true', help='Output .docx format')
-    parser.add_argument('-p', '--pdf', action='store_true', help='Output pdf')
+    parser.add_argument('-p', '--pdf', action='store_true', help='Output pdf', default=True)
     parser.add_argument('-r', '--reference-docx', default = None, help="Reference docx file to use (eg with Heading 1 having a page-break before)")
     parser.add_argument('-o','--one-doc', action='store_true', help='Output a single document per song: assumes you want A4 PDF')
     parser.add_argument('-b',
@@ -495,6 +501,21 @@ def convert():
     os.makedirs(out_dir, exist_ok=True)
     songs = []
     output_file =  args["file_stem"]
+
+    #Is there a setlist file?
+    
+    if args["setlist"] == None:
+        list = None
+    else:
+       list = open(args["setlist"]).read()
+       list, bookfile = extract_book_filename(list)
+       if bookfile != None and not args["book_file"]:
+           #No book file passed so use the one we found in the setlist
+           args["files"] = [open(bookfile,'r')]
+           args["book_file"] = True
+           
+       
+    
     if args["files"] != None:
        if args["book_file"]:
             book_file = args["files"][0]
@@ -506,6 +527,7 @@ def convert():
             text = book_file.read()
             text, args["title"] = extract_title(text, args["title"] )
             for line in text.split("\n"):
+                # Do we need to transpose this one?
                 trans = re.search("((\+|-)?\d+)$", line)
                 t = 0
                 if trans != None:
@@ -528,7 +550,6 @@ def convert():
     # If there's a setlist file use it
     if args["setlist"] != None:
        #Let the setlist override titles set elsewere
-       list = open(args["setlist"]).read()
        list, args["title"] = extract_title(list, args["title"] )
        book.order_by_setlist(list)
        if args["book_file"] or args["file_stem"] == default_output_file:
@@ -538,12 +559,6 @@ def convert():
 
     if args["alphabetically"]:
         songs.sort(key= lambda song: re.sub("(?i)^(the|a|\(.*?\)) ", "", song.title.lower()))
-
-   
-   
-  
-    
-
         
     title = args['title']
     if  args['epub']:
@@ -585,7 +600,7 @@ def convert():
         html_path = output_file + ".html"
         contents = "# Contents\n<table width='100%'>\n"
         #TODO Depends on template so should be passed as an option
-        start_page = 4
+        start_page = 3
         book.reorder(start_page) 
         all_songs = ""
         page_count = start_page
