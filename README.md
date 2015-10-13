@@ -12,21 +12,59 @@ song-sheets.
 
 NOTE: Unlike most chordpro software this does not display chords above the text (not yet anyway). Displaying chords inline is more compact and it's good enough for Rob Weule and his [Ukulele Club Songbook](http://katoombamusic.com.au/product/ukulele-club-songbook/) and for [Richard G](http://www.scorpexuke.com/ukulele-songs.html) it's good enough for me.
 
-## TODO
+## Features
+
+* Generate books from files passed on the command line
+
+* Generate books from a book file which is a list of files
+
+* Reorder songs using a setlist file using either of the above ways of
+selecting files
+
+*  Transpose songs
+
+
+So, if you play with a group you can maintain a songbook for the
+group, then create subsets of that book jsut by typing the titles
+
+### PDF
+
+* Scales songs to fit the page as best it can (good for ageing eyes
+   and working in the dark)
+
+* Generate individual song-sheets including multiple keys eg 
+  add this directive to produce two more versions of a song transposed
+  up one semitone and down two semitones.
+
+    ```{transpose: +1 -2}```
+
+
+### Word output (.docx)
+
+* Gives you a start on creating a word document from a set of chordpro files
+
+### TODO
 
 When I get time I'll convert these TODOs into github milestones.
 
-* Chord charts for various intruments
-* Better doco
-* Maybe a GUI? Probably not
-* Display chords above text? Probably not
+* Chord charts for various instruments
+
+* Generate error reports as text files when things fail
+
+* Allow comment/notes  in setlists
+
+* Better doco including in the code
+
+### Probably won't do
+* Make a GUI, but see the comment below about auto-creating PDF
+
+* Display chords above text.
 
 
 ## Audience
 
 This is for people running a unix-like operating system who know how
 to install packaged software scripts and python modules.
-
 
 Status: Alpha / mostly works for me  on OS X 10.10.5.
 
@@ -144,3 +182,9 @@ Create a PDF book from all the files in a directory.
    Use this to filter all the songs in a directory using a setlist:
 
     ```./chordprobook.py -s samples/setlist.txt -b samples/sample-book.txt```
+
+
+## Auto creating PDF
+
+One mode I have used with a bandmates is to share the chordpro, book
+and setlist files with bandmates via Dropbox. 
