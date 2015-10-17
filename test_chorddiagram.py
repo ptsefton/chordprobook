@@ -96,14 +96,59 @@ class TestChorddiagram(unittest.TestCase):
         aaugchord = "{define: Aaug frets 2 1 1 4 fingers 2 1 1 4 add: string 1 fret 1 finger 1 add: string 4 fret 1 finger 1}"
         d = cd.ChordDiagram()
         d.parse_definition(aaugchord)
-        d.show()
+        d.draw()
         self.assertEqual(d.num_strings, 4)
-        # Chord starting on a higher fret
-
-
+        print(d.to_data_URI())
+         
         # Chord with non-played strings
-
+        dchord = "{define: D x 0 0 2 3 2}"
+        d = cd.ChordDiagram()
+        d.parse_definition(dchord)
+        d.draw()
+        self.assertEqual(d.num_strings, 6)
+        self.assertEqual(d.strings[0].dots[0].fret, None)
+        self.assertEqual(d.strings[1].dots[0].fret, 0)
+        self.assertEqual(d.strings[2].dots[0].fret, 0)
+        self.assertEqual(d.strings[3].dots[0].fret, 2)
+        self.assertEqual(d.strings[4].dots[0].fret, 3)
+        self.assertEqual(d.strings[5].dots[0].fret, 2)
+        print(d.to_data_URI())
       
+        # Chord starting on a higher fret
+        e5chord = "{define: E5 base-fret 7 frets 0 1 3 3 x x}"
+        d = cd.ChordDiagram()
+        d.parse_definition(e5chord)
+        d.show()
+        self.assertEqual(d.num_strings, 6)
+        self.assertEqual(d.strings[0].dots[0].fret, 0)
+        self.assertEqual(d.strings[1].dots[0].fret, 1)
+        self.assertEqual(d.strings[2].dots[0].fret, 3)
+        self.assertEqual(d.strings[3].dots[0].fret, 3)
+        self.assertEqual(d.strings[4].dots[0].fret, None)
+        self.assertEqual(d.strings[5].dots[0].fret, None)
+        #print(d.to_data_URI())
+       
 
+        # Same E5 chord starting on a higher fret
+        e5chord = "{define: E5 frets 0 8 10 10 x x}"
+        d = cd.ChordDiagram()
+        d.parse_definition(e5chord)
+        d.draw()
+        self.assertEqual(d.num_strings, 6)
+        self.assertEqual(d.strings[0].dots[0].fret, 0)
+        self.assertEqual(d.strings[1].dots[0].fret, 1)
+        self.assertEqual(d.strings[2].dots[0].fret, 3)
+        self.assertEqual(d.strings[3].dots[0].fret, 3)
+        self.assertEqual(d.strings[4].dots[0].fret, None)
+        self.assertEqual(d.strings[5].dots[0].fret, None)
+       
+
+        # Stupid chord requiring 7 fingers and 7 strings
+        stupid = "{define: F#stupid base-fret 22 frets 1 2 3 x 4 5 6 7}"
+        d = cd.ChordDiagram()
+        d.parse_definition(stupid)
+        d.show()
+        print(d.to_data_URI())
+        
 if __name__ == '__main__':
     unittest.main()
