@@ -1,6 +1,10 @@
-ukeGeeks.definitions.sopranoUkuleleGcea = [
-	// Required: Instruement Name and Tuning (string names)
-	// -------------------------------------------------------
+# From https://github.com/buzcarter/UkeGeeks/blob/7bca97b47dd149fab892f8b81c29c3fa782eec09/src/js/scriptasaurus/ukeGeeks.definitions.sopranoUkuleleGcea.js
+# This library is licensed under GNU General Public License.
+# http://www.gnu.org/licenses/gpl.html
+# Use it, change it, fork it, but please leave the author attribution.
+
+# Extracted from Buz Carter's Javascript code into a plain-text file
+
 {instrument: Soprano Ukulele}
 {tuning: G C E A}
 
