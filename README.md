@@ -24,6 +24,9 @@ good enough for me.
 * Reorder songs using a setlist file using either of the above ways of
 selecting files
 
+* Show chord grids at the top of the page (for soprano uke and guitar
+  tunings so far, more coming if I can find data for other instruments).
+
 *  Transpose songs
 
 If you play with a group you can maintain a songbook for the
@@ -54,8 +57,6 @@ This is still experimental, but the idea is to produce HTML that fills the scree
 ### TODO
 
 When I get time I'll convert these TODOs into github milestones.
-
-* Chord charts for various instruments
 
 * Generate error reports as text files when things fail
 
@@ -151,11 +152,10 @@ TODO: Allow the setlist to have transpositions, and to have additional notes for
 To see  usage info, type:
 ```
 
-./chordprobook.py -h
-
-chordprobook.py [-h] [-a] [-k] [--a4] [-e] [-f FILE_STEM] [--html] [-w]
-                       [-p] [-r REFERENCE_DOCX] [-o] [-b] [-s SETLIST]
-                       [--title TITLE]
+./chordprobook.py --help
+usage: chordprobook.py [-h] [-a] [-g GRIDS] [-k] [--a4] [-e] [-f FILE_STEM]
+                       [--html] [-w] [-p] [-r REFERENCE_DOCX] [-o] [-b]
+                       [-s SETLIST] [--title TITLE]
                        [files [files ...]]
 
 positional arguments:
@@ -164,7 +164,10 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -a, --alphabetically  Sort songs alphabetically
-  -k, --keep_order      Preserve song order for playing as a setlist (inserts
+  -g GRIDS, --grids GRIDS
+                        Show chord grids for the given tuning, supported
+                        tunings so far are GCEA for uke or EADGBE for guitar
+  -k, --keep-order      Preserve song order for playing as a setlist (inserts
                         blank pages to keep multi page songs on facing pages
   --a4                  Format for printing (web page output)
   -e, --epub            Output epub book
@@ -182,14 +185,15 @@ optional arguments:
                         PDF
   -b, --book-file       First file contains a list of files, each line
                         optionally followed by a transposition (+|-)\d\d? eg
-                        to transpose up one tone: song-file.cho +2
+                        to transpose up one tone: song-file.cho +2, you can
+                        also add a title line: {title: Title of book}
   -s SETLIST, --setlist SETLIST
                         Use a setlist file to filter the book, one song per
                         line and keep facing pages together. Setlist lines can
-                        be one or more words from the song title
-  --title TITLE         Title to use for the book
-
-
+                        be one or more words from the song title , you can
+                        also add a setlist line: {title: Title of setlist}
+  --title TITLE         Title to use for the book, if there is no title in a
+                        book file or setlist file
 ```
 
 
@@ -205,7 +209,7 @@ Create a PDF book from all the files in a directory.
 
     Which is equivalent to:
 
-    ```./chordprobook --pdf --a4  --title="My book" samples/*.cho```
+    ```./chordprobook --pdf --a4  samples/*.cho```
 
 *  To add a file name and a title to the book.
  
@@ -214,6 +218,12 @@ Create a PDF book from all the files in a directory.
 *  If you'd like it sorted alphabetically by title:
 
     ```./chordprobook -a --file-stem=my_book --title="My book"  samples/*.cho```
+
+* To add chord grids for soprano ukulele:
+	```./chordprobook -a --file-stem=my_book --title="My book" --grids GCEA samples/*.cho```
+
+* To add chord grids for soprano ukulele:
+	```./chordprobook -a --file-stem=my_book --title="My book" --grids EADGBE samples/*.cho```
 
 * To build a book from a list of files use a book file and the -b
    flag. This will preserve the order you entered the songs except

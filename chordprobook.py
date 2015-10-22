@@ -6,6 +6,7 @@ import os
 import subprocess
 import pypandoc
 import tempfile
+from chorddiagram import ChordChart
 
 class transposer:
    
@@ -32,7 +33,7 @@ class transposer:
     
 def extract_title(text, title = None):
     """Find a chordpro title and get rid of it out of a string"""
-    title_re = re.compile("{(ti:|title:) *(.*?)}", re.IGNORECASE)
+    title_re = re.compile("{(ti:|title:|t:) *(.*?)}", re.IGNORECASE)
     title_search = re.search(title_re, text)
     if title_search != None:
         title = title_search.group(2)
@@ -50,14 +51,16 @@ def extract_book_filename(text, book = None):
     return text, book_filename
 
 class cp_song:
-    def __init__(self, song, title="Song", transpose=0, blank = False, path = None):
+    def __init__(self, song, title="Song", transpose=0, blank = False, path = None, grids = None):
         self.blank = blank
+        self.grids = grids
         self.text = song
         self.key = None
         self.pages = 1
         self.original_key = None
         self.title = title
         self.path = path
+        self.chords_used = []
         self.transpose = transpose
         self.transposer = transposer(transpose)
         self.__find_title()
@@ -134,7 +137,14 @@ class cp_song:
             self.transposer = transposer(transpose)
             
         def format_chord(chord):
-            return ("%s" % (self.transposer.transpose_chord(chord)))
+            if self.transposer.offset != 0:
+                chord = self.transposer.transpose_chord(chord)
+            chord_normal = self.grids.normalise_chord_name(chord)
+            if not chord_normal in self.chords_used:
+                self.chords_used.append(chord_normal)
+        
+            return("[%s]" % chord)
+                
         song =  self.text
         #Add four spaces to mid-stanza line ends to force Markdown to add breaks
         song = re.sub("(.)\n(.)", "\\1    \\n\\2", song)
@@ -150,12 +160,17 @@ class cp_song:
         song = re.sub("{(c:|comment:) *(.*)}","**\\2**", song)
 
         #Chords
-        if self.transposer.offset != 0:
-            song = re.sub("\[(.*?)\]",lambda m: format_chord(m.group()),song)
+        song = re.sub("\[(.*?)\]",lambda m: format_chord(m.group(1)),song)
             
         key_string = self.get_key_string()
         title = "%s %s" % (self.title, key_string)
-        song = "<div>\n# %s\n%s\n</div>" % (title, song)
+        grid_md = "<div class='grids'>"
+        if self.grids != None:
+            for chord_name in self.chords_used:
+                grid_md += self.grids.grid_as_md(chord_name)
+        grid_md += "</div>"   
+      
+        song = "# %s\n%s\n<div class='song-page'><div class='song-text'>\n%s\n\n</div></div>" % (title, grid_md, song)
        
         song, pages = re.subn("{(new_page|np)}", "<!-- new_page -->", song)
         if pages > 0:
@@ -173,8 +188,9 @@ class cp_song:
 
 </div>
 </div>
+</div>
         """ % self.md
-        song = song.replace("<!-- new_page -->", "\n</div></div><div class='page'><div>")
+        song = song.replace("<!-- new_page -->", "\n</div></div></div><div class='page'><div class='song-page'><div class='song-text'>")
         return pypandoc.convert(song, 'html', format='md')
 
     def to_stand_alone_html(self):
@@ -254,31 +270,48 @@ class html_book:
     
     def format(html, contents = "",  title="Untitled", for_print=True, stand_alone=False):
         script = """
-$(function() {
+function fill_page() {
 
 $("div.page").each(function() {
- var div = $(this).children("div");
+ var page = $(this);
+ var page_height = page.height();
+ var song_page = page.children("div.song-page");
+ var text = song_page.children("div.song-text");
+ var text_height = text.height();
+ var grids_height = page.children("div.grids").height();
+ var heading_height = page.children("h1").height();
+ var chord_grids = page.children("div.grids").children("img").length;
+ //grids_height = 200;
+ var height_remaining = page_height - grids_height - heading_height;
+
  var i = 0;
- console.log("Looping");
- if (div.length > 0)
+ console.log("GRIDS", grids_height);
+ if (text.length > 0)
  {
+  
+    song_page.height( height_remaining);
    // Make text bigger until it is too big
-   while( $(this).height() * %(cols)s > div.height()) {
-    div.css('font-size', (parseInt(div.css('font-size')) + 1) +"px" );
+   while( height_remaining * %(cols)s > text.height()) {
+    text.css('font-size', (parseInt(text.css('font-size')) + 1) +"px" );
     i++;
+  
     if (i > 50) {break}
     }
-   // Make text small until it is just right
-   while( $(this).height() * %(cols)s < div.height() ) {
-    div.css('font-size', (parseInt(div.css('font-size')) - 1) +"px" );
-      i++;
-    if (i > 100) {break}
-    }
-    console.log($(this).find("h1").html(), $(this).width(), div.width(), div.css('font-size') );
+   // Make text smaller until it is just right
+   while( height_remaining * %(cols)s  < text.height()) {
     
+     text.css('font-size', (parseInt(text.css('font-size')) - 1) +"px" );
+      i++;
+
+       if (i > 100) {break}
+    }
+    console.log(page.find("h1").html(), "PAGE HEIGHT TO MATCH", height_remaining, "CONTENTS HEIGHT", text.height(), "FONT SIZE", text.css('font-size') );
   }
 });
 
+};
+$(function() {
+  fill_page()
 });
 
 """
@@ -302,7 +335,9 @@ $("div.page").each(function() {
     overflow: hidden;
     -webkit-column-count: 2;
     border-bottom: thick dotted #ff0000;
-  
+    page-break-inside: avoid;
+    position: relative;
+    
 }
 
 .page p {
@@ -371,23 +406,22 @@ p {
         frontmatter = """
 <div class='song'>
 <div class='page'>
-<div>
+
 <h1>%s</h1>
 </div>
 </div>
-</div>
-
-
-
 <div class='song'>
 <div class='page'>
-<div>
+<div class='song-page'>
+<div class='song-text'>
 %s
+</div>
 </div>
 </div>
 </div>
 
         """
+
 
         print_template = """
 <html>
@@ -397,7 +431,6 @@ p {
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 <script>
 %s
-
 </script>
 
 <style>
@@ -408,16 +441,36 @@ padding: .2cm;
 margin: .2cm;
 border-style: solid;
 border-width: 1px;
-overflow: hidden;
 border-color: #FFFFFF;
+page-break-inside: avoid;
+position: relative;
+}
+div.grids img {
 
 }
-h1 {
-   padding: 0px 0px 0px 0px;
+div.song-page {
+padding: 0cm;
+margin: 0cm;
+border-style: solid;
+border-width: 1px;
+overflow: hidden;
+border-color: #FFFFF;
+page-break-inside: avoid;
+font-size: 2px;
+}
+
+
+img {
+     padding: 0px 0px 0px 0px;
      margin: 0px 0px 0px 0px;
      -webkit-margin-before: 0px;
      -webkit-margin-after: 0px;
-
+}
+h1 {
+     padding: 0px 0px 0px 0px;
+     margin: 0px 0px 0px 0px;
+     -webkit-margin-before: 0px;
+     -webkit-margin-after: 0px;
 }
 div {
 
@@ -428,6 +481,9 @@ div {
 @media print  
 {
     div.page{
+        page-break-inside: avoid;
+    }
+    div.song-page{
         page-break-inside: avoid;
     }
 }
@@ -467,6 +523,7 @@ def convert():
     parser = argparse.ArgumentParser()
     parser.add_argument('files', type=argparse.FileType('r'), nargs="*", default=None, help='List of files')
     parser.add_argument('-a', '--alphabetically', action='store_true', help='Sort songs alphabetically')
+    parser.add_argument('-g', '--grids', default=None, help='Show chord grids for the given tuning, supported tunings so far are GCEA for uke or EADGBE for guitar')
     parser.add_argument('-k',
                         '--keep-order',
                         action='store_true',
@@ -502,12 +559,20 @@ def convert():
     songs = []
     output_file =  args["file_stem"]
 
+    # Do we want chord grids?
+    if args["grids"] != None:
+        #TODO - relative to this file!
+        chart = ChordChart()
+        chart.load_tuning(args['grids'])
+    else:
+        chart = None
     #Is there a setlist file?
-    
     if args["setlist"] == None:
         list = None
     else:
        list = open(args["setlist"]).read()
+       #TODO: annotations such as who is leading this song
+       #TODO: Transpose
        list, bookfile = extract_book_filename(list)
        if bookfile != None and not args["book_file"]:
            #No book file passed so use the one we found in the setlist
@@ -537,12 +602,12 @@ def convert():
                 line = line.strip()
                 if line != "":
                     song_path = os.path.join(book_dir, line.strip())
-                    songs.append(cp_song(open(song_path).read(), transpose=t, path=song_path))
+                    songs.append(cp_song(open(song_path).read(), transpose=t, path=song_path, grids = chart))
        else:
            for f in args['files']:
-                songs.append(cp_song(f.read(), path=f.name))
+                songs.append(cp_song(f.read(), path=f.name, grids=chart))
     else:
-        print("You need to pass one or more files to process")
+        print("ERROR: You need to pass one or more files to process")
   
     # Make all the input files into a book object
     book = cp_song_book(songs, keep_order = args['keep_order'], title=args["title"])
@@ -576,7 +641,7 @@ def convert():
         #subprocess.call(["open", word_path])
         
    
-    #PDF is generated from HTML BTW
+    #PDF is generated from HTML, BTW
     if args['one_doc']: #Assume standalone PDF
       for song in book.songs:
         if song.path != None:
@@ -598,7 +663,7 @@ def convert():
         
     elif args['html'] or args['pdf']:
         html_path = output_file + ".html"
-        contents = "# Contents\n<table width='100%'>\n"
+        contents = "# Contents\n\n"
         #TODO Depends on template so should be passed as an option
         start_page = 3
         book.reorder(start_page) 
@@ -609,7 +674,7 @@ def convert():
         #TODO - Move this to book class
         for song  in book.songs:
             if not song.blank:
-                contents += "<tr><td>%s</td><td>%s</td></tr>" % (song.title, str(page_count)) 
+                contents += "<p>%s <span style='float:right'>%s</span></p>" % (song.title, str(page_count)) 
                 song.format()
             page_count += song.pages
             all_songs += song.to_html()
@@ -624,7 +689,7 @@ def convert():
 
         if args['pdf']:
             pdf_path = output_file + ".pdf"
-            print(pdf_path)
+            print("Outputting PDF:", pdf_path)
             command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', '--outline', '--outline-depth', '1', '--default-header', html_path, pdf_path]
             subprocess.call(command)
             #subprocess.call(["open", pdf_path])

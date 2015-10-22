@@ -47,7 +47,7 @@ class TestChorddiagram(unittest.TestCase):
     for s in d.strings:
       self.assertTrue(s.string_x > string_x)
       string_x = s.string_x
-      self.assertTrue(string_x < cd.ChordDiagram.box_width)
+      self.assertTrue(string_x < d.box_width)
 
   def test_parse(self):
         #Simple chord
@@ -118,7 +118,7 @@ class TestChorddiagram(unittest.TestCase):
         e5chord = "{define: E5 base-fret 7 frets 0 1 3 3 x x}"
         d = cd.ChordDiagram()
         d.parse_definition(e5chord)
-        d.show()
+        d.draw()
         self.assertEqual(d.num_strings, 6)
         self.assertEqual(d.strings[0].dots[0].fret, 0)
         self.assertEqual(d.strings[1].dots[0].fret, 1)
@@ -126,7 +126,6 @@ class TestChorddiagram(unittest.TestCase):
         self.assertEqual(d.strings[3].dots[0].fret, 3)
         self.assertEqual(d.strings[4].dots[0].fret, None)
         self.assertEqual(d.strings[5].dots[0].fret, None)
-        #print(d.to_data_URI())
        
 
         # Same E5 chord starting on a higher fret
@@ -143,12 +142,19 @@ class TestChorddiagram(unittest.TestCase):
         self.assertEqual(d.strings[5].dots[0].fret, None)
        
 
-        # Stupid chord requiring 7 fingers and 7 strings
-        stupid = "{define: F#stupid base-fret 22 frets 1 2 3 x 4 5 6 7}"
+        # Stupid chord requiring 7 fingers and 8 strings
+        stupid = "{define: F#stupid base-fret 22 frets 1 2 3 x 4 5 6 7 8 9 10 11 fingers 11 10 9 8 0 7 6 5 4 3 2 1}"
         d = cd.ChordDiagram()
         d.parse_definition(stupid)
-        d.show()
-        print(d.to_data_URI())
+        d.draw()
+       
+
+  def test_grid(self):
+        f = open("soprano_uke_chords.cho")
+        chart = cd.ChordChart(f)
+        self.assertEqual(chart.grid_as_md("F#7"), chart.grid_as_md("F#7!"))
+        self.assertEqual(chart.grid_as_md("F#7///"), chart.grid_as_md("F#7"))
+        self.assertEqual(chart.normalise_chord_name("Fadd9"), "F9")
         
 if __name__ == '__main__':
     unittest.main()
