@@ -1,7 +1,17 @@
 {Title: Gig number 1,000}
 
-Baby
+# Set 1
 
-Uni
+## Baby
+> Play with a lively feel, start with a manic synth solo!
+>> Not that lively!
 
-Amazing
+## Uni
+
+## Amazing
+Make it amazing!
+
+# Set 2
+
+## Baby {transpose: -2}
+Play slow this time.

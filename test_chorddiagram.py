@@ -1,17 +1,28 @@
 #!usr/bin/env python3
 import unittest
 import chorddiagram as cd
-from chorddiagram import String, Dot
+from chorddiagram import String, Dot, Instruments
 
+class TestIntruments(unittest.TestCase):
+  """
+  Check that we can recognize tunings from instrument names
+  """
+  def test_instruments(self):
+    instruments = Instruments()
+    ukes = instruments.get_instruments_by_tuning("GCEA")
+    self.assertEqual(len(ukes), 2)
+    instruments.describe()
+    self.assertEqual(instruments.get_tuning_by_name("Uke"), "GCEA")
 
 class TestChorddiagram(unittest.TestCase):
 
+  
   def test_init(self):
     """
     Struggling to write good tests here 
 
     """
-    d = cd.ChordDiagram()
+    d = cd.ChordDiagram( name="D", strings=[String([Dot(2,1)]),String([Dot(2,1)]),String([Dot(2,1)]),String([Dot(5, 3),Dot(2,1)])])
     #d.show()
 
 
@@ -29,7 +40,7 @@ class TestChorddiagram(unittest.TestCase):
 
    
       
-    d= cd.ChordDiagram( name="D", strings=[String([Dot(2,1)]),String([Dot(2,1)]),String([Dot(2,1)]),String([Dot(5, 3),Dot(2,1)])])
+   
     #d.show()
 
     
@@ -39,8 +50,6 @@ class TestChorddiagram(unittest.TestCase):
     #Guitar G chord
     d= cd.ChordDiagram( name="G", strings=[String([Dot(3,2)]),String([Dot(2,1)]),String([Dot(0)]),String([Dot(0)]),String([Dot(0)]), String([Dot(3,3)])])
     #Check strings are not on top of each other
-   
-    
     d.draw()
     self.assertEqual(d.num_strings, 6)
     string_x = 0
@@ -98,8 +107,9 @@ class TestChorddiagram(unittest.TestCase):
         d.parse_definition(aaugchord)
         d.draw()
         self.assertEqual(d.num_strings, 4)
-        print(d.to_data_URI())
-         
+        print(d.to_md())
+        # TODO - check serialisation of this chord with fingers and all
+        
         # Chord with non-played strings
         dchord = "{define: D x 0 0 2 3 2}"
         d = cd.ChordDiagram()
@@ -112,7 +122,6 @@ class TestChorddiagram(unittest.TestCase):
         self.assertEqual(d.strings[3].dots[0].fret, 2)
         self.assertEqual(d.strings[4].dots[0].fret, 3)
         self.assertEqual(d.strings[5].dots[0].fret, 2)
-        print(d.to_data_URI())
       
         # Chord starting on a higher fret
         e5chord = "{define: E5 base-fret 7 frets 0 1 3 3 x x}"
@@ -140,19 +149,36 @@ class TestChorddiagram(unittest.TestCase):
         self.assertEqual(d.strings[3].dots[0].fret, 3)
         self.assertEqual(d.strings[4].dots[0].fret, None)
         self.assertEqual(d.strings[5].dots[0].fret, None)
+        self.assertEqual(d.open_strings, 1)
+        self.assertEqual(d.non_played_strings, 2)
+        self.assertEqual(d.to_chordpro(), "{define: E5 base-fret 7 frets 0 1 3 3 x x}")
+        
+
+        
+        dchord = "{define: D base-fret 1 frets  1 1 1 4}"
+        d = cd.ChordDiagram()
+        d.parse_definition(dchord)
+        d.draw()
+        self.assertEqual(d.num_strings, 4)
+        self.assertEqual(d.strings[0].dots[0].fret, 2)
+        self.assertEqual(d.strings[1].dots[0].fret, 2)
+        self.assertEqual(d.strings[2].dots[0].fret, 2)
+        self.assertEqual(d.strings[3].dots[0].fret, 5)
        
 
         # Stupid chord requiring 7 fingers and 8 strings
         stupid = "{define: F#stupid base-fret 22 frets 1 2 3 x 4 5 6 7 8 9 10 11 fingers 11 10 9 8 0 7 6 5 4 3 2 1}"
         d = cd.ChordDiagram()
-        d.parse_definition(stupid)
+        d.parse_definition(stupid)        
         d.draw()
-       
+        self.assertEqual(d.non_played_strings, 1)
+        print(d.to_md())
 
   def test_grid(self):
-        f = open("soprano_uke_chords.cho")
-        chart = cd.ChordChart(f)
+        chart = cd.ChordChart()
+        chart.load_tuning_by_name("Soprano Uke")
         self.assertEqual(chart.grid_as_md("F#7"), chart.grid_as_md("F#7!"))
+        chart.get_default("F#7").show()
         self.assertEqual(chart.grid_as_md("F#7///"), chart.grid_as_md("F#7"))
         self.assertEqual(chart.normalise_chord_name("Fadd9"), "F9")
         

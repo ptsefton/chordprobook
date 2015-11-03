@@ -24,8 +24,8 @@ good enough for me.
 * Reorder songs using a setlist file using either of the above ways of
 selecting files
 
-* Show chord grids at the top of the page (for soprano uke and guitar
-  tunings so far, more coming if I can find data for other instruments).
+* Show chord grids at the top of the page for a range of instruments
+  (I could use some help getting better chord definitions)
 
 *  Transpose songs
 

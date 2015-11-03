@@ -3,17 +3,125 @@ import re
 from io import BytesIO
 import base64
 import os.path
+import yaml
 
+class Instruments:
+    """Set of instruments we know about, read in from a data file so we can get more"""
+    
+    def __init__(self):
+        path, file = os.path.split(os.path.realpath(__file__))
+        f = open(os.path.join(path,"instruments.yaml"))
+        instrument_data = yaml.load(f)
+        self.tuning_lookup = {}
+        self.name_lookup = {}
+        self.instruments = []
+        for i in instrument_data:
+            inst = Instrument(i)
+            self.add_instrument(inst)
+        
+        
+    def add_instrument(self, inst):
+        self.instruments.append(inst)
+        self.name_lookup[inst.name.lower()] = inst
+        for alt in inst.alternate_names:
+            # TODO worry about over-writing?
+            self.name_lookup[alt.lower()] = inst
+        if inst.tuning in self.tuning_lookup:
+            self.tuning_lookup[inst.tuning].append(inst)
+        else:
+            self.tuning_lookup[inst.tuning] = [inst]
+
+            
+    def get_instruments_by_tuning(self, tuning):
+        if tuning in self.tuning_lookup:
+            return self.tuning_lookup[tuning]
+        else:
+            return []
+        
+    def get_tuning_by_name(self, instrument_name):
+        instrument_name = instrument_name.lower()
+        if instrument_name in self.name_lookup:
+            return(self.name_lookup[instrument_name].tuning)
+
+    def get_chordpro_file_by_name(self, instrument_name):
+        instrument_name = instrument_name.lower()
+        if instrument_name in self.name_lookup:
+            return(self.name_lookup[instrument_name].chord_definitions)
+
+    def get_transpose_by_name(self, instrument_name):
+        instrument_name = instrument_name.lower()
+        if instrument_name in self.name_lookup:
+            return(self.name_lookup[instrument_name].transpose)
+        
+
+    def describe(self):
+        for instrument in self.instruments:
+            print(instrument.name)
+            if instrument.alternate_names != []:
+                print("AKA: %s" % (", ").join(instrument.alternate_names))
+            print("Tuning: %s" % instrument.tuning)
+            print("")   
+        
+class Instrument:
+    def __init__(self, data):
+        """ Simple data structure for instruments"""
+        self.name = data['name']
+        self.tuning = data['tuning']
+        
+        if 'alternate_names' in data:
+            self.alternate_names = data['alternate_names']
+        else:
+            self.alternate_names = []
+            
+        if 'chord_definitions' in data:
+            self.chord_definitions = data['chord_definitions']
+        else:
+             self.chord_definitions = None
+
+        if 'transpose' in data:
+            self.transpose = int(data['transpose'])
+        else:
+             self.transpose = 0
+
+class transposer:
+   
+    __note_indicies = {"C": 0, "C#": 1, "Db": 1, "D": 2, "Eb": 3, "D#": 3,
+                     "E" : 4, "F": 5, "F#": 6, "Gb": 6, "G": 7, "Ab": 8,
+                     "G#": 8, "A" : 9, "Bb": 10, "A#": 10, "B": 11}
+        
+    __notes = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"]
+    
+    def __init__(self, offset = 0):
+        self.offset = offset
+    
+    def transpose_chord(self, chord_string):
+        return re.sub("([A-G](\#|b)?)",(lambda x: self.transpose_note(x.group())), chord_string)
+
+               
+    def get_note_index(self, note):
+        return self.__note_indicies[note] if note in self.__note_indicies else none
+
+    def get_note(self, index):
+        return transposer.__notes[index]
+   
+    def transpose_note(self, note):   
+        note_index = self.get_note_index(note)
+        new_note = (note_index + self.offset ) % 12
+        return self.__notes[new_note] if  note_index != None else note
 
 class Dot:
-    """ Class to represent a single dot in the diagram ie a finger on a fret use None to say 'don't play'"""
+    """
+    Class to represent a single dot in the diagram ie a finger on a fret
+    use None To say 'don't play'
+    0 for open string'
+    """
     def __init__(self, fret, finger = None):
         self.fret = fret 
         self.finger = finger if self.fret != None else 0
         
         
 class String:
-    """Class to represent all the dots to show on a string, pass in an array of dot """
+    """Class to represent all the dots to show on a string, pass in an array of dots """
     def __init__(self, dots):
         self.dots = dots
 
@@ -24,33 +132,75 @@ class Fret:
         self.left_x = left_x
         self.y = y
         self.right_x = right_x
+
+class ChordVoicings:
+    """Container for alternative fingerings/voicings."""
+    def __init__(self, grid):
+        self.voicings = [grid]
+
+    def append(self, grid):
+        self.voicings.append(grid)
         
+    def sort_by_playability(self):
+        self.voicings.sort(key=lambda x: x.playability, reverse=True)
+        
+
+
+    
 class ChordChart:
     def __init__(self):
         """Container for a set of chord-grids"""
         self.grids = {}
         self.tuning = None
+        self.transposer = transposer(0)
         
-    def load_tuning(self, strings):
+    def load_tuning_by_name(self, instrument_name):
         """
         Takes a string representation of an instrument tuning, eg:
         EADGBE (guitar) or
         GCEA (soprano uke)
-        """
-        
-        self.tuning = strings.upper()
+
+        TODO:
+        If it can't find the file will try to find a chord chart with the same
+        relative tuning eg DGBE should find GCEA
+
+         if strings != None:
+            self.tuning = strings
         path, file = os.path.split(os.path.realpath(__file__))
-        
-        f = open(os.path.join(path, "%s_chords.cho" %  self.tuning))
-        self.load_file(f)
-    
-        
+        f = os.path.join(path, "%s_chords.cho" %  self.transposer.transpose_chord(self.tuning))
+        if os.path.exists(f):
+            self.load_file(open(f))
+        elif self.transposer.offset < 11:
+            self.transposer.offset += 1
+            self.load_tuning()
+        """
+        instruments = Instruments()
+        defs_file = instruments.get_chordpro_file_by_name(instrument_name)
+        path, file = os.path.split(os.path.realpath(__file__))
+        if defs_file != None:
+            self.transposer.offset = instruments.get_transpose_by_name(instrument_name)
+            f = os.path.join(path, defs_file)
+            if os.path.exists(f):
+                self.load_file(open(f))
+            else:
+                print("******** Unable to load %s" % f)
+            
+
+    def load(self, f):
+        self.load_file(f.split("\\n"))
+                    
     def load_file(self, f):
+        self.transposer.offset = 12 - self.transposer.offset
         for line in f:
             if line.startswith("{define:"):
                 grid = ChordDiagram()
                 grid.parse_definition(line)
-                self.grids[grid.name] = grid
+                if self.transposer.offset > 0:
+                    grid.name = self.transposer.transpose_chord(grid.name)
+                if grid.name not in self.grids:
+                    self.grids[grid.name] = ChordVoicings(grid)
+                else:
+                    self.grids[grid.name].append(grid)
 
     def normalise_chord_name(self, chord_name):
         """ Transform chord name as used to a canonical name, means we only have to store a limited set of chords """
@@ -58,7 +208,6 @@ class ChordChart:
         chord_name = re.sub("\!$","", chord_name)
         
         # Allow / / / inside chord diagrams for strumming
-        
         chord_name = re.sub("(/* *)*$","", chord_name)
         
         # Normalise "add" for ninths, elevenths etc - TODO sharps as well
@@ -68,10 +217,33 @@ class ChordChart:
     def grid_as_md(self, chord_name):
         # TODO: add tests
         chord_name = self.normalise_chord_name(chord_name)
-        if chord_name in self.grids:
-            return self.grids[chord_name].to_md()
+        chord = self.get_default(chord_name)
+        if chord != None:
+            return chord.to_md()     
         else:
             return("[%s]" % chord_name)
+
+    def get_default(self, chord_name):
+        chord_name = self.normalise_chord_name(chord_name)
+        if chord_name in self.grids:
+            chord = self.grids[chord_name]
+            if len(chord.voicings) > 0:
+               return chord.voicings[0]
+        else:
+            return None
+     
+    def sort_by_playability(self,chord_name):
+        if chord_name in self.grids:
+            chord = self.grids[chord_name]
+            chord.sort_by_playability()
+
+    def to_chordpro(self, chord_name):
+        if chord_name in self.grids:
+            chordpro = ""
+            for grid in self.grids[chord_name].voicings:
+                chordpro += "%s\n" % grid.to_chordpro()
+            return chordpro
+
     
 class ChordDiagram:
     box_width =  80
@@ -84,13 +256,14 @@ class ChordDiagram:
     dot_text_color = (256,256,256) #white
     dot_color = (0,0,0) #black
     
-    def __init__(self, name="", strings=[]):
+    def __init__(self, name="", strings=[], draw_name=False):
         """ Empty diagram. No strings, no frets, no nothin' """
         self.name = name
         self.strings = strings
-        
+        self.draw_name = draw_name
         self.frets = [] #Will contain fret objects
         self.base_fret = 0
+        self.setup()
         
     def to_data_URI(self):
         self.draw()
@@ -102,65 +275,101 @@ class ChordDiagram:
     def to_md(self):
         return("<img width='%s' height='%s' alt='%s' src='%s' />" % (self.box_width, self.box_height, self.name, self.to_data_URI()))
 
-    def draw(self):
-        """
-        Render the chord - have exposed a lot of the internal maths to help with testing, hard to test the diagrams but
-        we can at least check that frets are not on top of each other, and so on.
-        """
-       
-        #work out min non-0 and max fretted (rather than open) positions
-        #if self.base_fret == 0:
-        max_fret = 0
-        min_fret = 100
+    def to_chordpro(self):
+        chordpro = "{define: %s " % self.name;
+        if self.base_fret != 0:
+            chordpro += "base-fret %s " % str(self.base_fret)
+        chordpro += "frets"
         for string in self.strings:
             for dot in string.dots:
-                if dot.fret != None and dot.fret != 0:
-                    dot.fret = dot.fret + self.base_fret
-                    max_fret = max(dot.fret,max_fret)
-                    min_fret = min(dot.fret, min_fret)
+                if dot.fret == None:
+                    chordpro += " x"
+                else:
+                    chordpro += " %s" % str(dot.fret)
+        chordpro += "}"
+        return chordpro #TODO: FINGERS AND EXTRA DOTS!!!        
+                
+                
 
+            
+    def setup(self):
+        """
+        Calculate everything needed to draw and/or sort this chord
+        have exposed a lot of the internal maths to help with testing, hard to test the diagrams but
+        we can at least check that frets are not on top of each other, and so on
+        """
+
+        self.max_fret = 0
+        self.min_fret = 100
+        self.open_strings = 0
+        self.non_played_strings = 0
+        for string in self.strings:
+            for dot in string.dots:
+                if dot.fret == None:
+                    self.non_played_strings += 1
+                elif dot.fret == 0:
+                    self.open_strings += 1
+                else:
+                    dot.fret = dot.fret + self.base_fret
+                    self.max_fret = max(dot.fret, self.max_fret)
+                    self.min_fret = min(dot.fret, self.min_fret)
+                
         # Recalculate base_fret
-        if max_fret > ChordDiagram.default_frets and 100 > min_fret > 1:
-            self.base_fret = min_fret - 1
+        if self.max_fret > ChordDiagram.default_frets and 100 > self.min_fret > 1:
+            self.base_fret = self.min_fret - 1
             for string in self.strings:
                 for dot in string.dots:
                     if dot.fret != None and dot.fret != 0:
                         dot.fret = dot.fret - self.base_fret
-
+        else:
+            self.base_fret = 0 
+       
         #Work out how many frets to draw.
         #This program is not your music teacher! if you put in stupid chords it will
         # draw them
-        fret_range = max_fret - self.base_fret
+        fret_range = self.max_fret - self.base_fret
         if fret_range > ChordDiagram.default_frets:
             self.num_frets = fret_range
         else:
             self.num_frets = ChordDiagram.default_frets
 
-        #Scale up if there are lots of strings or frets
+        #Scale up bounding box if there are lots of strings or frets
         self.num_strings = len(self.strings)
         self.box_height = ChordDiagram.box_height
         self.box_width = ChordDiagram.box_width
         
-        #TODO: get rid of these contstants
         if self.num_strings > ChordDiagram.default_strings:
             self.box_width = int((self.box_width / ChordDiagram.default_strings) * self.num_strings)
 
         if self.num_frets> ChordDiagram.default_frets:
             self.box_height = int((self.box_height / ChordDiagram.default_frets) * self.num_frets)
+            
+        # Unscientific algorithm for rating chords open is best, not too high up neck good, short reach good, non_played strings not good
+        self.playability = self.open_strings * 13 - self.max_fret * 29 - (self.max_fret - self.min_fret) * 7 - self.non_played_strings * 11
 
+        
+    def draw(self):
+        """
+        Render the chord.
+        """
         # Commence scribbling
         self.img = Image.new("RGB", (self.box_width, self.box_height), ChordDiagram.bgcolor)
         draw = ImageDraw.Draw(self.img)
 
+        w, h = draw.textsize(self.name)
+        top_margin = ChordDiagram.top_margin
+        if not self.draw_name:
+            (w, h) = (0, 0)
+             
+
         # Look, I can write my own name
         # TODO, bigger, nicer font
-        w, h = draw.textsize(self.name)
-        draw.text(((ChordDiagram.box_width - w) / 2, 0),self.name, (0,0,0))
+        if self.draw_name:
+            draw.text(((self.box_width - w) / 2, 0),self.name, (0,0,0))
         
         # Draw plenty of strings evenly placed across the diagram, instrument agnostic,
-        self.string_top = h + ChordDiagram.top_margin
-        self.string_bottom = self.box_height - ChordDiagram.bottom_margin
-        
+        self.string_top = h + top_margin
+        self.string_bottom = self.box_height - ChordDiagram.bottom_margin     
         self.string_spacing = self.box_width / (self.num_strings + 1)
         for i  in range(0, len(self.strings)):
             string = self.strings[i]
@@ -184,6 +393,7 @@ class ChordDiagram:
                 x = (i + 1) * self.string_spacing
                 # OK so I put this in so that fingers > 9 work.
                 # who knows, maybe there are two or three people fretting the thing
+                # (And Hi 13 to our alien overlords!)
                 if dot.finger != None:
                     w, h = draw.textsize(str(dot.finger))
                 else:
@@ -212,9 +422,9 @@ class ChordDiagram:
 
     def parse_definition(self, definition):
         """ unpack a chordpro chord definition, trying to be as permissive as possible """
+       
         frets_re = re.compile("{define: +(\\S+?) *(base-fret (\\d+))? *(frets)? +([\\d x]+)", re.IGNORECASE)
         frets_search = re.search(frets_re, definition)
-    
          
         if frets_search != None:
             self.name = frets_search.group(1)
@@ -247,7 +457,7 @@ class ChordDiagram:
                 self.strings.append(String([Dot(fret, finger)]))
                 i += 1
             # Look for additional fingers
-            #Could add this to main regex but this was simpler in initial coding
+            # Could add this to main regex but this was simpler in initial coding
             definition = definition.replace("}","")
             additional = definition.strip().split("add: ")
             for dot_to_add in additional:
@@ -260,6 +470,7 @@ class ChordDiagram:
                     if string <= len(frets) and fret > 0:
                         self.strings[string].dots.append(Dot(fret, finger))
                  
+        self.setup()
         
 
 

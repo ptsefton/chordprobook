@@ -1,5 +1,5 @@
 {title: Sample songs}
 ./i_called_your_name.cho
 ./slot_machine_baby.cho
-./slot_machine_baby.cho -2
+./slot_machine_baby.cho {transpose: -2}
 ./uni-verse.cho 

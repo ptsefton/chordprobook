@@ -6,31 +6,20 @@ import os
 import subprocess
 import pypandoc
 import tempfile
-from chorddiagram import ChordChart
+from chorddiagram import ChordChart, transposer, Instruments
+import copy
 
-class transposer:
-   
-    __note_indicies = {"C": 0, "C#": 1, "Db": 1, "D": 2, "Eb": 3, "D#": 3,
-                     "E" : 4, "F": 5, "F#": 6, "Gb": 6, "G": 7, "Ab": 8,
-                     "G#": 8, "A" : 9, "Bb": 10, "A#": 10, "B": 11}
-        
-    __notes = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"]
-    
-    def __init__(self, offset = 0):
-        self.offset = offset
-    
-    def transpose_chord(self, chord_string):
-        return re.sub("([A-G](\#|b)?)",(lambda x: self.transpose_note(x.group())), chord_string)
-               
-    def __getNoteIndex(self, note):
-        return self.__note_indicies[note] if note in self.__note_indicies else none
-    
-   
-    def transpose_note(self, note):   
-        note_index = self.__getNoteIndex(note)
-        new_note = (note_index + self.offset ) % 12
-        return self.__notes[new_note] if  note_index != None else note
-    
+def extract_transposition(text):
+    """Find a transpose directive and get rid of it out of a string"""
+    tr_re = re.compile("{(tr|transpose): *(.*)}", re.IGNORECASE)
+    tr_search = re.search(tr_re, text)
+    standard_transpositions = [0]
+    if tr_search != None:
+        trans = tr_search.group(2).split(" ")
+        standard_transpositions += [int(x) for x in trans]
+        text = re.sub(tr_re, "", text)
+    return text, standard_transpositions
+
 def extract_title(text, title = None):
     """Find a chordpro title and get rid of it out of a string"""
     title_re = re.compile("{(ti:|title:|t:) *(.*?)}", re.IGNORECASE)
@@ -41,7 +30,7 @@ def extract_title(text, title = None):
     return text, title
 
 def extract_book_filename(text, book = None):
-    """Find a custom chordpro directive {book: }"""
+    """Find a custom chordpro directive: {book: }"""
     book_re = re.compile("{(book:) *(.*?)}", re.IGNORECASE)
     book_search = re.search(book_re, text)
     book_filename = None
@@ -51,15 +40,19 @@ def extract_book_filename(text, book = None):
     return text, book_filename
 
 class cp_song:
+    """ Represents a song, with the text, key, chord grids etc"""
     def __init__(self, song, title="Song", transpose=0, blank = False, path = None, grids = None):
         self.blank = blank
         self.grids = grids
+        # Remove comments (as in remarks, not {c: })
+        song = re.sub("\n#.*","", song)
         self.text = song
         self.key = None
         self.pages = 1
         self.original_key = None
         self.title = title
         self.path = path
+        self.notes_md = ""
         self.chords_used = []
         self.transpose = transpose
         self.transposer = transposer(transpose)
@@ -76,14 +69,10 @@ class cp_song:
     def __find_title(self):
         self.text, self.title = extract_title(self.text, title=self.title)
 
+    
     def __find_transpositions(self):
-        tr_re = re.compile("{(tr|transpose): *(.*)}", re.IGNORECASE)
-        tr_search = re.search(tr_re, self.text)
-        self.standard_transpositions = [0]
-        if tr_search != None:
-            standard_transpositions = tr_search.group(2).split(" ")
-            self.standard_transpositions += [int(x) for x in standard_transpositions]
-            self.text = re.sub(tr_re, "", self.text)
+        self.text, self.standard_transpositions = extract_transposition(self.text)
+       
             
     def __find_key(self):
         key_re = re.compile("{key: *(.*)}", re.IGNORECASE)
@@ -139,9 +128,11 @@ class cp_song:
         def format_chord(chord):
             if self.transposer.offset != 0:
                 chord = self.transposer.transpose_chord(chord)
-            chord_normal = self.grids.normalise_chord_name(chord)
-            if not chord_normal in self.chords_used:
-                self.chords_used.append(chord_normal)
+    
+            if self.grids != None:
+                chord_normal = self.grids.normalise_chord_name(chord)
+                if not chord_normal in self.chords_used:
+                    self.chords_used.append(chord_normal)
         
             return("[%s]" % chord)
                 
@@ -152,8 +143,6 @@ class cp_song:
         #TAB
         #song = re.sub("{(sot|eot|start_of_tab|end_of_tab)}","```", song)
         # Subtitle
-        # Remove comments (as in remarks, not {c: })
-        song = re.sub("\n#.*","", song)
         song = re.sub("{(st:|subtitle:) *(.*)}","\n*\\2*", song)
         
         #Comments / headings
@@ -164,13 +153,15 @@ class cp_song:
             
         key_string = self.get_key_string()
         title = "%s %s" % (self.title, key_string)
-        grid_md = "<div class='grids'>"
+        grid_md = ""
         if self.grids != None:
+            grid_md = "<div class='grids'>"
             for chord_name in self.chords_used:
-                grid_md += self.grids.grid_as_md(chord_name)
-        grid_md += "</div>"   
+                grid_md += "<div style='float:left;align:center'>%s<br/>%s</div>" % (self.grids.grid_as_md(chord_name),
+                                                                                                   chord_name)
+            grid_md += "<div style='clear:left'></div></div>"   
       
-        song = "# %s\n%s\n<div class='song-page'><div class='song-text'>\n%s\n\n</div></div>" % (title, grid_md, song)
+        song = "# %s\n%s\n<div class='song-page'><div class='song-text'>\n%s\n%s\n\n</div></div>" % ( title, grid_md, self.notes_md, song)
        
         song, pages = re.subn("{(new_page|np)}", "<!-- new_page -->", song)
         if pages > 0:
@@ -206,6 +197,7 @@ class cp_song_book:
         self.songs = songs
         self.keep_order = keep_order
         self.title = title
+        self.sets = [] #Song-like objects to hold rip-out-able set lists
 
     def to_md(self):
         md = "---\ntitle: %s\n---\n" % self.title
@@ -214,18 +206,68 @@ class cp_song_book:
         return md
         
     def order_by_setlist(self, setlist):
+        """
+        Use a setlist to order the book. Setlist will already have {title: } and {book: }
+        directives removed by this point.
+
+        Setlist uses markdown conventions, with ATX-style headers
+        # Set 1
+
+        ## Song name
+
+        Notes on performance go here.
+
+        ## Another song
+
+        # Set 2
+
+        ...
+        """
         new_order = []
+        current_set = None
+        new_set = False
+        current_song = None
         for potential_song in setlist.split("\n"):
-            if potential_song.strip() != "" and not potential_song.startswith("#"):
-                restring = potential_song.replace(" ", ".*?").lower()
-                regex = re.compile(restring)
-                found_song = False
-                for song in self.songs:
-                    if re.search(regex, song.title.lower()) != None:
-                        new_order.append(song)
-                        found_song = True
-                if not found_song:
-                    new_order.append(cp_song("{title: %s (not found)}" % potential_song))
+            if potential_song.strip() != "":
+                if potential_song.startswith("# "):
+                    potential_song = potential_song.replace("#","").strip()
+                    
+                    # Use songs to represent sets, so each set gets a sinlge page up front of the book
+                    # the text of which will scale up nice and big courtesy of the song scaling algorithm
+                    if current_song != None and current_set != None:
+                        current_song.title = "End %s :: %s" % (current_set.title, current_song.title)
+                        
+                    current_set = cp_song("{title: %s}" % potential_song)
+                    self.sets.append(current_set)
+                    new_set = True
+
+                elif potential_song.startswith("## "): # A song
+                    song_name = potential_song.replace("## ", "").strip()
+                    song_name, transpositions = extract_transposition(song_name)
+                    print(transpositions)
+                    restring = song_name.replace(" ", ".*?").lower()
+                    regex = re.compile(restring)
+                    found_song = False
+
+                    for song in self.songs:
+                        if re.search(regex, song.title.lower()) != None:
+                            #Copy the song in case it is in the setlist twice with different treatment, such as keys or notes
+                            current_song = copy.deepcopy(song)
+                            if new_set:
+                                current_song.title = "Start %s :: %s" % (current_set.title, current_song.title)
+                                new_set = False
+                            if len(transpositions) > 1 and transpositions[1] != 0:
+                                current_song.format(transpose = transpositions[1])
+                            if current_song.key != None:
+                                potential_song = "## %s (in %s)" % (song_name, current_song.key)
+                            new_order.append(current_song)
+                            current_set.text +=  potential_song + "\n"
+                            found_song = True
+                    if not found_song:
+                        new_order.append(cp_song("{title: %s (not found)}" % song_name))
+                elif current_song != None:
+                    current_song.notes_md += potential_song + "\n\n"
+                    current_set.text +=  potential_song + "\n\n"
         self.songs = new_order
         
     def reorder(self, start_page, old = None, new_order=[], waiting = []):
@@ -435,15 +477,21 @@ p {
 
 <style>
 .page {
-width: 21cm;
-height: 29cm;
-padding: .2cm;
-margin: .2cm;
+width: 23cm;
+height: 31cm;
+padding: 0cm;
+margin: 0cm;
 border-style: solid;
 border-width: 1px;
 border-color: #FFFFFF;
 page-break-inside: avoid;
 position: relative;
+}
+
+.grids {
+ font-size: 18pt;
+ font-weight: bold;
+ text-align: center;
 }
 div.grids img {
 
@@ -523,7 +571,8 @@ def convert():
     parser = argparse.ArgumentParser()
     parser.add_argument('files', type=argparse.FileType('r'), nargs="*", default=None, help='List of files')
     parser.add_argument('-a', '--alphabetically', action='store_true', help='Sort songs alphabetically')
-    parser.add_argument('-g', '--grids', default=None, help='Show chord grids for the given tuning, supported tunings so far are GCEA for uke or EADGBE for guitar')
+    parser.add_argument('-i', '--instrument', default=None, help='Show chord grids for the given instrument. Eg --instrument "Soprano Ukulele"')
+    parser.add_argument('--instruments', action='store_true', help='chord grids for the given instrument, then quit use any of the names or aliases listed under AKA')
     parser.add_argument('-k',
                         '--keep-order',
                         action='store_true',
@@ -553,17 +602,21 @@ def convert():
    
 
     args = vars(parser.parse_args())
-    
+    if args["instruments"]:
+        instruments = Instruments()
+        instruments.describe()
+        exit()
+        
     out_dir = "."
     os.makedirs(out_dir, exist_ok=True)
     songs = []
     output_file =  args["file_stem"]
 
     # Do we want chord grids?
-    if args["grids"] != None:
+    if args["instrument"] != None:
         #TODO - relative to this file!
         chart = ChordChart()
-        chart.load_tuning(args['grids'])
+        chart.load_tuning_by_name(args['instrument'])
     else:
         chart = None
     #Is there a setlist file?
@@ -593,11 +646,8 @@ def convert():
             text, args["title"] = extract_title(text, args["title"] )
             for line in text.split("\n"):
                 # Do we need to transpose this one?
-                trans = re.search("((\+|-)?\d+)$", line)
-                t = 0
-                if trans != None:
-                    t = int(trans.group(0))
-                    line = re.sub("(?i)((\+|-)?\d+)$", "", line)
+                line, transpositions = extract_transposition(line)
+                t = transpositions[1] if len(transpositions) > 1 else 0
                 line = re.sub("(?i)^#.*","", line) #Lose comments
                 line = line.strip()
                 if line != "":
@@ -624,8 +674,14 @@ def convert():
 
     if args["alphabetically"]:
         songs.sort(key= lambda song: re.sub("(?i)^(the|a|\(.*?\)) ", "", song.title.lower()))
-        
+
     title = args['title']
+
+    if args['instrument'] != None:
+        output_file += "_" + args['instrument'].lower().replace(" ","_")
+        title += " with chords for %s" % args['instrument']
+        
+
     if  args['epub']:
         epub_path = output_file + ".epub"
         xtra =[ "--toc-depth=1","--epub-chapter-level=1"] #, "--epub-stylesheet=songbook.css"] 
@@ -654,6 +710,9 @@ def convert():
                 else:
                     suffix_string = "_" + str(trans) if trans != 0 else ""
 
+                if args['instrument'] != None:
+                    suffix_string += "_" + args['instrument'].lower().replace(" ","_")
+                    song.title += " with chords for %s" % args['instrument']
                 temp_file = tempfile.NamedTemporaryFile(suffix=".html")
                 html_path = temp_file.name
                 open(html_path, 'w').write(song.to_stand_alone_html())
@@ -668,6 +727,9 @@ def convert():
         start_page = 3
         book.reorder(start_page) 
         all_songs = ""
+        for set in book.sets:
+            all_songs += set.to_html()
+            start_page += 1
         page_count = start_page
         #Make a table of contents
         #TODO - LINK!
@@ -679,7 +741,7 @@ def convert():
             page_count += song.pages
             all_songs += song.to_html()
         contents += "</table>"
-
+        
         open(html_path, 'w').write( html_book.format(all_songs,
                                                       title=title,
                                                       for_print = args['a4'],
