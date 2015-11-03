@@ -104,6 +104,12 @@ C..G, followed by any mixture of lower case, slashes, and numbers. Eg:
 Note that when transposing, any capital A...G inside a chord will get transposed so
 don't write [CAug] use [Caug].
 
+Some charts use ! and / inside chords to indicate a staccato chord or
+rhythm respectively. This works, and will be recognised for the
+purposes of transcribing the song:
+
+``` [C / / / ] [F / /] [C!]```
+
 
 ### Other formatting
 
@@ -151,11 +157,13 @@ TODO: Allow the setlist to have transpositions, and to have additional notes for
 
 To see  usage info, type:
 ```
+./chorprobook.py
 
-./chordprobook.py --help
-usage: chordprobook.py [-h] [-a] [-g GRIDS] [-k] [--a4] [-e] [-f FILE_STEM]
-                       [--html] [-w] [-p] [-r REFERENCE_DOCX] [-o] [-b]
-                       [-s SETLIST] [--title TITLE]
+
+usage: chordprobook.py [-h] [-a] [-i INSTRUMENT] [--instruments] [-k] [--a4]
+                       [-e] [-f FILE_STEM] [--html] [-w] [-p]
+                       [-r REFERENCE_DOCX] [-o] [-b] [-s SETLIST]
+                       [--title TITLE]
                        [files [files ...]]
 
 positional arguments:
@@ -164,9 +172,11 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -a, --alphabetically  Sort songs alphabetically
-  -g GRIDS, --grids GRIDS
-                        Show chord grids for the given tuning, supported
-                        tunings so far are GCEA for uke or EADGBE for guitar
+  -i INSTRUMENT, --instrument INSTRUMENT
+                        Show chord grids for the given instrument. Eg
+                        --instrument "Soprano Ukulele"
+  --instruments         chord grids for the given instrument, then quit use
+                        any of the names or aliases listed under AKA
   -k, --keep-order      Preserve song order for playing as a setlist (inserts
                         blank pages to keep multi page songs on facing pages
   --a4                  Format for printing (web page output)
@@ -194,6 +204,7 @@ optional arguments:
                         also add a setlist line: {title: Title of setlist}
   --title TITLE         Title to use for the book, if there is no title in a
                         book file or setlist file
+
 ```
 
 
@@ -220,10 +231,13 @@ Create a PDF book from all the files in a directory.
     ```./chordprobook -a --file-stem=my_book --title="My book"  samples/*.cho```
 
 * To add chord grids for soprano ukulele:
-	```./chordprobook -a --file-stem=my_book --title="My book" --grids GCEA samples/*.cho```
+	```./chordprobook -a --file-stem=my_book --title="My book"	--instrument Uke samples/*.cho```
 
-* To add chord grids for soprano ukulele:
-	```./chordprobook -a --file-stem=my_book --title="My book" --grids EADGBE samples/*.cho```
+* To find out what instruments are supported:
+	```./chordprobook.py --instruments```
+
+* To use an instrument name with space, quote it:
+	```./chordprobook -a --file-stem=my_book --title="My book"	--instrument "5 String Banjo" samples/*.cho```
 
 * To build a book from a list of files use a book file and the -b
    flag. This will preserve the order you entered the songs except
@@ -242,13 +256,13 @@ Create a PDF book from all the files in a directory.
     ```./chordprobook.py -a -b samples/sample-book.txt```
     
 * To choose a subset of the songs in a book in a particular order use
-  a setlist file.  
+  a setlist file. 
 
    Use this to filter all the songs in a directory using a setlist:
 
     ```./chordprobook.py -s samples/setlist.txt samples/*.cho```
     
-*  Or use a book file:
+*  Or use a book file and filter that:
 
     ```./chordprobook.py -s samples/setlist.txt -b samples/sample-book.txt```
 
