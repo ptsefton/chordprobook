@@ -1,0 +1,398 @@
+ This file was derived from the Chordii software.
+#https://github.com/malclocke/chordii-debian/blob/7581d000aaa5175990144691cefc1a63f199e231/src/grid.c
+#This file is part of Chordii.
+#    Chordii is free software: you can redistribute it and/or modify
+ #   it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+#    Chordii is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+ #   You should have received a copy of the GNU General Public License
+#    along with Chordii.  If not, see <http://www.gnu.org/licenses/>.
+
+
+{define: Ab frets 1 3 3 2 1 1}
+{define: Ab+ frets x x 2 1 1 0}
+{define: Ab4 frets x x 1 1 2 4}
+{define: Ab7 frets x x 1 1 1 2}
+{define: Ab11 frets 1 3 1 3 1 1}
+{define: Absus frets x x 1 1 2 4}
+{define: Absus4 frets x x 1 1 2 4}
+{define: Abdim frets x x 0 1 0 1}
+{define: Abmaj frets 1 3 3 2 1 1}
+{define: Abmaj7 frets x x 1 1 1 3}
+{define: Abm frets 1 3 3 1 1 1}
+{define: Abmin frets 1 3 3 1 1 1}
+{define: Abm7 frets x x 1 1 1 1}
+
+{define: A frets x 0 2 2 2 0}
+{define: A+ frets x 0 3 2 2 1}
+{define: A4 frets 0 0 2 2 0 0}
+{define: A6 frets x x 2 2 2 2}
+{define: A7 frets x 0 2 0 2 0}
+{define: A7+ frets x x 3 2 2 1}
+{define: A7(9+) frets x 2 2 2 2 3}
+{define: A9 frets x 0 2 1 0 0}
+{define: A11 frets x 4 2 4 3 3}
+{define: A13 frets x 0 1 2 3 1}
+{define: A7sus4 frets 0 0 2 0 3 0}
+{define: A9sus frets x 0 2 1 0 0}
+{define: Asus frets x x 2 2 3 0}
+{define: Asus2 frets 0 0 2 2 0 0}
+{define: Asus4 frets x x 2 2 3 0}
+{define: Adim frets x x 1 2 1 2}
+{define: Amaj frets x 0 2 2 2 0}
+{define: Amaj7 frets x 0 2 1 2 0}
+{define: Am frets x 0 2 2 1 0}
+{define: Amin frets x 0 2 2 1 0}
+{define: A/D frets x x 0 0 2 2}
+{define: A/F# frets 2 0 2 2 2 0}
+{define: A/G# frets 4 0 2 2 2 0}
+
+{define: Am#7 frets x x 2 1 1 0}
+{define: Am(7#) frets x 0 2 2 1 4}
+{define: Am6 frets x 0 2 2 1 2}
+{define: Am7 frets x 0 2 2 1 3}
+{define: Am7sus4 frets 0 0 0 0 3 0}
+{define: Am9 frets x 0 1 1 1 3}
+{define: Am/G frets 3 0 2 2 1 0}
+{define: Amadd9 frets 0 2 2 2 1 0}
+{define: Am(add9) frets 0 2 2 2 1 0}
+
+{define: A# frets x 1 3 3 3 1}
+{define: A#+ frets x x 0 3 3 2}
+{define: A#4 frets x x 3 3 4 1}
+{define: A#7 frets x x 1 1 1 2}
+{define: A#sus frets x x 3 3 4 1}
+{define: A#sus4 frets x x 3 3 4 1}
+{define: A#maj frets x 1 3 3 3 1}
+{define: A#maj7 frets x 1 3 2 3 x}
+{define: A#dim frets x x 2 3 2 3}
+{define: A#m frets x 1 3 3 2 1}
+{define: A#min frets x 1 3 3 2 1}
+{define: A#m7 frets x 1 3 1 2 1}
+
+{define: Bb frets x 1 3 3 3 1}
+{define: Bb+ frets x x 0 3 3 2}
+{define: Bb4 frets x x 3 3 4 1}
+{define: Bb6 frets x x 3 3 3 3}
+{define: Bb7 frets x x 1 1 1 2}
+{define: Bb9 frets 1 3 1 2 1 3}
+{define: Bb11 frets 1 3 1 3 4 1}
+{define: Bbsus frets x x 3 3 4 1}
+{define: Bbsus4 frets x x 3 3 4 1}
+{define: Bbmaj frets x 1 3 3 3 1}
+{define: Bbmaj7 frets x 1 3 2 3 x}
+{define: Bbdim frets x x 2 3 2 3}
+{define: Bbm frets x 1 3 3 2 1}
+{define: Bbmin frets x 1 3 3 2 1}
+{define: Bbm7 frets x 1 3 1 2 1}
+{define: Bbm9 frets x x x 1 1 3}
+
+{define: B frets x 2 4 4 4 2}
+{define: B+ frets x x 1 0 0 4}
+{define: B4 frets x x 3 3 4 1}
+{define: B7 frets 0 2 1 2 0 2}
+{define: B7+ frets x 2 1 2 0 3}
+{define: B7+5 frets x 2 1 2 0 3}
+{define: B7#9 frets x 2 1 2 3 x}
+{define: B7(#9) frets x 2 1 2 3 x}
+{define: B9 frets 1 3 1 2 1 3}
+{define: B11 frets 1 3 3 2 0 0}
+{define: B11/13 frets x 1 1 1 1 3}
+{define: B13 frets x 2 1 2 0 4}
+{define: Bsus frets x x 3 3 4 1}
+{define: Bsus4 frets x x 3 3 4 1}
+{define: Bmaj frets x 2 4 3 4 x}
+{define: Bmaj7 frets x 2 4 3 4 x}
+{define: Bdim frets x x 0 1 0 1}
+{define: Bm frets x 2 4 4 3 2}
+{define: Bmin frets x 2 4 4 3 2}
+{define: B/F# frets 0 2 2 2 0 0}
+{define: BaddE frets x 2 4 4 0 0}
+{define: B(addE) frets x 2 4 4 0 0}
+{define: BaddE/F# frets 2 x 4 4 0 0}
+
+{define: Bm6 frets x x 4 4 3 4}
+{define: Bm7 frets x 1 3 1 2 1}
+{define: Bmmaj7 frets x 1 4 4 3 x}
+{define: Bm(maj7) frets x 1 4 4 3 x}
+{define: Bmsus9 frets x x 4 4 2 2}
+{define: Bm(sus9) frets x x 4 4 2 2}
+{define: Bm7b5 frets 1 2 4 2 3 1}
+
+{define: C frets x 3 2 0 1 0}
+{define: C+ frets x x 2 1 1 0}
+{define: C4 frets x x 3 0 1 3}
+{define: C6 frets x 0 2 2 1 3}
+{define: C7 frets 0 3 2 3 1 0}
+{define: C9 frets 1 3 1 2 1 3}
+{define: C9(11) frets x 3 3 3 3 x}
+{define: C11 frets x 1 3 1 4 1}
+{define: Csus frets x x 3 0 1 3}
+{define: Csus2 frets x 3 0 0 1 x}
+{define: Csus4 frets x x 3 0 1 3}
+{define: Csus9 frets x x 4 1 2 4}
+{define: Cmaj frets 0 3 2 0 1 0}
+{define: Cmaj7 frets x 3 2 0 0 0}
+{define: Cm frets x 1 3 3 2 1}
+{define: Cmin frets x 1 3 3 2 1}
+{define: Cdim frets x x 1 2 1 2}
+{define: C/B frets x 2 2 0 1 0}
+{define: Cadd2/B frets x 2 0 0 1 0}
+{define: CaddD frets x 3 2 0 3 0}
+{define: C(addD) frets x 3 2 0 3 0}
+{define: Cadd9 frets x 3 2 0 3 0}
+{define: C(add9) frets x 3 2 0 3 0}
+
+{define: C3 frets x 1 3 3 2 1}
+{define: Cm7 frets x 1 3 1 2 1}
+{define: Cm11 frets x 1 3 1 4 x}
+
+{define: C# frets x x 3 1 2 1}
+{define: C#+ frets x x 3 2 2 1}
+{define: C#4 frets x x 3 3 4 1}
+{define: C#7 frets x x 3 4 2 4}
+{define: C#7(b5) frets x 2 1 2 1 2}
+{define: C#sus frets x x 3 3 4 1}
+{define: C#sus4 frets x x 3 3 4 1}
+{define: C#maj frets x 4 3 1 1 1}
+{define: C#maj7 frets x 4 3 1 1 1}
+{define: C#dim frets x x 2 3 2 3}
+{define: C#m frets x x 2 1 2 0}
+{define: C#min frets x x 2 1 2 0}
+{define: C#add9 frets x 1 3 3 1 1}
+{define: C#(add9) frets x 1 3 3 1 1}
+{define: C#m7 frets x x 2 4 2 4}
+
+{define: Db frets x x 3 1 2 1}
+{define: Db+ frets x x 3 2 2 1}
+{define: Db7 frets x x 3 4 2 4}
+{define: Dbsus frets x x 3 3 4 1}
+{define: Dbsus4 frets x x 3 3 4 1}
+{define: Dbmaj frets x x 3 1 2 1}
+{define: Dbmaj7 frets x 4 3 1 1 1}
+{define: Dbdim frets x x 2 3 2 3}
+{define: Dbm frets x x 2 1 2 0}
+{define: Dbmin frets x x 2 1 2 0}
+{define: Dbm7 frets x x 2 4 2 4}
+
+{define: D frets x x 0 2 3 2}
+{define: D+ frets x x 0 3 3 2}
+{define: D4 frets x x 0 2 3 3}
+{define: D6 frets x 0 0 2 0 2}
+{define: D7 frets x x 0 2 1 2}
+{define: D7#9 frets x 2 1 2 3 3}
+{define: D7(#9) frets x 2 1 2 3 3}
+{define: D9 frets 1 3 1 2 1 3}
+{define: D11 frets 3 0 0 2 1 0}
+{define: Dsus frets x x 0 2 3 3}
+{define: Dsus2 frets 0 0 0 2 3 0}
+{define: Dsus4 frets x x 0 2 3 3}
+{define: D7sus2 frets x 0 0 2 1 0}
+{define: D7sus4 frets x 0 0 2 1 3}
+{define: Dmaj frets x x 0 2 3 2}
+{define: Dmaj7 frets x x 0 2 2 2}
+{define: Ddim frets x x 0 1 0 1}
+{define: Dm frets x x 0 2 3 1}
+{define: Dmin frets x x 0 2 3 1}
+{define: D/A frets x 0 0 2 3 2}
+{define: D/B frets x 2 0 2 3 2}
+{define: D/C frets x 3 0 2 3 2}
+{define: D/C# frets x 4 0 2 3 2}
+{define: D/E frets x 1 1 1 1 x}
+{define: D/G frets 3 x 0 2 3 2}
+{define: D5/E frets 0 1 1 1 x x}
+{define: Dadd9 frets 0 0 0 2 3 2}
+{define: D(add9) frets 0 0 0 2 3 2}
+{define: D9add6 frets 1 3 3 2 0 0}
+{define: D9(add6) frets 1 3 3 2 0 0}
+
+{define: Dm6(5b) frets x x 0 1 0 1}
+{define: Dm7 frets x x 0 2 1 1}
+{define: Dm#5 frets x x 0 3 3 2}
+{define: Dm(#5) frets x x 0 3 3 2}
+{define: Dm#7 frets x x 0 2 2 1}
+{define: Dm(#7) frets x x 0 2 2 1}
+{define: Dm/A frets x 0 0 2 3 1}
+{define: Dm/B frets x 2 0 2 3 1}
+{define: Dm/C frets x 3 0 2 3 1}
+{define: Dm/C# frets x 4 0 2 3 1}
+{define: Dm9 frets x x 3 2 1 0}
+
+{define: D# frets x x 3 1 2 1}
+{define: D#+ frets x x 1 0 0 4}
+{define: D#4 frets x x 1 3 4 4}
+{define: D#7 frets x x 1 3 2 3}
+{define: D#sus frets x x 1 3 4 4}
+{define: D#sus4 frets x x 1 3 4 4}
+{define: D#maj frets x x 3 1 2 1}
+{define: D#maj7 frets x x 1 3 3 3}
+{define: D#dim frets x x 1 2 1 2}
+{define: D#m frets x x 4 3 4 2}
+{define: D#min frets x x 4 3 4 2}
+{define: D#m7 frets x x 1 3 2 2}
+
+{define: Eb frets x x 3 1 2 1}
+{define: Eb+ frets x x 1 0 0 4}
+{define: Eb4 frets x x 1 3 4 4}
+{define: Eb7 frets x x 1 3 2 3}
+{define: Ebsus frets x x 1 3 4 4}
+{define: Ebsus4 frets x x 1 3 4 4}
+{define: Ebmaj frets x x 1 3 3 3}
+{define: Ebmaj7 frets x x 1 3 3 3}
+{define: Ebdim frets x x 1 2 1 2}
+{define: Ebadd9 frets x 1 1 3 4 1}
+{define: Eb(add9) frets x 1 1 3 4 1}
+{define: Ebm frets x x 4 3 4 2}
+{define: Ebmin frets x x 4 3 4 2}
+{define: Ebm7 frets x x 1 3 2 2}
+
+{define: E frets 0 2 2 1 0 0}
+{define: E+ frets x x 2 1 1 0}
+{define: E5 frets 0 1 3 3 x x}
+{define: E6 frets x x 3 3 3 3}
+{define: E7 frets 0 2 2 1 3 0}
+{define: E7#9 frets 0 2 2 1 3 3}
+{define: E7(#9) frets 0 2 2 1 3 3}
+{define: E7(5b) frets x 1 0 1 3 0}
+{define: E7b9 frets 0 2 0 1 3 2}
+{define: E7(b9) frets 0 2 0 1 3 2}
+{define: E7(11) frets 0 2 2 2 3 0}
+{define: E9 frets 1 3 1 2 1 3}
+{define: E11 frets 1 1 1 1 2 2}
+{define: Esus frets 0 2 2 2 0 0}
+{define: Esus4 frets 0 2 2 2 0 0}
+{define: Emaj frets 0 2 2 1 0 0}
+{define: Emaj7 frets 0 2 1 1 0 x}
+{define: Edim frets x x 2 3 2 3}
+{define: Em frets 0 2 2 0 0 0}
+{define: Emin frets 0 2 2 0 0 0}
+
+{define: Em6 frets 0 2 2 0 2 0}
+{define: Em7 frets 0 2 2 0 3 0}
+{define: Em/B frets x 2 2 0 0 0}
+{define: Em/D frets x x 0 0 0 0}
+{define: Em7/D frets x x 0 0 0 0}
+{define: Emsus4 frets 0 0 2 0 0 0}
+{define: Em(sus4) frets 0 0 2 0 0 0}
+{define: Emadd9 frets 0 2 4 0 0 0}
+{define: Em(add9) frets 0 2 4 0 0 0}
+
+{define: F frets 1 3 3 2 1 1}
+{define: F+ frets x x 3 2 2 1}
+{define: F+7+11 frets 1 3 3 2 0 0}
+{define: F4 frets x x 3 3 1 1}
+{define: F6 frets x 3 3 2 3 x}
+{define: F7 frets 1 3 1 2 1 1}
+{define: F9 frets 2 4 2 3 2 4}
+{define: F11 frets 1 3 1 3 1 1}
+{define: Fsus frets x x 3 3 1 1}
+{define: Fsus4 frets x x 3 3 1 1}
+{define: Fmaj frets 1 3 3 2 1 1}
+{define: Fmaj7 frets x 3 3 2 1 0}
+{define: Fdim frets x x 0 1 0 1}
+{define: Fm frets 1 3 3 1 1 1}
+{define: Fmin frets 1 3 3 1 1 1}
+{define: F/A frets x 0 3 2 1 1}
+{define: F/C frets x x 3 2 1 1}
+{define: F/D frets x x 0 2 1 1}
+{define: F/G frets 3 3 3 2 1 1}
+{define: F7/A frets x 0 3 0 1 1}
+{define: Fmaj7/A frets x 0 3 2 1 0}
+{define: Fmaj7/C frets x 3 3 2 1 0}
+{define: Fmaj7(+5)" x x 3 2 2 0}
+{define: Fadd9 frets 3 0 3 2 1 1}
+{define: F(add9) frets 3 0 3 2 1 1}
+{define: FaddG frets 1 x 3 2 1 3}
+{define: FaddG frets 1 x 3 2 1 3}
+
+{define: Fm6 frets x x 0 1 1 1}
+{define: Fm7 frets 1 3 1 1 1 1}
+{define: Fmmaj7 frets x 3 3 1 1 0}
+
+{define: F# frets 2 4 4 3 2 2}
+{define: F#+ frets x x 4 3 3 2}
+{define: F#7 frets x x 4 3 2 0}
+{define: F#9 frets x 1 2 1 2 2}
+{define: F#11 frets 2 4 2 4 2 2}
+{define: F#sus frets x x 4 4 2 2}
+{define: F#sus4 frets x x 4 4 2 2}
+{define: F#maj frets 2 4 4 3 2 2}
+{define: F#maj7 frets x x 4 3 2 1}
+{define: F#dim frets x x 1 2 1 2}
+{define: F#m frets 2 4 4 2 2 2}
+{define: F#min frets 2 4 4 2 2 2}
+{define: F#/E frets 0 4 4 3 2 2}
+{define: F#4 frets x x 4 4 2 2}
+{define: F#m6 frets x x 1 2 2 2}
+{define: F#m7 frets x x 2 2 2 2}
+{define: F#m7-5 frets 1 0 2 3 3 3}
+{define: F#m/C#m frets x x 4 2 2 2}
+
+{define: Gb frets 2 4 4 3 2 2}
+{define: Gb+ frets x x 4 3 3 2}
+{define: Gb7 frets x x 4 3 2 0}
+{define: Gb9 frets x 1 2 1 2 2}
+{define: Gbsus frets x x 4 4 2 2}
+{define: Gbsus4 frets x x 4 4 2 2}
+{define: Gbmaj frets 2 4 4 3 2 2}
+{define: Gbmaj7 frets x x 4 3 2 1}
+{define: Gbdim frets x x 1 2 1 2}
+{define: Gbm frets 2 4 4 2 2 2}
+{define: Gbmin frets 2 4 4 2 2 2}
+{define: Gbm7 frets x x 2 2 2 2}
+
+{define: G frets 3 2 0 0 0 3}
+{define: G+ frets x x 1 0 0 4}
+{define: G4 frets x x 0 0 1 3}
+{define: G6 frets 3 x 0 0 0 0}
+{define: G7 frets 3 2 0 0 0 1}
+{define: G7+ frets x x 4 3 3 2}
+{define: G7b9 frets x x 0 1 0 1}
+{define: G7(b9) frets x x 0 1 0 1}
+{define: G7#9 frets 1 3 x 2 4 4}
+{define: G7(#9) frets 1 3 x 2 4 4}
+{define: G9 frets 3 x 0 2 0 1}
+{define: G9(11) frets 1 3 1 3 1 3}
+{define: G11 frets 3 x 0 2 1 1}
+{define: Gsus frets x x 0 0 1 3}
+{define: Gsus4 frets x x 0 0 1 1}
+{define: G6sus4 frets 0 2 0 0 1 0}
+{define: G6(sus4) frets 0 2 0 0 1 0}
+{define: G7sus4 frets 3 3 0 0 1 1}
+{define: G7(sus4) frets 3 3 0 0 1 1}
+{define: Gmaj frets 3 2 0 0 0 3}
+{define: Gmaj7 frets x x 4 3 2 1}
+{define: Gmaj7sus4" x x 0 0 1 2}
+{define: Gmaj9 frets 1 1 4 1 2 1}
+{define: Gm frets 1 3 3 1 1 1}
+{define: Gmin frets 1 3 3 1 1 1}
+{define: Gdim frets x x 2 3 2 3}
+{define: Gadd9 frets 1 3 x 2 1 3}
+{define: G(add9) frets 1 3 x 2 1 3}
+{define: G/A frets x 0 0 0 0 3}
+{define: G/B frets x 2 0 0 0 3}
+{define: G/D frets x 2 2 1 0 0}
+{define: G/F# frets 2 2 0 0 0 3}
+
+{define: Gm6 frets x x 2 3 3 3}
+{define: Gm7 frets 1 3 1 1 1 1}
+{define: Gm/Bb frets 3 2 2 1 x x}
+
+{define: G# frets 1 3 3 2 1 1}
+{define: G#+ frets x x 2 1 1 0}
+{define: G#4 frets 1 3 3 1 1 1}
+{define: G#7 frets x x 1 1 1 2}
+{define: G#sus frets x x 1 1 2}
+{define: G#sus4 frets x x 1 1 2}
+{define: G#maj frets 1 3 3 2 1 1}
+{define: G#maj7 frets x x 1 1 1 3}
+{define: G#dim frets x x 0 1 0 1}
+{define: G#m frets 1 3 3 1 1 1}
+{define: G#min frets 1 3 3 1 1 1}
+{define: G#m6 frets x x 1 1 0 1}
+{define: G#m7 frets x x 1 1 1 1}
+{define: G#m9maj7 frets x x 1 3 0 3}

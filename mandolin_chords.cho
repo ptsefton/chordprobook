@@ -1,0 +1,561 @@
+{c: C}
+{define: C frets 0 2 3 0}
+{define: C frets 0 2 3 3}
+{define: C frets 0 5 3 0}
+{define: C frets 5 5 3 0}
+{define: C frets 5 2 3 3}
+{define: C base-fret 4 frets 1 1 3 0}
+{define: C base-fret 2 frets 3 3 5 1}
+{define: C base-fret 4 frets 0 1 3 4}
+{define: C base-fret 4 frets 1 1 3 4}
+{define: C base-fret 9 frets 0 1 1 0}
+{define: C base-fret 8 frets 1 2 2 0}
+{define: C base-fret 6 frets 0 4 1 0}
+{define: C base-fret 4 frets 5 1 3 4}
+{define: C base-fret 7 frets 2 3 3 1}
+
+{c: C7}
+{define: C7 frets 3 2 3 3}
+{define: C7 frets 3 5 3 0}
+{define: C7 frets 5 5 1 0}
+{define: C7 frets 5 2 1 3}
+{define: C7 base-fret 1 frets 0 1 2 5}
+{define: C7 base-fret 4 frets 1 1 3 2}
+{define: C7 base-fret 7 frets 2 1 3 1}
+{define: C7 base-fret 5 frets 0 5 2 1}
+{define: C7 base-fret 5 frets 4 5 5 1}
+
+{c: Cm}
+{define: Cm frets 0 1 3 3}
+{define: Cm frets 5 1 3 3}
+{define: Cm base-fret 2 frets 3 3 4 1}
+{define: Cm base-fret 4 frets 0 1 2 4}
+{define: Cm base-fret 4 frets 1 1 2 4}
+{define: Cm base-fret 4 frets 4 1 2 4}
+{define: Cm base-fret 7 frets 1 3 3 1}
+
+{c: Cmaj7}
+{define: Cmaj7 frets 4 2 3 3}
+{define: Cmaj7 frets 4 5 3 0}
+{define: Cmaj7 frets 5 5 2 0}
+{define: Cmaj7 frets 5 2 2 3}
+{define: Cmaj7 base-fret 4 frets 1 1 3 3}
+{define: Cmaj7 base-fret 6 frets 0 3 1 2}
+{define: Cmaj7 base-fret 6 frets 0 4 1 1}
+{define: Cmaj7 base-fret 7 frets 2 2 3 1}
+{define: Cmaj7 base-fret 6 frets 3 4 4 1}
+
+{c: Cm7}
+{define: Cm7 frets 3 1 3 3}
+{define: Cm7 frets 5 1 1 3}
+{define: Cm7 base-fret 4 frets 1 1 2 2}
+{define: Cm7 base-fret 7 frets 1 1 3 1}
+{define: Cm7 base-fret 5 frets 0 5 1 1}
+{define: Cm7 base-fret 5 frets 3 5 5 1}
+
+{c: Cadd9}
+{define: Cadd9 frets 0 0 3 0}
+{define: Cadd9 frets 5 5 5 0}
+{define: Cadd9 frets 5 2 5 3}
+{define: Cadd9 base-fret 6 frets 0 0 1 2}
+{define: Cadd9 base-fret 2 frets 5 3 1 0}
+{define: Cadd9 base-fret 2 frets 3 0 5 1}
+{define: Cadd9 base-fret 4 frets 3 1 3 4}
+{define: Cadd9 base-fret 7 frets 2 0 3 1}
+{define: Cadd9 base-fret 8 frets 1 2 2 2}
+{define: Cadd9 base-fret 6 frets 0 4 1 4}
+{define: Cadd9 base-fret 6 frets 1 4 4 0}
+
+{c: C#}
+{define: C# frets 1 3 4 1}
+{define: C# frets 1 3 4 4}
+{define: C# base-fret 2 frets 4 1 2 2}
+{define: C# base-fret 3 frets 3 3 5 1}
+{define: C# base-fret 5 frets 5 1 3 4}
+
+{c: C#7}
+{define: C#7 base-fret 1 frets 5 2 1 3}
+{define: C#7 base-fret 5 frets 1 1 3 2}
+
+{c: C#m}
+{define: C#m frets 1 2 4 0}
+{define: C#m frets 1 2 4 4}
+{define: C#m base-fret 3 frets 3 3 1 0}
+{define: C#m base-fret 5 frets 1 1 2 0}
+{define: C#m base-fret 1 frets 5 1 3 3}
+{define: C#m base-fret 3 frets 3 3 4 1}
+{define: C#m base-fret 5 frets 4 1 2 4}
+
+{c: C#maj7}
+{define: C#maj7 frets 5 3 4 4}
+{define: C#maj7 base-fret 2 frets 4 1 1 2}
+{define: C#maj7 base-fret 4 frets 1 2 4 5}
+
+{c: C#m7}
+{define: C#m7 frets 4 2 4 4}
+{define: C#m7 base-fret 1 frets 5 5 1 0}
+{define: C#m7 base-fret 1 frets 5 1 1 3}
+{define: C#m7 base-fret 5 frets 1 1 2 2}
+
+{c: C#add9}
+{define: C#add9 frets 1 1 4 1}
+{define: C#add9 base-fret 2 frets 4 1 4 2}
+{define: C#add9 base-fret 5 frets 3 1 3 4}
+
+{c: D}
+{define: D frets 2 0 0 2}
+{define: D frets 2 0 5 2}
+{define: D frets 2 4 5 2}
+{define: D frets 2 4 5 5}
+{define: D base-fret 3 frets 4 1 0 2}
+{define: D base-fret 3 frets 4 1 2 2}
+{define: D base-fret 4 frets 3 0 5 1}
+{define: D base-fret 4 frets 3 3 5 1}
+
+{c: D7}
+{define: D7 frets 2 0 3 2}
+{define: D7 frets 5 0 0 2}
+{define: D7 frets 5 4 5 5}
+{define: D7 base-fret 2 frets 5 2 1 3}
+{define: D7 base-fret 3 frets 4 1 0 5}
+{define: D7 base-fret 4 frets 1 0 5 1}
+
+{c: Dm}
+{define: Dm frets 2 0 0 1}
+{define: Dm frets 2 0 5 1}
+{define: Dm frets 2 3 5 5}
+{define: Dm frets 2 3 5 1}
+{define: Dm base-fret 2 frets 5 1 0 3}
+{define: Dm base-fret 2 frets 5 1 3 3}
+{define: Dm base-fret 4 frets 3 0 4 1}
+{define: Dm base-fret 4 frets 3 3 4 1}
+{define: Dm base-fret 9 frets 1 0 0 1}
+{define: Dm base-fret 6 frets 4 1 0 4}
+{define: Dm base-fret 6 frets 4 1 2 4}
+
+{c: Dmaj7}
+{define: Dmaj7 frets 2 0 4 2}
+{define: Dmaj7 base-fret 1 frets 5 0 0 1}
+{define: Dmaj7 base-fret 3 frets 3 1 2 2}
+{define: Dmaj7 base-fret 3 frets 4 1 1 2}
+{define: Dmaj7 base-fret 4 frets 2 0 5 1}
+{define: Dmaj7 base-fret 5 frets 1 2 4 5}
+
+{c: Dm7}
+{define: Dm7 frets 2 0 3 1}
+{define: Dm7 frets 5 0 0 1}
+{define: Dm7 frets 5 3 5 5}
+{define: Dm7 base-fret 2 frets 5 1 1 3}
+{define: Dm7 base-fret 4 frets 1 0 4 1}
+{define: Dm7 base-fret 9 frets 1 1 0 1}
+{define: Dm7 base-fret 7 frets 3 0 0 1}
+
+{c: Dadd9}
+{define: Dadd9 frets 2 4 5 0}
+{define: Dadd9 frets 2 2 5 2}
+{define: Dadd9 base-fret 3 frets 4 1 0 0}
+{define: Dadd9 base-fret 3 frets 4 1 4 2}
+{define: Dadd9 base-fret 6 frets 1 1 3 0}
+{define: Dadd9 base-fret 4 frets 5 0 5 1}
+
+{c: Eb}
+{define: Eb frets 0 1 1 3}
+{define: Eb frets 3 1 1 3}
+{define: Eb base-fret 4 frets 0 1 2 2}
+{define: Eb base-fret 2 frets 1 3 4 4}
+{define: Eb base-fret 5 frets 0 3 1 1}
+{define: Eb base-fret 4 frets 4 1 2 2}
+{define: Eb base-fret 5 frets 3 3 5 1}
+
+{c: Eb7}
+{define: Eb7 frets 3 1 4 3}
+{define: Eb7 base-fret 4 frets 2 1 2 2}
+{define: Eb7 base-fret 3 frets 5 2 1 3}
+{define: Eb7 base-fret 7 frets 1 1 3 2}
+
+{c: Ebm}
+{define: Ebm frets 3 1 1 2}
+{define: Ebm base-fret 2 frets 1 2 4 4}
+{define: Ebm base-fret 3 frets 5 1 3 3}
+{define: Ebm base-fret 5 frets 3 3 4 1}
+
+{c: Ebmaj7}
+{define: Ebmaj7 base-fret 5 frets 0 0 1 1}
+{define: Ebmaj7 frets 3 1 5 3}
+{define: Ebmaj7 base-fret 2 frets 1 0 4 1}
+{define: Ebmaj7 base-fret 4 frets 3 1 2 2}
+{define: Ebmaj7 base-fret 4 frets 4 1 1 2}
+{define: Ebmaj7 base-fret 7 frets 1 1 3 3}
+{define: Ebmaj7 base-fret 5 frets 3 0 5 1}
+
+{c: Ebm7}
+{define: Ebm7 frets 3 1 4 2}
+{define: Ebm7 base-fret 3 frets 3 1 3 3}
+{define: Ebm7 base-fret 3 frets 5 1 1 3}
+
+{c: Ebadd9}
+{define: Ebadd9 base-fret 2 frets 0 1 4 4}
+{define: Ebadd9 base-fret 2 frets 1 1 4 1}
+{define: Ebadd9 base-fret 4 frets 4 1 4 2}
+
+{c: E}
+{define: E frets 1 2 2 0}
+{define: E frets 4 2 2 4}
+{define: E frets 1 2 2 4}
+{define: E base-fret 1 frets 3 5 1 0}
+{define: E base-fret 3 frets 1 3 4 1}
+{define: E base-fret 3 frets 1 3 4 4}
+{define: E base-fret 5 frets 4 1 2 2}
+
+{c: E7}
+{define: E7 frets 1 0 2 0}
+{define: E7 frets 4 2 5 4}
+{define: E7 base-fret 5 frets 2 1 2 2}
+{define: E7 base-fret 3 frets 1 0 4 1}
+{define: E7 base-fret 4 frets 5 2 1 3}
+
+{c: Em}
+{define: Em frets 0 2 2 0}
+{define: Em frets 0 2 2 3}
+{define: Em frets 4 2 2 3}
+{define: Em frets 0 5 2 0}
+{define: Em frets 4 5 2 0}
+{define: Em base-fret 4 frets 0 1 3 3}
+{define: Em base-fret 3 frets 1 2 4 4}
+{define: Em base-fret 2 frets 2 3 5 1}
+{define: Em base-fret 6 frets 0 3 1 0}
+{define: Em base-fret 6 frets 0 3 1 1}
+{define: Em base-fret 8 frets 0 1 2 0}
+{define: Em base-fret 8 frets 1 1 2 0}
+{define: Em base-fret 4 frets 5 1 3 3}
+{define: Em base-fret 6 frets 3 3 4 1}
+
+{c: Emaj7}
+{define: Emaj7 frets 1 1 2 0}
+{define: Emaj7 base-fret 1 frets 3 1 5 3}
+{define: Emaj7 base-fret 5 frets 3 1 2 2}
+{define: Emaj7 base-fret 5 frets 4 1 1 2}
+
+{c: Em7}
+{define: Em7 frets 0 0 2 0}
+{define: Em7 frets 4 5 5 0}
+{define: Em7 frets 4 2 5 3}
+{define: Em7 base-fret 6 frets 0 0 1 1}
+{define: Em7 base-fret 4 frets 3 1 3 3}
+{define: Em7 base-fret 2 frets 2 0 5 1}
+{define: Em7 base-fret 4 frets 0 5 1 0}
+{define: Em7 base-fret 4 frets 5 1 1 3}
+{define: Em7 base-fret 8 frets 1 1 2 2}
+{define: Em7 base-fret 6 frets 1 3 4 0}
+{define: Em7 base-fret 6 frets 3 0 4 1}
+
+{c: Eadd9}
+{define: Eadd9 frets 1 2 2 2}
+{define: Eadd9 base-fret 3 frets 1 1 4 1}
+{define: Eadd9 base-fret 5 frets 4 1 4 2}
+
+{c: F}
+{define: F frets 2 3 3 1}
+{define: F frets 5 3 0 5}
+{define: F frets 5 3 3 5}
+{define: F frets 5 3 0 1}
+{define: F frets 2 3 3 5}
+{define: F base-fret 4 frets 1 3 4 1}
+{define: F base-fret 7 frets 3 3 0 1}
+{define: F base-fret 6 frets 4 1 0 2}
+{define: F base-fret 6 frets 4 1 2 2}
+
+{c: F7}
+{define: F7 frets 2 1 3 1}
+{define: F7 frets 5 1 0 1}
+{define: F7 base-fret 2 frets 3 1 4 3}
+{define: F7 base-fret 6 frets 2 1 2 2}
+
+{c: Fm}
+{define: Fm frets 1 3 3 1}
+{define: Fm frets 1 3 3 4}
+{define: Fm frets 5 3 3 4}
+{define: Fm base-fret 3 frets 2 3 5 1}
+{define: Fm base-fret 5 frets 5 1 3 3}
+
+{c: Fmaj7}
+{define: Fmaj7 frets 2 3 3 0}
+{define: Fmaj7 frets 2 2 3 1}
+{define: Fmaj7 frets 5 3 0 0}
+{define: Fmaj7 frets 5 2 0 1}
+{define: Fmaj7 base-fret 2 frets 3 1 5 3}
+{define: Fmaj7 base-fret 4 frets 1 3 4 0}
+{define: Fmaj7 base-fret 9 frets 1 1 0 0}
+{define: Fmaj7 base-fret 6 frets 3 1 2 2}
+
+{c: Fm7}
+{define: Fm7 frets 1 1 3 1}
+{define: Fm7 base-fret 2 frets 3 1 4 2}
+{define: Fm7 base-fret 5 frets 3 1 3 3}
+
+{c: Fadd9}
+{define: Fadd9 frets 2 3 3 3}
+{define: Fadd9 frets 5 3 0 3}
+{define: Fadd9 frets 0 3 3 5}
+{define: Fadd9 frets 5 5 0 1}
+{define: Fadd9 frets 2 5 3 1}
+{define: Fadd9 base-fret 4 frets 1 1 4 1}
+{define: Fadd9 base-fret 6 frets 4 1 4 2}
+
+{c: F#}
+{define: F# frets 3 4 4 2}
+{define: F# base-fret 3 frets 3 1 1 3}
+{define: F# base-fret 2 frets 1 2 2 4}
+{define: F# base-fret 5 frets 1 3 4 1}
+
+{c: F#7}
+{define: F#7 frets 3 4 4 0}
+{define: F#7 frets 3 2 4 2}
+{define: F#7 base-fret 3 frets 3 1 4 3}
+{define: F#7 base-fret 5 frets 1 3 4 0}
+
+{c: F#m}
+{define: F#m frets 2 4 4 2}
+{define: F#m frets 2 4 4 5}
+{define: F#m base-fret 3 frets 3 1 0 2}
+{define: F#m base-fret 3 frets 3 1 1 2}
+{define: F#m base-fret 1 frets 5 3 0 1}
+{define: F#m base-fret 4 frets 2 3 5 1}
+
+{c: F#maj7}
+{define: F#maj7 frets 3 3 4 2}
+{define: F#maj7 frets 3 4 4 1}
+{define: F#maj7 base-fret 3 frets 3 1 5 3}
+
+{c: F#m7}
+{define: F#m7 frets 2 4 4 0}
+{define: F#m7 frets 2 2 4 2}
+{define: F#m7 base-fret 3 frets 3 1 0 0}
+{define: F#m7 base-fret 1 frets 5 1 0 1}
+{define: F#m7 base-fret 3 frets 3 1 4 2}
+{define: F#m7 base-fret 5 frets 1 2 4 0}
+
+{c: F#add9}
+{define: F#add9 frets 3 4 4 4}
+{define: F#add9 base-fret 5 frets 1 1 4 1}
+
+{c: G}
+{define: G frets 0 0 2 3}
+{define: G frets 4 0 2 3}
+{define: G frets 4 0 5 3}
+{define: G frets 4 5 5 3}
+{define: G base-fret 4 frets 0 0 1 3}
+{define: G base-fret 4 frets 0 1 1 3}
+{define: G base-fret 4 frets 3 1 1 3}
+{define: G base-fret 3 frets 1 2 2 4}
+{define: G base-fret 4 frets 0 5 1 3}
+{define: G base-fret 8 frets 0 1 2 2}
+{define: G base-fret 6 frets 0 0 4 1}
+{define: G base-fret 6 frets 1 0 4 1}
+{define: G base-fret 6 frets 1 3 4 1}
+
+{c: G7}
+{define: G7 frets 0 0 2 1}
+{define: G7 frets 4 3 5 3}
+{define: G7 frets 4 5 5 1}
+{define: G7 base-fret 6 frets 0 0 2 1}
+{define: G7 base-fret 2 frets 0 1 3 5}
+{define: G7 base-fret 4 frets 3 1 4 3}
+{define: G7 base-fret 8 frets 2 1 2 2}
+{define: G7 base-fret 6 frets 4 0 4 1}
+
+{c: Gm}
+{define: Gm frets 0 0 1 3}
+{define: Gm frets 3 0 1 3}
+{define: Gm frets 3 0 5 3}
+{define: Gm base-fret 4 frets 0 0 1 2}
+{define: Gm frets 3 5 5 3}
+{define: Gm base-fret 4 frets 0 1 1 2}
+{define: Gm base-fret 2 frets 1 3 3 4}
+{define: Gm base-fret 4 frets 3 1 1 2}
+{define: Gm base-fret 4 frets 0 4 1 2}
+{define: Gm base-fret 7 frets 0 1 3 3}
+{define: Gm base-fret 5 frets 0 0 5 1}
+{define: Gm base-fret 5 frets 2 0 5 1}
+{define: Gm base-fret 5 frets 2 3 5 1}
+
+{c: Gmaj7}
+{define: Gmaj7 frets 0 0 2 2}
+{define: Gmaj7 frets 4 4 5 3}
+{define: Gmaj7 frets 4 5 5 2}
+{define: Gmaj7 base-fret 3 frets 0 1 2 4}
+{define: Gmaj7 base-fret 6 frets 0 0 3 1}
+{define: Gmaj7 base-fret 4 frets 3 1 5 3}
+
+{c: Gm7}
+{define: Gm7 frets 0 0 1 1}
+{define: Gm7 frets 3 3 5 3}
+{define: Gm7 frets 3 5 5 1}
+{define: Gm7 base-fret 2 frets 0 1 3 4}
+{define: Gm7 base-fret 5 frets 0 0 3 1}
+{define: Gm7 base-fret 4 frets 3 1 4 2}
+{define: Gm7 base-fret 7 frets 3 1 3 3}
+{define: Gm7 base-fret 5 frets 5 0 5 1}
+
+{c: Gadd9}
+{define: Gadd9 frets 2 0 2 3}
+{define: Gadd9 frets 4 0 0 3}
+{define: Gadd9 frets 0 0 2 5}
+{define: Gadd9 frets 4 5 5 5}
+{define: Gadd9 base-fret 6 frets 0 0 0 1}
+{define: Gadd9 base-fret 4 frets 0 3 1 3}
+{define: Gadd9 base-fret 4 frets 3 1 0 3}
+{define: Gadd9 base-fret 2 frets 2 5 3 1}
+{define: Gadd9 base-fret 4 frets 0 5 1 1}
+{define: Gadd9 base-fret 6 frets 1 1 4 1}
+
+{c: Ab}
+{define: Ab frets 1 1 3 4}
+{define: Ab frets 5 1 3 4}
+{define: Ab base-fret 3 frets 2 3 3 1}
+{define: Ab base-fret 5 frets 3 1 1 3}
+
+{c: Ab7}
+{define: Ab7 frets 1 1 3 2}
+{define: Ab7 base-fret 3 frets 2 1 3 1}
+{define: Ab7 base-fret 1 frets 4 5 5 1}
+
+{c: Abm}
+{define: Abm frets 1 1 2 4}
+{define: Abm frets 4 1 2 4}
+{define: Abm base-fret 3 frets 1 3 3 4}
+{define: Abm base-fret 5 frets 3 1 1 2}
+
+{c: Abmaj7}
+{define: Abmaj7 frets 1 1 3 3}
+{define: Abmaj7 frets 0 1 3 4}
+{define: Abmaj7 base-fret 3 frets 2 2 3 1}
+{define: Abmaj7 base-fret 2 frets 3 4 4 1}
+{define: Abmaj7 base-fret 5 frets 3 1 5 3}
+
+{c: Abm7}
+{define: Abm7 frets 1 1 2 2}
+{define: Abm7 base-fret 3 frets 1 1 3 1}
+{define: Abm7 base-fret 5 frets 3 1 4 2}
+
+{c: Abadd9}
+{define: Abadd9 frets 5 1 1 4}
+{define: Abadd9 base-fret 4 frets 1 2 2 2}
+{define: Abadd9 base-fret 3 frets 2 5 3 1}
+
+{c: A}
+{define: A frets 2 2 4 0}
+{define: A frets 2 2 4 5}
+{define: A base-fret 1 frets 5 1 0 0}
+{define: A base-fret 5 frets 1 2 0 0}
+{define: A base-fret 1 frets 5 1 0 4}
+{define: A base-fret 5 frets 1 2 2 0}
+{define: A base-fret 1 frets 5 1 3 4}
+{define: A base-fret 3 frets 3 4 1 0}
+{define: A base-fret 4 frets 2 3 3 1}
+{define: A base-fret 6 frets 3 1 0 3}
+{define: A base-fret 6 frets 3 1 1 3}
+
+{c: A7}
+{define: A7 frets 2 2 4 3}
+{define: A7 frets 2 5 4 0}
+{define: A7 frets 0 2 4 5}
+{define: A7 base-fret 4 frets 2 1 0 0}
+{define: A7 base-fret 1 frets 5 1 0 2}
+{define: A7 base-fret 3 frets 0 4 1 0}
+{define: A7 base-fret 4 frets 2 1 3 1}
+{define: A7 base-fret 2 frets 4 5 5 1}
+{define: A7 base-fret 4 frets 5 1 0 5}
+{define: A7 base-fret 5 frets 1 2 5 0}
+{define: A7 base-fret 6 frets 3 1 4 3}
+
+{c: Am}
+{define: Am frets 2 2 3 0}
+{define: Am frets 5 2 0 0}
+{define: Am frets 5 2 0 5}
+{define: Am frets 5 2 3 5}
+{define: Am frets 2 2 3 5}
+{define: Am base-fret 4 frets 1 3 0 0}
+{define: Am base-fret 4 frets 1 3 3 0}
+{define: Am base-fret 4 frets 1 3 3 1}
+{define: Am base-fret 2 frets 3 5 1 0}
+{define: Am base-fret 6 frets 3 1 0 2}
+{define: Am base-fret 8 frets 1 2 0 0}
+{define: Am base-fret 6 frets 3 1 1 2}
+{define: Am base-fret 7 frets 2 3 0 1}
+
+{c: Amaj7}
+{define: Amaj7 frets 2 2 4 4}
+{define: Amaj7 base-fret 5 frets 1 1 0 0}
+{define: Amaj7 frets 1 2 4 5}
+{define: Amaj7 base-fret 1 frets 1 5 3 0}
+{define: Amaj7 base-fret 1 frets 5 1 0 3}
+{define: Amaj7 base-fret 4 frets 2 2 3 1}
+{define: Amaj7 base-fret 3 frets 3 4 4 1}
+
+{c: Am7}
+{define: Am7 frets 2 2 3 3}
+{define: Am7 frets 5 5 0 0}
+{define: Am7 frets 2 5 3 0}
+{define: Am7 frets 5 2 0 3}
+{define: Am7 frets 0 2 3 5}
+{define: Am7 base-fret 2 frets 0 5 1 0}
+{define: Am7 base-fret 4 frets 1 1 3 1}
+{define: Am7 base-fret 2 frets 3 5 5 1}
+{define: Am7 base-fret 9 frets 0 1 0 0}
+{define: Am7 base-fret 4 frets 5 1 0 4}
+{define: Am7 base-fret 6 frets 3 1 4 2}
+
+{c: Aadd9}
+{define: Aadd9 frets 4 2 4 5}
+{define: Aadd9 base-fret 1 frets 5 1 1 4}
+{define: Aadd9 base-fret 5 frets 1 2 2 2}
+{define: Aadd9 base-fret 3 frets 1 4 1 0}
+{define: Aadd9 base-fret 5 frets 1 4 0 0}
+{define: Aadd9 base-fret 4 frets 2 5 3 1}
+
+{c: Bb}
+{define: Bb frets 3 0 1 1}
+{define: Bb frets 3 0 5 1}
+{define: Bb frets 3 3 5 1}
+{define: Bb base-fret 2 frets 1 1 3 4}
+{define: Bb base-fret 2 frets 5 1 3 4}
+{define: Bb base-fret 5 frets 2 0 3 1}
+{define: Bb base-fret 5 frets 2 3 3 1}
+{define: Bb base-fret 7 frets 3 1 1 3}
+{define: Bb base-fret 5 frets 5 0 3 1}
+
+{c: Bb7}
+{define: Bb7 frets 3 3 5 4}
+{define: Bb7 base-fret 5 frets 2 1 3 1}
+{define: Bb7 base-fret 3 frets 4 5 5 1}
+
+{c: Bbm}
+{define: Bbm frets 3 3 4 1}
+{define: Bbm base-fret 2 frets 4 1 2 4}
+{define: Bbm base-fret 2 frets 1 1 2 4}
+{define: Bbm base-fret 5 frets 1 3 3 1}
+{define: Bbm base-fret 7 frets 3 1 1 2}
+
+{c: Bbmaj7}
+{define: Bbmaj7 frets 2 0 1 1}
+{define: Bbmaj7 frets 3 0 0 1}
+{define: Bbmaj7 frets 3 3 5 5}
+{define: Bbmaj7 base-fret 1 frets 1 2 4 5}
+{define: Bbmaj7 base-fret 2 frets 5 1 0 4}
+{define: Bbmaj7 base-fret 5 frets 2 2 3 1}
+{define: Bbmaj7 base-fret 4 frets 3 4 4 1}
+{define: Bbmaj7 base-fret 5 frets 5 0 0 1}
+
+{c: Bbm7}
+{define: Bbm7 base-fret 5 frets 1 1 3 1}
+{define: Bbm7 base-fret 3 frets 3 5 5 1}
+
+{c: Bbadd9}
+{define: Bbadd9 frets 3 0 3 1}
+{define: Bbadd9 frets 5 0 1 1}
+{define: Bbadd9 base-fret 2 frets 3 1 3 4}
+{define: Bbadd9 base-fret 2 frets 5 1 1 4}
+{define: Bbadd9 base-fret 4 frets 1 0 4 2}
+{define: Bbadd9 base-fret 5 frets 2 5 3 1}
+
