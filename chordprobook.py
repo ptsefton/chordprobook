@@ -190,7 +190,7 @@ class cp_song:
     def get_key_string(self, trans = None):
         if self.original_key != None:
             self.key = self.transposer.transpose_chord(self.original_key)
-        return "(Key of %s)" % self.key if self.key != None else ""
+        return "(%s)" % self.key if self.key != None else ""
 
 class cp_song_book:
     def __init__(self, songs = [], keep_order = False, title="Songbook"):
@@ -244,7 +244,6 @@ class cp_song_book:
                 elif potential_song.startswith("## "): # A song
                     song_name = potential_song.replace("## ", "").strip()
                     song_name, transpositions = extract_transposition(song_name)
-                    print(transpositions)
                     restring = song_name.replace(" ", ".*?").lower()
                     regex = re.compile(restring)
                     found_song = False
@@ -317,17 +316,27 @@ function fill_page() {
 $("div.page").each(function() {
  var page = $(this);
  var page_height = page.height();
+ var page_width =page.width();
  var song_page = page.children("div.song-page");
  var text = song_page.children("div.song-text");
+ var heading = page.children("h1");
+
+ if (heading.length > 0) {
+  
+    heading.css('font-size', ("100px" ));
+    while (heading.width() > page.width()) {
+      heading.css('font-size', (parseInt(heading.css('font-size')) - 1) +"px" );
+    }
+ }
+
  var text_height = text.height();
  var grids_height = page.children("div.grids").height();
- var heading_height = page.children("h1").height();
+ var heading_height = heading.height();
  var chord_grids = page.children("div.grids").children("img").length;
- //grids_height = 200;
  var height_remaining = page_height - grids_height - heading_height;
 
  var i = 0;
- console.log("GRIDS", grids_height);
+ 
  if (text.length > 0)
  {
   
@@ -478,7 +487,7 @@ p {
 <style>
 .page {
 width: 23cm;
-height: 31cm;
+height: 30cm;
 padding: 0cm;
 margin: 0cm;
 border-style: solid;
@@ -509,7 +518,7 @@ font-size: 2px;
 
 
 img {
-     padding: 0px 0px 0px 0px;
+     padding: 0px 0px 0px 0pconsole.log("not", heading.width(), page.width());x;
      margin: 0px 0px 0px 0px;
      -webkit-margin-before: 0px;
      -webkit-margin-after: 0px;
@@ -517,6 +526,8 @@ img {
 h1 {
      padding: 0px 0px 0px 0px;
      margin: 0px 0px 0px 0px;
+     white-space: nowrap;
+     display: inline-block;
      -webkit-margin-before: 0px;
      -webkit-margin-after: 0px;
 }
@@ -624,8 +635,6 @@ def convert():
         list = None
     else:
        list = open(args["setlist"]).read()
-       #TODO: annotations such as who is leading this song
-       #TODO: Transpose
        list, bookfile = extract_book_filename(list)
        if bookfile != None and not args["book_file"]:
            #No book file passed so use the one we found in the setlist

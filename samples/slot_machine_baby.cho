@@ -1,46 +1,48 @@
 {title: Slot Machine Baby}
 {st: Peter Sefton & Maxine Whelan (c) 1987}
-{key: C}
 
-
-{c: Verse 1 (boy)}
+{c: Verse 1 ♂}
 [C] The other [F] day we noticed [C] that we'd [G] grown up and we
 [C] Had a [F] baby, [C] [G] that's it [C] there.
 [C] It's a [F] big one. [C] It's a [G] blue one.
 [C] It's a [F] wee one. [C] [G] It's a [C] poo one.
 
 {soc}
-{c: Chorus}
+{c: Chorus ♀♂}
 [C] Slot machine baby wee and poo [F] wee and poo [G] wee and poo
 [C] Slot machine baby wee and poo [F]  Ah, but we love you.
 {eoc}
 
-
-{c: Verse 2 (both)}
-[C]We haven't [F] sexed it yet. [C] Do you wanna [G] make a bet,
-[C] When it [F] grows up will it [C] wanna be a [G] boy or a girl or a [C] pussycat
-
+ 
+{c: Verse 2 ♀♂}
+[C]We haven't [F] sexed it yet. [C]Do you wanna [G] make a bet,
+[C] When it [F] grows up witll it [C] wanna be a [G] boy or a girls or a [C] pussycat
 
 {soc}
-{c: Chorus}
+{c: Chorus ♀♂}
 [C] Slot machine baby wee and poo [F] wee and poo [G] wee and poo
 [C] Slot machine baby wee and poo [F]  Ah, but we love you.
 {eoc}
 
-{c: Verse 3 (girl)}
+{c: Verse 3 ♀}
 [C] This bloke [F] got me pregnant and [C] pissed off [G] down the pub
 [C] He talks [F] about 'our' baby,[C] but [G] he's a [C] lazy slob
 [C] He treats me [F] like a slot machine [C] poke it in [G] see what comes out
 [C] Can hear me [F] call for dinner, [C] can't [G] hear when the [C] babies shout
 
-{c: Chorus}
-
-{c: Sing verse 1 (boy) and 3 (girl) simultaneously}
-
-
 {soc}
-{c: Chorus}
+{c: Chorus ♀♂}
 [C] Slot machine baby wee and poo [F] wee and poo [G] wee and poo
-*Boy:* [C] Slot machine baby wee and poo [F] Ah, but we love you.
-*Girl:* [C] Slot machine baby wee and poo [F] Your father says he loves you.
+[C] Slot machine baby wee and poo [F]
 {eoc}
+
+
+{sot}
+Together: ♂: Ah, but we love you.
+	  ♀: Your father says he loves you
+{eot}
+
+
+{c: Sing verses 1♂ and 3♀ simultaneously}
+
+{c: Chorus}
