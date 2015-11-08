@@ -8,6 +8,31 @@ import pypandoc
 import tempfile
 from chorddiagram import ChordChart, transposer, Instruments
 import copy
+import fnmatch
+
+
+def extract_files(text, relative_to="."):
+    """Find a chordpro list of files, and return a list of actual file paths"""
+    files_re = re.compile("{(files:) *(.*?)}", re.IGNORECASE)
+    files_search = re.search(files_re, text)
+    matches = []
+    if files_search != None:
+        files = files_search.group(2).strip()
+        text = re.sub(files_re, "", text)
+        dirs_re = re.compile("{(dirs:) *(.*?)}", re.IGNORECASE)
+        dirs_search = re.search(dirs_re, text)
+        dir_list = ["."]
+        if dirs_search != None:
+            dirs = dirs_search.group(2)
+            text = re.sub(dirs_re, "", text)
+            dir_list = dirs.split(" ")
+        for dir in dir_list:
+            for root, dirnames, filenames in os.walk(os.path.join(relative_to,dir.strip())):
+                for filename in fnmatch.filter(filenames, files):
+                    if not filename.startswith(".") and not filename in matches:
+                        matches.append(os.path.join(root, filename))
+    return text, matches
+
 
 def extract_transposition(text):
     """Find a transpose directive and get rid of it out of a string"""
@@ -652,7 +677,13 @@ def convert():
                 output_file, _ = os.path.splitext(book_name)
                 output_file = os.path.join(book_dir, output_file)
             text = book_file.read()
+            text, file_list = extract_files(text, book_dir)
             text, args["title"] = extract_title(text, args["title"] )
+            
+            for song_path in file_list:
+                print(song_path)
+                songs.append(cp_song(open(song_path).read(), path=song_path, grids = chart))
+                
             for line in text.split("\n"):
                 # Do we need to transpose this one?
                 line, transpositions = extract_transposition(line)

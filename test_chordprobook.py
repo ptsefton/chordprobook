@@ -3,7 +3,13 @@ import unittest
 import chordprobook as cpb
 
 
-class TestStringMethods(unittest.TestCase):
+class TestStuff(unittest.TestCase):
+    
+  def test_files(self):
+    song = "{title: something}\n{files: *.cho}{dirs: ./samples}"
+    song, files = cpb.extract_files(song)
+    self.assertEqual(len(files), 6)
+    
 
   def test_reorder(self):
     one1 = cpb.cp_song("{title: 1 page}")
@@ -14,12 +20,9 @@ class TestStringMethods(unittest.TestCase):
     two2.pages = 2
     book = cpb.cp_song_book([one1,two1, one2, two2])
     page = 3
-    print(book.songs)
     book.reorder(page)
-    print(book.songs)
     for song in book.songs:
       #Check that two or four page spreads start on an even page
-      print(page, song.pages)
       if song.pages % 2 == 0:
         self.assertEqual(page % 2, 0)
       page += song.pages
@@ -35,9 +38,7 @@ class TestStringMethods(unittest.TestCase):
     self.assertEqual(song.title, "A Song!")
     song = cpb.cp_song("{title: A Song!}\nSome stuff\n{key: C#}\n#A comment\n#or two", transpose=3)
     self.assertEqual(song.key, "E")
-    #self.assertEqual(song.text, "# A Song! (Key of E)\n    \nSome stuff    \n    \n")
-
-    self.assertEqual(song.to_html(), '<div class="song">\n<div class="page">\n<div>\n<h1 id="a-song-key-of-e">A Song! (Key of E)</h1>\n<p>Some stuff</p>\n</div>\n</div>\n</div>\n')
+    self.assertEqual(song.to_html(), '<div class="song">\n<div class="page">\n<h1 id="a-song-e">A Song! (E)</h1>\n<div class="song-page">\n<div class="song-text">\n<p>Some stuff</p>\n</div>\n</div>\n</div>\n</div>\n</div>\n')
     
     
   def test_transpose(self):
