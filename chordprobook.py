@@ -616,7 +616,7 @@ def convert():
     parser.add_argument('--a4', action='store_true', default=True, help='Format for printing (web page output)')
     parser.add_argument('-e', '--epub', action='store_true', help='Output epub book')
     parser.add_argument('-f', '--file-stem', default=default_output_file, help='Base file name, without extension, for output files')
-    parser.add_argument( '--html', action='store_true', default=True, help='Output HTML book, defaults to screen-formatting use --a4 option for printing (PDF generation not working unless you chose --a4 for now')
+    parser.add_argument( '--html', action='store_true', default=False, help='Output HTML book, defaults to screen-formatting use --a4 option for printing (PDF generation not working unless you chose --a4 for now')
     parser.add_argument('-w', '--word', action='store_true', help='Output .docx format')
     parser.add_argument('-p', '--pdf', action='store_true', help='Output pdf', default=True)
     parser.add_argument('-r', '--reference-docx', default = None, help="Reference docx file to use (eg with Heading 1 having a page-break before)")
@@ -681,8 +681,10 @@ def convert():
             text, args["title"] = extract_title(text, args["title"] )
             
             for song_path in file_list:
-                print(song_path)
-                songs.append(cp_song(open(song_path).read(), path=song_path, grids = chart))
+                song = cp_song(open(song_path).read(), path=song_path, grids = chart)
+                if len(song.standard_transpositions) > 1:
+                    song.format(transpose = (song.standard_transpositions[1]))
+                songs.append(song)
                 
             for line in text.split("\n"):
                 # Do we need to transpose this one?
@@ -761,7 +763,12 @@ def convert():
                 subprocess.call(command)
         
     elif args['html'] or args['pdf']:
-        html_path = output_file + ".html"
+        if args['html']:
+            html_path = output_file + ".html"
+        else:
+            temp_file = tempfile.NamedTemporaryFile(suffix=".html")
+            html_path = temp_file.name
+        
         contents = "# Contents\n\n"
         #TODO Depends on template so should be passed as an option
         start_page = 3
