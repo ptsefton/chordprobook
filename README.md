@@ -137,7 +137,7 @@ Formatting / Directive         |      Description  | Rendered as
 ### Book files
 A book file is a text file with a list of paths with and optional title (see [samples/sample-book.txt](samples/sample-book.txt)).
 
-To transpose the song, add a positive or negative integer at after the path, separated by a space. eg:
+To transpose the song, add a positive or negative integer at after the (partial) song name, separated by a space. eg:
 ```./songs/my-song.cho {transpose: +2}```
 
 
