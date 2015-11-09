@@ -799,7 +799,9 @@ def convert():
         if args['pdf']:
             pdf_path = output_file + ".pdf"
             print("Outputting PDF:", pdf_path)
-            command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', '--outline', '--outline-depth', '1', '--default-header', html_path, pdf_path]
+            command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', '--outline',
+                       '--outline-depth', '1','--header-right', "[page]/[toPage]",
+                       '--header-line', '--header-left', "%s" % title, html_path, pdf_path]
             subprocess.call(command)
             #subprocess.call(["open", pdf_path])
         

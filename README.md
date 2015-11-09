@@ -25,7 +25,7 @@ good enough for me.
 selecting files
 
 * Show chord grids at the top of the page for a range of instruments
-  (I could use some help getting better chord definitions)
+  (I could use some help getting better chord definition
 
 *  Transpose songs
 
@@ -122,7 +122,12 @@ Formatting / Directive         |      Description  | Rendered as
 {Title: \<Song title>} {t: \<Song title>}  | Song title | A top-level heading
 {Subtitle: \<Artist / songwriter name>} | Subtitle, by convention this is the composer or artist | An second-level heading
 {key: \<A...G>} | The key of the song     | Will be added to the title in brackets like ```(Key of G)``` if present.
-{transpose: +1 +2 -2} | A space separted list of semitone deltas.  | When called in single-song mode the software will automatically produce extra versions transposed as per the directive. In this can if the song is in C it would be transposed to C#, D and Bb.
+{transpose: +1 +2 -2} | A space separted list of semitone deltas.  |
+In a song file, when called in single-song mode the software will
+automatically produce extra versions transposed as per the
+directive. In this case if the song is in C it would be transposed to
+C#, D and Bb. In a book file, use after a file-path or in a setlist
+after the title of the song, on the same line.
 {C: Some comment} {Comment: Some comment} | Notes on the song  | A third level heading
 {new+page} {np} | New page | A page break. When generating HTML and PDF the software will attempt to fill each page to the screen or paper size respectively as best it can.
 {start_of_chorus} {soc} | Start of chorus. Usually followed by some variant of {c: Chorus} | Chorus is rendendered as an indendented block. TODO: make this configurable via stylesheets. In .docx format the chorus is rendered using ```Block Text``` style.
@@ -132,26 +137,36 @@ Formatting / Directive         |      Description  | Rendered as
 {sot} {start_of_tab} | Start of tab (tablature) | Rendered in a fixed width (monospace) font, as per the HTML \<pre> element. NOTE: Tabs that are acutal text-formatted representations of the fingerboard will not be transposed, although chords in square brackets will, so you can use tab-blocks to format intros or breaks where chords line up under each other 
 {eot} {end_of_tab} | End of tab | Finishes the fixed-width formatting
 {book: path_to_book} | For use in setlist files, a path to a book file relative to the setlist file or an absolute path | 
-
+{files: } & {dirs: }| A file-glob pattern to match, eg {files: *.cho}
+in a space separated list of directories| For use in book
+files only, does a recursive search in the directories for files
+matching the pattern. If the song has a {transpose: } directive it
+will use the first one 
 
 ### Book files
 A book file is a text file with a list of paths with and optional title (see [samples/sample-book.txt](samples/sample-book.txt)).
 
 To transpose the song, add a positive or negative integer at after the path, separated by a space. eg:
-```./songs/my-song.cho +2```
+```./songs/my-song.cho {transpose: +2}```
 
-TODO: Allow the book to have additional notes for songs and sub sections.
 
 ### Setlist files
 
 The setlist consists of an optional {title: } directive, and optional {book: <path>} directive followed by a list of songs, one per line.   (see [samples/sample-book.txt](samples/setlist.txt)).
 
-If there is no {book: } directive then the setlist will be selected from the song files passed in as arguments:  see the examples below.
+If there is no {book: } directive then the setlist will be selected
+from the song files passed in as arguments:  see the examples below.
 
-Identify songs by entering one or more words from the title, in order. So "Amazing" will match "Amazing Grace" and "Slot Baby" would match "Slot Machine Baby".
+Unlike book and song files, the setlist uses markdown format. Songs
+are second level headings starting with "##" and sets are first level
+headings. You can include any other markup you like.
 
-TODO: Allow the setlist to have transpositions, and to have additional notes for songs and sub sections.
+Identify songs by entering one or more words from the title, in
+order. So "## Amazing" will match "Amazing Grace" and "##Slot Baby"
+would match "Slot Machine Baby".
 
+To transpose the song, add a positive or negative integer at after the path, separated by a space. eg:
+```#My Song  {transpose: +2}```
 
 ## usage
 
@@ -211,7 +226,6 @@ optional arguments:
 
 ## Examples
 
-Create a PDF book from all the files in a directory. 
 
 * To make a PDF book (defaults to songbook.pdf) from a set of chordpro
   files:
@@ -239,11 +253,18 @@ Create a PDF book from all the files in a directory.
 * To use an instrument name with space, quote it:
 	```./chordprobook -a --file-stem=my_book --title="My book"	--instrument "5 String Banjo" samples/*.cho```
 
-* To build a book from a list of files use a book file and the -b
+* To build a book from a list of files use a book file, containing a
+   list of files, one per line and the -b
    flag. This will preserve the order you entered the songs except
    that it will make sure that two-page songs appear on facing pages.
   
     ```./chordprobook.py -b samples/sample-book.txt```
+
+* To build a book in a lazier way, use a directive such as ``{files:
+  *.cho}`` and specify a space separated directory of file names, like ``{dirs:
+  *./covers .originals}```
+  
+  ```./chordprobook.py -b samples/sample-book-lazy.txt ```
 
 * To make sure the order of songs is preserved exactly, for example to
   use as a setlist, use -k or --keep-order. This will insert blank

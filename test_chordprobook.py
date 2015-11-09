@@ -8,7 +8,8 @@ class TestStuff(unittest.TestCase):
   def test_files(self):
     song = "{title: something}\n{files: *.cho}{dirs: ./samples}"
     song, files = cpb.extract_files(song)
-    self.assertEqual(len(files), 6)
+    #OK, so this is a pretty lame test, but at least there is one!
+    self.assertEqual(len(files), 5)
     
 
   def test_reorder(self):

@@ -1,0 +1,3 @@
+{title: Sample songs}
+{dirs: .}
+{files: *.cho}
