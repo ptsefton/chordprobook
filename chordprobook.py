@@ -255,7 +255,7 @@ class cp_song_book:
         for potential_song in setlist.split("\n"):
             if potential_song.strip() != "":
                 if potential_song.startswith("# "):
-                    potential_song = potential_song.replace("#","").strip()
+                    potential_song = potential_song.replace("# ","").strip()
                     
                     # Use songs to represent sets, so each set gets a sinlge page up front of the book
                     # the text of which will scale up nice and big courtesy of the song scaling algorithm
@@ -283,9 +283,9 @@ class cp_song_book:
                             if len(transpositions) > 1 and transpositions[1] != 0:
                                 current_song.format(transpose = transpositions[1])
                             if current_song.key != None:
-                                potential_song = "## %s (in %s)" % (song_name, current_song.key)
+                                song_name = "%s (in %s)" % (song_name, current_song.key)
                             new_order.append(current_song)
-                            current_set.text +=  potential_song + "\n"
+                            current_set.text +=  "## %s\n" % song_name
                             found_song = True
                     if not found_song:
                         new_order.append(cp_song("{title: %s (not found)}" % song_name))
@@ -630,11 +630,9 @@ def convert():
     parser.add_argument('-s',
                         '--setlist',
                         default=None,
-                        help ='Use a setlist file to filter the book, one song per line and keep facing pages together. Setlist lines can be one or more words from the song title , you can also add a setlist line: {title: Title of setlist}')
+                        help ="Use a setlist file in markdown format to filter the book, one song per line, and keep facing pages together. Setlist lines can be one or more words from the song title starting with '## ', with '# ' for the names of sets and other markdown as you require in between you can also add a setlist line: {title: Title of setlist}")
     parser.add_argument('--title', default=default_title, help='Title to use for the book, if there is no title in a book file or setlist file')
     
-
-
    
 
     args = vars(parser.parse_args())
