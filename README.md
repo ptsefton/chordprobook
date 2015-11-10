@@ -122,11 +122,12 @@ Formatting / Directive         |      Description  | Rendered as
 {Title: \<Song title>} {t: \<Song title>}  | Song title | A top-level heading
 {Subtitle: \<Artist / songwriter name>} | Subtitle, by convention this is the composer or artist | An second-level heading
 {key: \<A...G>} | The key of the song     | Will be added to the title in brackets like ```(Key of G)``` if present.
+<<<<<<< HEAD
 {transpose: +1 +2 -2} | A space separted list of semitone deltas.  | In a song file, when called in single-song mode the software will
 automatically produce extra versions transposed as per the
 directive. In this case if the song is in C it would be transposed to
-C#, D and Bb. In a book file, use after a file-path or in a setlist
-after the title of the song, on the same line.
+C#, D and Bb. In a book file, use after a file-path or in a setlist after the title of the song, on the same line.
+{transpose: +1 +2 -2} | A space separted list of semitone deltas.  | In a song file, when called in single-song mode the software will automatically produce extra versions transposed as per the directive. In this case if the song is in C it would be transposed to C#, D and Bb. Can be used in a book file or a setlist file at the end of a line after a file-path or the title of the song, respectively.
 {C: Some comment} {Comment: Some comment} | Notes on the song  | A third level heading
 {new+page} {np} | New page | A page break. When generating HTML and PDF the software will attempt to fill each page to the screen or paper size respectively as best it can.
 {start_of_chorus} {soc} | Start of chorus. Usually followed by some variant of {c: Chorus} | Chorus is rendendered as an indendented block. TODO: make this configurable via stylesheets. In .docx format the chorus is rendered using ```Block Text``` style.
@@ -136,16 +137,12 @@ after the title of the song, on the same line.
 {sot} {start_of_tab} | Start of tab (tablature) | Rendered in a fixed width (monospace) font, as per the HTML \<pre> element. NOTE: Tabs that are acutal text-formatted representations of the fingerboard will not be transposed, although chords in square brackets will, so you can use tab-blocks to format intros or breaks where chords line up under each other 
 {eot} {end_of_tab} | End of tab | Finishes the fixed-width formatting
 {book: path_to_book} | For use in setlist files, a path to a book file relative to the setlist file or an absolute path | 
-{files: } & {dirs: }| A file-glob pattern to match, eg {files: *.cho}
-in a space separated list of directories| For use in book
-files only, does a recursive search in the directories for files
-matching the pattern. If the song has a {transpose: } directive it
-will use the first one 
+{files: } & {dirs: }| A file-glob pattern to match, eg {files: *.cho} in a space separated list of directories| For use in book files only, does a recursive search in the directories for files matching the pattern. If the song has a {transpose: } directive it will use the first one 
 
 ### Book files
 A book file is a text file with a list of paths with and optional title (see [samples/sample-book.txt](samples/sample-book.txt)).
 
-To transpose the song, add a positive or negative integer at after the path, separated by a space. eg:
+To transpose the song, add a positive or negative integer at after the (partial) song name, separated by a space. eg:
 ```./songs/my-song.cho {transpose: +2}```
 
 
