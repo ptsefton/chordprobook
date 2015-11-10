@@ -653,6 +653,9 @@ def convert():
         #TODO - relative to this file!
         chart = ChordChart()
         chart.load_tuning_by_name(args['instrument'])
+        if chart.error != None:
+            print(chart.error)
+            chart = None
     else:
         chart = None
     #Is there a setlist file?
@@ -660,10 +663,11 @@ def convert():
         list = None
     else:
        list = open(args["setlist"]).read()
+       set_dir, set_name = os.path.split(args["setlist"])
        list, bookfile = extract_book_filename(list)
        if bookfile != None and not args["book_file"]:
            #No book file passed so use the one we found in the setlist
-           args["files"] = [open(bookfile,'r')]
+           args["files"] = [open(os.path.join(set_dir,bookfile),'r')]
            args["book_file"] = True
            
        
@@ -779,7 +783,6 @@ def convert():
             start_page += 1
         page_count = start_page
         #Make a table of contents
-        #TODO - LINK!
         #TODO - Move this to book class
         for song  in book.songs:
             if not song.blank:

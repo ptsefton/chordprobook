@@ -1,10 +1,11 @@
 {Title: Gig number 1,000}
+{book: ./sample-book-lazy.txt}
 
 # Set 1
 
 ## Baby
 > Play with a lively feel, start with a manic synth solo!
->> Not that lively!
+>> But not **that** lively!
 
 ## Uni
 

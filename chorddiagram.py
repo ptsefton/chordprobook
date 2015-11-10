@@ -153,6 +153,7 @@ class ChordChart:
         self.grids = {}
         self.tuning = None
         self.transposer = transposer(0)
+        self.error = None
         
     def load_tuning_by_name(self, instrument_name):
         """
@@ -164,15 +165,6 @@ class ChordChart:
         If it can't find the file will try to find a chord chart with the same
         relative tuning eg DGBE should find GCEA
 
-         if strings != None:
-            self.tuning = strings
-        path, file = os.path.split(os.path.realpath(__file__))
-        f = os.path.join(path, "%s_chords.cho" %  self.transposer.transpose_chord(self.tuning))
-        if os.path.exists(f):
-            self.load_file(open(f))
-        elif self.transposer.offset < 11:
-            self.transposer.offset += 1
-            self.load_tuning()
         """
         instruments = Instruments()
         defs_file = instruments.get_chordpro_file_by_name(instrument_name)
@@ -184,7 +176,8 @@ class ChordChart:
                 self.load_file(open(f))
             else:
                 print("******** Unable to load %s" % f)
-            
+        else:
+            self.error = "Instrument not found"    
 
     def load(self, f):
         self.load_file(f.split("\\n"))

@@ -122,8 +122,7 @@ Formatting / Directive         |      Description  | Rendered as
 {Title: \<Song title>} {t: \<Song title>}  | Song title | A top-level heading
 {Subtitle: \<Artist / songwriter name>} | Subtitle, by convention this is the composer or artist | An second-level heading
 {key: \<A...G>} | The key of the song     | Will be added to the title in brackets like ```(Key of G)``` if present.
-{transpose: +1 +2 -2} | A space separted list of semitone deltas.  |
-In a song file, when called in single-song mode the software will
+{transpose: +1 +2 -2} | A space separted list of semitone deltas.  | In a song file, when called in single-song mode the software will
 automatically produce extra versions transposed as per the
 directive. In this case if the song is in C it would be transposed to
 C#, D and Bb. In a book file, use after a file-path or in a setlist
@@ -286,6 +285,5 @@ optional arguments:
 *  Or use a book file and filter that:
 
     ```./chordprobook.py -s samples/setlist.txt -b samples/sample-book.txt```
-
 
 
