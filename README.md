@@ -122,11 +122,6 @@ Formatting / Directive         |      Description  | Rendered as
 {Title: \<Song title>} {t: \<Song title>}  | Song title | A top-level heading
 {Subtitle: \<Artist / songwriter name>} | Subtitle, by convention this is the composer or artist | An second-level heading
 {key: \<A...G>} | The key of the song     | Will be added to the title in brackets like ```(Key of G)``` if present.
-<<<<<<< HEAD
-{transpose: +1 +2 -2} | A space separted list of semitone deltas.  | In a song file, when called in single-song mode the software will
-automatically produce extra versions transposed as per the
-directive. In this case if the song is in C it would be transposed to
-C#, D and Bb. In a book file, use after a file-path or in a setlist after the title of the song, on the same line.
 {transpose: +1 +2 -2} | A space separted list of semitone deltas.  | In a song file, when called in single-song mode the software will automatically produce extra versions transposed as per the directive. In this case if the song is in C it would be transposed to C#, D and Bb. Can be used in a book file or a setlist file at the end of a line after a file-path or the title of the song, respectively.
 {C: Some comment} {Comment: Some comment} | Notes on the song  | A third level heading
 {new+page} {np} | New page | A page break. When generating HTML and PDF the software will attempt to fill each page to the screen or paper size respectively as best it can.
