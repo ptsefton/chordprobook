@@ -122,11 +122,6 @@ Formatting / Directive         |      Description  | Rendered as
 {Title: \<Song title>} {t: \<Song title>}  | Song title | A top-level heading
 {Subtitle: \<Artist / songwriter name>} | Subtitle, by convention this is the composer or artist | An second-level heading
 {key: \<A...G>} | The key of the song     | Will be added to the title in brackets like ```(Key of G)``` if present.
-<<<<<<< HEAD
-{transpose: +1 +2 -2} | A space separted list of semitone deltas.  | In a song file, when called in single-song mode the software will
-automatically produce extra versions transposed as per the
-directive. In this case if the song is in C it would be transposed to
-C#, D and Bb. In a book file, use after a file-path or in a setlist after the title of the song, on the same line.
 {transpose: +1 +2 -2} | A space separted list of semitone deltas.  | In a song file, when called in single-song mode the software will automatically produce extra versions transposed as per the directive. In this case if the song is in C it would be transposed to C#, D and Bb. Can be used in a book file or a setlist file at the end of a line after a file-path or the title of the song, respectively.
 {C: Some comment} {Comment: Some comment} | Notes on the song  | A third level heading
 {new+page} {np} | New page | A page break. When generating HTML and PDF the software will attempt to fill each page to the screen or paper size respectively as best it can.
@@ -155,10 +150,9 @@ from the song files passed in as arguments:  see the examples below.
 
 Unlike book and song files, the setlist uses markdown format. Songs
 are second level headings starting with "##" and sets are first level
-headings. You can include any other markup you like.
-
+headings. You can include any other (Pandoc) markdown markup you like.
 Identify songs by entering one or more words from the title, in
-order. So "## Amazing" will match "Amazing Grace" and "##Slot Baby"
+order. So "## Amazing" will match "Amazing Grace" and "## Slot Baby"
 would match "Slot Machine Baby".
 
 To transpose the song, add a positive or negative integer at after the path, separated by a space. eg:
@@ -168,8 +162,7 @@ To transpose the song, add a positive or negative integer at after the path, sep
 
 To see  usage info, type:
 ```
-./chorprobook.py
-
+chordprobook.py --help
 
 usage: chordprobook.py [-h] [-a] [-i INSTRUMENT] [--instruments] [-k] [--a4]
                        [-e] [-f FILE_STEM] [--html] [-w] [-p]
@@ -209,10 +202,13 @@ optional arguments:
                         to transpose up one tone: song-file.cho +2, you can
                         also add a title line: {title: Title of book}
   -s SETLIST, --setlist SETLIST
-                        Use a setlist file to filter the book, one song per
-                        line and keep facing pages together. Setlist lines can
-                        be one or more words from the song title , you can
-                        also add a setlist line: {title: Title of setlist}
+                        Use a setlist file in markdown format to filter the
+                        book, one song per line, and keep facing pages
+                        together. Setlist lines can be one or more words from
+                        the song title starting with '## ', with '# ' for the
+                        names of sets and other markdown as you require in
+                        between you can also add a setlist line: {title: Title
+                        of setlist}
   --title TITLE         Title to use for the book, if there is no title in a
                         book file or setlist file
 
@@ -221,7 +217,6 @@ optional arguments:
 
 
 ## Examples
-
 
 * To make a PDF book (defaults to songbook.pdf) from a set of chordpro
   files:
