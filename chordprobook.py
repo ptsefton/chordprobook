@@ -78,7 +78,6 @@ class cp_song:
         self.title = title
         self.path = path
         self.notes_md = ""
-        self.chords_used = []
         self.transpose = transpose
         self.transposer = transposer(transpose)
         self.__find_title()
@@ -149,7 +148,7 @@ class cp_song:
         """ Create a markdown version of the song, transposed if necessary """
         if transpose != None:
             self.transposer = transposer(transpose)
-            
+        self.chords_used = []    
         def format_chord(chord):
             if self.transposer.offset != 0:
                 chord = self.transposer.transpose_chord(chord)
