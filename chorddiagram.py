@@ -214,7 +214,7 @@ class ChordChart:
         if chord != None:
             return chord.to_md()     
         else:
-            return("[%s]" % chord_name)
+            return(None)
 
     def get_default(self, chord_name):
         chord_name = self.normalise_chord_name(chord_name)

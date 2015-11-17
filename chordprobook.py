@@ -179,10 +179,12 @@ class cp_song:
         title = "%s %s" % (self.title, key_string)
         grid_md = ""
         if self.grids != None:
+            
             grid_md = "<div class='grids'>"
             for chord_name in self.chords_used:
-                grid_md += "<div style='float:left;align:center'>%s<br/>%s</div>" % (self.grids.grid_as_md(chord_name),
-                                                                                                   chord_name)
+                md = self.grids.grid_as_md(chord_name)
+                if md != None:
+                    grid_md += "<div style='float:left;align:center'>%s<br/>%s</div>" % (md, chord_name)
             grid_md += "<div style='clear:left'></div></div>"   
       
         song = "# %s\n%s\n<div class='song-page'><div class='song-text'>\n%s\n%s\n\n</div></div>" % ( title, grid_md, self.notes_md, song)
@@ -683,9 +685,10 @@ def convert():
             
             for song_path in file_list:
                 song = cp_song(open(song_path).read(), path=song_path, grids = chart)
-                if len(song.standard_transpositions) > 1:
-                    song.format(transpose = (song.standard_transpositions[1]))
-                songs.append(song)
+                for trans in song.standard_transpositions:
+                    s = copy.deepcopy(song)
+                    s.format(transpose = trans)
+                    songs.append(s)
                 
             for line in text.split("\n"):
                 # Do we need to transpose this one?
@@ -704,7 +707,7 @@ def convert():
   
     # Make all the input files into a book object
     book = cp_song_book(songs, keep_order = args['keep_order'], title=args["title"])
-
+    
     # If there's a setlist file use it
     if args["setlist"] != None:
        #Let the setlist override titles set elsewere
