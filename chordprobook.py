@@ -156,7 +156,6 @@ class cp_song:
               
                 new_text += "%s\n" % line
             else:
-                print(dir, line)
                 if dir.type == directive.comment:
                     if in_chorus:
                         #">" is Markdown for blockquote
