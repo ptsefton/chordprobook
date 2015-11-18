@@ -15,6 +15,12 @@ the text (not yet anyway). Displaying chords inline is more compact. If it's goo
 and for [Richard G](http://www.scorpexuke.com/ukulele-songs.html) it's
 good enough for me.
 
+## Status
+
+This is alpha code, until there are other people using it will
+continue to develop without branches and may make breaking
+changes. Let me know if you want a more stable release.
+
 ## Features
 
 * Generate books from files passed on the command line
