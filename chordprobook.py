@@ -64,6 +64,51 @@ def extract_book_filename(text, book = None):
         text = re.sub(book_re, "", text)
     return text, book_filename
 
+class directive:
+    """Simple data structure for a directive, with name and optional value"""
+    title, subtitle, key, start_chorus, end_chorus, start_tab, end_tab, start_bridge, end_bridge, transpose, new_page, define, grids, comment, instrument, tuning = range(0,16)
+    directives = {"t": title,
+                  "title": title,
+                  "st": subtitle,
+                  "subtitle": subtitle,
+                  "key": key,
+                  "start_of_chorus": start_chorus,
+                  "soc": start_chorus,
+                  "end_of_chorus": end_chorus,
+                  "eoc": end_chorus,
+                  "start_of_tab": start_tab,
+                  "sot": start_tab,
+                  "end_of_tab": end_tab,
+                  "eot": end_tab,
+                  "start_of_chorus": start_chorus,
+                  "sob": start_bridge,
+                  "end_of_bridge": end_bridge,
+                  "eob": end_bridge,
+                  "st": subtitle,
+                  "transpose": transpose,
+                  "tr": transpose,
+                  "new_page": new_page,
+                  "np": "new_page",
+                  "define": define,
+                  "grids": grids,
+                  "comment": comment,
+                  "c": comment,
+                  "instrument": instrument,
+                  "tuning": tuning}
+    
+        
+    def __init__(self, line):
+        """Takes a line of text as input"""
+        line = line.strip()
+        self.type = None
+        if line.startswith("{") and line.endswith("}"):
+            name, _, self.value = line[1:-1].partition(":")
+            name = name.lower()
+            if name in directive.directives:
+                self.type = directive.directives[name]
+                self.value = self.value.strip()
+
+
 class cp_song:
     """ Represents a song, with the text, key, chord grids etc"""
     def __init__(self, song, title="Song", transpose=0, blank = False, path = None, grids = None):
@@ -75,21 +120,80 @@ class cp_song:
         self.key = None
         self.pages = 1
         self.original_key = None
-        self.title = title
         self.path = path
         self.notes_md = ""
         self.transpose = transpose
         self.transposer = transposer(transpose)
-        self.__find_title()
-        if self.title == None:
+        self.standard_transpositions = [0]
+        self.title = ""
+        self.parse()
+        if self.title == "":
             self.title = title
-        self.__find_key()
-        self.__find_transpositions()
-        self.__format_tab()
-        self.__format_chorus()
-        self.format()    
-        
-
+        self.format()
+          
+    def parse(self):
+        in_chorus = False
+        in_tab = False
+        new_text = ""
+        #Add four spaces to mid-stanza line ends to force Markdown to add breaks
+        self.text = re.sub("(.)\n(.)", "\\1    \\n\\2", self.text)
+                      
+        #TODO
+        # TITLE, KEY, ST, TRANSPOSE
+        for line in self.text.split("\n"):
+            dir = directive(line)
+            if dir.type == None:
+                if in_chorus:
+                    #">" is Markdown for blockquote
+                    new_text += ">"
+                elif in_tab:
+                    #Four spaces in Markdown means preformatted
+                    new_text += "    "
+                else:
+                    #Highlight chords
+                    line = line.replace("][","] [")
+                    line = re.sub("\[(.*?)\]","**[\\1]**",line)
+              
+                new_text += "%s\n" % line
+            else:
+                print(dir, line)
+                if dir.type == directive.comment:
+                    if in_chorus:
+                        #">" is Markdown for blockquote
+                        new_text += ">"
+                    new_text += "## %s\n" % dir.value
+                    
+                elif dir.type == directive.title:
+                    self.title += dir.value
+                    
+                elif dir.type == directive.subtitle:
+                    self.title += dir.value
+                    
+                elif dir.type == directive.key:
+                    self.original_key = dir.value
+                    self.key = self.transposer.transpose_chord(self.original_key)
+                    
+                elif dir.type == directive.transpose:
+                    trans = dir.value.split(" ")
+                    self.standard_transpositions += [int(x) for x in trans]
+                    
+                elif dir.type in [directive.start_chorus, directive.start_bridge]:
+                    #Treat bridge and chorus formatting the same
+                    in_chorus = True
+                    in_tab = False
+                    
+                elif dir.type in [directive.end_chorus, directive.end_bridge]:
+                    in_tab = False
+                    in_chorus = False
+                    
+                elif dir.type == directive.start_tab:
+                    in_tab = True
+                    in_chorus = False
+                    
+                elif dir.type == directive.end_tab :
+                    in_tab = False
+        self.text = new_text
+               
     def __find_title(self):
         self.text, self.title = extract_title(self.text, title=self.title)
 
@@ -97,51 +201,8 @@ class cp_song:
     def __find_transpositions(self):
         self.text, self.standard_transpositions = extract_transposition(self.text)
        
-            
-    def __find_key(self):
-        key_re = re.compile("{key: *(.*)}", re.IGNORECASE)
-        key_search = re.search(key_re, self.text)
-        if key_search != None:
-            self.original_key = key_search.group(1)
-            self.key = self.transposer.transpose_chord(self.original_key)
-            self.text = re.sub(key_re, "", self.text)
-            
-
-    def __format_chorus(self):
-        in_chorus = False
-        new_text = ""
-        for line in self.text.split("\n"):
-            if re.match("{(soc|start_of_chorus|sob|start_of_bridge)}", line):
-                in_chorus = True
-            elif re.match("{(eoc|end_of_chorus|eob|end_of_bridge)}", line):
-                in_chorus = False
-            else:
-                if in_chorus:
-                    new_text += ">"
-                new_text += line + "\n"
-        if in_chorus:
-            new_text +=  "\n\n"
-        self.text = new_text
         
-    def __format_tab(self):
-        in_tab = False
-        new_text = ""
-        for line in self.text.split("\n"):
-            if re.match("{(sot|start_of_tab)}", line):
-                in_tab = True
-                new_text += "\n\n```\n"
-            elif re.match("{(eot|end_of_tab)}", line):
-                in_tab = False
-                new_text += "```\n"
-            else:
-                if not in_tab:
-                    #Highlight chords
-                    line = line.replace("][","] [")
-                    line = re.sub("\[(.*?)\]","**[\\1]**",line)
-                new_text += line + "\n"
-        if in_tab:
-            new_text +=  "```"
-        self.text = new_text
+        
      
         
     def format(self, transpose=None):
@@ -161,17 +222,6 @@ class cp_song:
             return("[%s]" % chord)
                 
         song =  self.text
-        #Add four spaces to mid-stanza line ends to force Markdown to add breaks
-        song = re.sub("(.)\n(.)", "\\1    \\n\\2", song)
-        
-        #TAB
-        #song = re.sub("{(sot|eot|start_of_tab|end_of_tab)}","```", song)
-        # Subtitle
-        song = re.sub("{(st:|subtitle:) *(.*)}","\n*\\2*", song)
-        
-        #Comments / headings
-        song = re.sub("{(c:|comment:) *(.*)}","**\\2**", song)
-
         #Chords
         song = re.sub("\[(.*?)\]",lambda m: format_chord(m.group(1)),song)
             
@@ -647,9 +697,11 @@ def convert():
     songs = []
     output_file =  args["file_stem"]
 
+    #Need to be able to pass this into songs now
+    instruments = Instruments()
+    
     # Do we want chord grids?
     if args["instrument"] != None:
-        instruments = Instruments()
         instrument = instruments.get_instrument_by_name(args['instrument'])
         if instrument != None:
             instrument.load_chord_chart()

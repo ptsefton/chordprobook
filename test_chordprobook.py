@@ -4,7 +4,25 @@ import chordprobook as cpb
 
 
 class TestStuff(unittest.TestCase):
-    
+
+  def test_directive(self):
+      d = cpb.directive("{title: This is a my title}")
+      self.assertEqual(d.type, cpb.directive.title)
+      d = cpb.directive("{st: This: is a my: subtitle title}")
+      self.assertEqual(d.type, cpb.directive.subtitle)
+      d = cpb.directive("{grids}")
+      self.assertEqual(d.type, cpb.directive.grids)
+      #Allow extra space
+      d = cpb.directive(" {grids}   ")
+      self.assertEqual(d.type, cpb.directive.grids)
+      #Allow things to have values, or not
+      d = cpb.directive(" {grids: C#7}   ")
+      self.assertEqual(d.type, cpb.directive.grids)
+      self.assertEqual(d.value, "C#7")
+      d = cpb.directive(" {grids: C#7 Bbsus4   }   ")
+      self.assertEqual(d.type, cpb.directive.grids)
+      self.assertEqual(d.value, "C#7 Bbsus4")
+      
   def test_files(self):
     song = "{title: something}\n{files: *.cho}{dirs: ./samples}"
     song, files = cpb.extract_files(song)
