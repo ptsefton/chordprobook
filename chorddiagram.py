@@ -6,7 +6,7 @@ import os.path
 import yaml
 
 class Instruments:
-    """Set of instruments we know about, read in from a data file so we can get more"""
+    """Set of instruments we know about, TODO read in from a data file so we can get more"""
     
     def __init__(self):
         path, file = os.path.split(os.path.realpath(__file__))
@@ -30,8 +30,14 @@ class Instruments:
             self.tuning_lookup[inst.tuning].append(inst)
         else:
             self.tuning_lookup[inst.tuning] = [inst]
-
             
+    def get_instrument_by_name(self, instrument_name):
+        instrument_name = instrument_name.lower()
+        if instrument_name in self.name_lookup:
+            return(self.name_lookup[instrument_name])
+        else:
+            return None
+        
     def get_instruments_by_tuning(self, tuning):
         if tuning in self.tuning_lookup:
             return self.tuning_lookup[tuning]
@@ -82,6 +88,16 @@ class Instrument:
             self.transpose = int(data['transpose'])
         else:
              self.transpose = 0
+        self.chart = None
+        self.error = None
+        
+    def load_chord_chart(self):
+        defs_file = self.chord_definitions
+        if defs_file != None:
+            if os.path.exists(defs_file):
+                self.chart = ChordChart(self.transpose, defs_file)
+            else:
+                self.error = "Chord defs file not found: %s"  % defs_file
 
 class transposer:
    
@@ -148,11 +164,13 @@ class ChordVoicings:
 
     
 class ChordChart:
-    def __init__(self):
+    def __init__(self, transpose = 0,file = None):
         """Container for a set of chord-grids"""
         self.grids = {}
         self.tuning = None
-        self.transposer = transposer(0)
+        self.transposer = transposer(transpose)
+        if file != None:
+            self.load_file(open(file))
         self.error = None
         
     def load_tuning_by_name(self, instrument_name):

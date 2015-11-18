@@ -21,6 +21,12 @@ This is alpha code, until there are other people using it will
 continue to develop without branches and may make breaking
 changes. Let me know if you want a more stable release.
 
+There are some (patchy) unit tests, I will improve this over time.
+
+Most of the song parsing uses brute force regular expressions, this
+performs pretty well, but I am thinking about implementing a
+simple line-by line parser with states.
+
 ## Features
 
 * Generate books from files passed on the command line
@@ -60,15 +66,7 @@ put it on the floor, unless you're viewing in on a tablet.
 
 This is still experimental, but the idea is to produce HTML that fills the screen for use on tablets, phones, etc with swipe navigatoin.
 
-### TODO
 
-When I get time I'll convert these TODOs into github milestones.
-
-* Generate error reports as text files when things fail
-
-* Allow comment/notes  in setlists
-
-* Better doco including in the code
 
 ### Probably won't do
 * Make a GUI, but see the comment below about auto-creating PDF

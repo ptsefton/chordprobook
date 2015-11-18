@@ -649,12 +649,15 @@ def convert():
 
     # Do we want chord grids?
     if args["instrument"] != None:
-        #TODO - relative to this file!
-        chart = ChordChart()
-        chart.load_tuning_by_name(args['instrument'])
-        if chart.error != None:
-            print(chart.error)
-            chart = None
+        instruments = Instruments()
+        instrument = instruments.get_instrument_by_name(args['instrument'])
+        if instrument != None:
+            instrument.load_chord_chart()
+            chart = instrument.chart
+            if chart == None:
+                print(instrument.error)
+        else:
+            print("No such instrument on file. Try ./chordprobook.py --instruments to get a list")
     else:
         chart = None
     #Is there a setlist file?

@@ -13,6 +13,17 @@ class TestIntruments(unittest.TestCase):
     self.assertEqual(len(ukes), 2)
     instruments.describe()
     self.assertEqual(instruments.get_tuning_by_name("Uke"), "GCEA")
+    self.assertEqual(instruments.get_instrument_by_name("0 String Banjo"), None)
+    uke = instruments.get_instrument_by_name("Uke")
+    uke.load_chord_chart()
+    chord = uke.chart.get_default("C7")
+    self.assertEqual(chord.to_chordpro(),"{define: C7 frets 0 0 0 1}") #TODO FIX THIS TO INCLUDE FINGERINGS ETC
+
+    p = instruments.get_instrument_by_name("Plucky")
+    p.load_chord_chart()
+    chord = p.chart.get_default("C7")
+    self.assertEqual(chord.to_chordpro(),"{define: C7 frets 3 0 0 0}")
+    #chord.show()
 
 class TestChorddiagram(unittest.TestCase):
 
@@ -178,7 +189,7 @@ class TestChorddiagram(unittest.TestCase):
         chart = cd.ChordChart()
         chart.load_tuning_by_name("Soprano Uke")
         self.assertEqual(chart.grid_as_md("F#7"), chart.grid_as_md("F#7!"))
-        chart.get_default("F#7").show()
+        #chart.get_default("F#7").show()
         self.assertEqual(chart.grid_as_md("F#7///"), chart.grid_as_md("F#7"))
         self.assertEqual(chart.normalise_chord_name("Fadd9"), "F9")
         
