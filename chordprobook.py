@@ -6,7 +6,7 @@ import os
 import subprocess
 import pypandoc
 import tempfile
-from chorddiagram import ChordChart, transposer, Instruments
+from chorddiagram import ChordChart, transposer, Instruments, Instrument
 import copy
 import fnmatch
 
@@ -111,11 +111,16 @@ class directive:
 
 class cp_song:
     """ Represents a song, with the text, key, chord grids etc"""
-    def __init__(self, song, title="Song", transpose=0, blank = False, path = None, grids = None):
+    def __init__(self, song, title="Song", transpose=0, blank = False, path = None, instruments = None, instrument_name=None):
         self.blank = blank
-        self.grids = grids
-        # Remove comments (as in remarks, not {c: })
-        song = re.sub("\n#.*","", song)
+        if instruments == None:
+            self.instruments = Instruments()
+        else:
+            self.instruments = copy.deepcopy(instruments)
+        # Look-up
+        self.instrument_name = instrument_name
+        self.current_instrument = None
+        self.local_instrument_names = []
         self.text = song
         self.key = None
         self.pages = 1
@@ -135,33 +140,31 @@ class cp_song:
         in_chorus = False
         in_tab = False
         new_text = ""
-        #Add four spaces to mid-stanza line ends to force Markdown to add breaks
-        self.text = re.sub("(.)\n(.)", "\\1    \\n\\2", self.text)
-                      
-        #TODO
-        # TITLE, KEY, ST, TRANSPOSE
+        
         for line in self.text.split("\n"):
             dir = directive(line)
             if dir.type == None:
-                if in_chorus:
-                    #">" is Markdown for blockquote
-                    new_text += ">"
-                elif in_tab:
-                    #Four spaces in Markdown means preformatted
-                    new_text += "    "
-                else:
-                    #Highlight chords
-                    line = line.replace("][","] [")
-                    line = re.sub("\[(.*?)\]","**[\\1]**",line)
-              
-                new_text += "%s\n" % line
+                if not line.startswith('#'):
+                    if in_chorus:
+                        #">" is Markdown for blockquote
+                        new_text += "> "
+                    if in_tab:
+                        #Four spaces in Markdown means preformatted
+                        new_text += "    "
+                    else:
+                        #Highlight chords
+                        line = line.replace("][","] [").strip()
+                        line = re.sub("\[(.*?)\]","**[\\1]**",line)
+                    new_text += "%s\n" % line
             else:
+                in_tab = False #Assume user has forgotten to close a tab block
                 if dir.type == directive.comment:
                     if in_chorus:
                         #">" is Markdown for blockquote
-                        new_text += ">"
-                    new_text += "## %s\n" % dir.value
-                    
+                        new_text += "\n> **%s**\n" % dir.value
+                    else:
+                        new_text += "\n**%s**\n" % dir.value
+    
                 elif dir.type == directive.title:
                     self.title += dir.value
                     
@@ -179,19 +182,38 @@ class cp_song:
                 elif dir.type in [directive.start_chorus, directive.start_bridge]:
                     #Treat bridge and chorus formatting the same
                     in_chorus = True
-                    in_tab = False
-                    
+
                 elif dir.type in [directive.end_chorus, directive.end_bridge]:
-                    in_tab = False
                     in_chorus = False
                     
                 elif dir.type == directive.start_tab:
                     in_tab = True
-                    in_chorus = False
                     
                 elif dir.type == directive.end_tab :
                     in_tab = False
-        self.text = new_text
+                    
+                elif dir.type == directive.new_page:
+                    new_text +=  "\n<!-- new_page -->\n"
+                    self.pages += 1
+                elif dir.type == directive.instrument:
+                    inst_name = dir.value
+                    current_instrument = self.instruments.get_instrument_by_name(inst_name)
+                    if current_instrument == None:
+                        current_instrument = Instrument(name = inst_name)
+                        current_instrument.chart = ChordChart()
+                        self.instruments.add_instrument(current_instrument)
+                    else:
+                        current_instrument.load_chord_chart()
+          
+                elif dir.type == directive.define:
+                    if current_instrument != None:
+                        current_instrument.chart.add_grid(line)
+                        
+                    
+                    
+            self.text = new_text
+            #Add four spaces to mid-stanza line ends to force Markdown to add breaks
+            self.text = re.sub("(.)\n(.)", "\\1    \\n\\2", self.text)
                
     def __find_title(self):
         self.text, self.title = extract_title(self.text, title=self.title)
@@ -199,13 +221,17 @@ class cp_song:
     
     def __find_transpositions(self):
         self.text, self.standard_transpositions = extract_transposition(self.text)
-       
-        
-        
      
         
     def format(self, transpose=None):
-        """ Create a markdown version of the song, transposed if necessary """
+        """
+        Create a markdown version of the song, transposed if necessary,
+        does the last-minute formatting on the song incuding transposition
+        and fetching chord grids """
+        if self.instrument_name != None:
+            self.grids = self.instruments.get_instrument_by_name(self.instrument_name).chart
+        else:
+            self.grids = None
         if transpose != None:
             self.transposer = transposer(transpose)
         self.chords_used = []    
@@ -221,6 +247,7 @@ class cp_song:
             return("[%s]" % chord)
                 
         song =  self.text
+        
         #Chords
         song = re.sub("\[(.*?)\]",lambda m: format_chord(m.group(1)),song)
             
@@ -228,9 +255,8 @@ class cp_song:
         title = "%s %s" % (self.title, key_string)
         grid_md = ""
         if self.grids != None:
-            
             grid_md = "<div class='grids'>"
-            for chord_name in self.chords_used:
+            for chord_name in self.chords_used:                
                 md = self.grids.grid_as_md(chord_name)
                 if md != None:
                     grid_md += "<div style='float:left;align:center'>%s<br/>%s</div>" % (md, chord_name)
@@ -238,11 +264,8 @@ class cp_song:
       
         song = "# %s\n%s\n<div class='song-page'><div class='song-text'>\n%s\n%s\n\n</div></div>" % ( title, grid_md, self.notes_md, song)
        
-        song, pages = re.subn("{(new_page|np)}", "<!-- new_page -->", song)
-        if pages > 0:
-            self.pages = pages + 1
-        self.md = song
         
+        self.md = song
     def to_html(self):
         #TODO STANDALONE
         self.format()
@@ -686,8 +709,10 @@ def convert():
    
 
     args = vars(parser.parse_args())
+    #Need to be able to pass this into songs now
+    instruments = Instruments()
+    
     if args["instruments"]:
-        instruments = Instruments()
         instruments.describe()
         exit()
         
@@ -696,8 +721,7 @@ def convert():
     songs = []
     output_file =  args["file_stem"]
 
-    #Need to be able to pass this into songs now
-    instruments = Instruments()
+
     
     # Do we want chord grids?
     if args["instrument"] != None:
@@ -709,8 +733,7 @@ def convert():
                 print(instrument.error)
         else:
             print("No such instrument on file. Try ./chordprobook.py --instruments to get a list")
-    else:
-        chart = None
+
     #Is there a setlist file?
     if args["setlist"] == None:
         list = None
@@ -738,7 +761,7 @@ def convert():
             text, args["title"] = extract_title(text, args["title"] )
             
             for song_path in file_list:
-                song = cp_song(open(song_path).read(), path=song_path, grids = chart)
+                song = cp_song(open(song_path).read(), path=song_path, instruments = instruments, instrument_name=args["instrument"])
                 for trans in song.standard_transpositions:
                     s = copy.deepcopy(song)
                     s.format(transpose = trans)
@@ -752,10 +775,10 @@ def convert():
                 line = line.strip()
                 if line != "":
                     song_path = os.path.join(book_dir, line.strip())
-                    songs.append(cp_song(open(song_path).read(), transpose=t, path=song_path, grids = chart))
+                    songs.append(cp_song(open(song_path).read(), transpose=t, path=song_path, grids = chart,))
        else:
            for f in args['files']:
-                songs.append(cp_song(f.read(), path=f.name, grids=chart))
+                songs.append(cp_song(f.read(), path=f.name, instruments = instruments, instrument_name=args["instrument"]))
     else:
         print("ERROR: You need to pass one or more files to process")
   

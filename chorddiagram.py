@@ -69,8 +69,11 @@ class Instruments:
             print("")   
         
 class Instrument:
-    def __init__(self, data):
+    def __init__(self, data = None, name = ""):
         """ Simple data structure for instruments"""
+        if data == None:
+            data = {"name": name, "tuning": "unknown"}
+            
         self.name = data['name']
         self.tuning = data['tuning']
         
@@ -93,7 +96,10 @@ class Instrument:
         
     def load_chord_chart(self):
         defs_file = self.chord_definitions
+        
         if defs_file != None:
+            path, file = os.path.split(os.path.realpath(__file__))
+            defs_file = os.path.join(path, defs_file)
             if os.path.exists(defs_file):
                 self.chart = ChordChart(self.transpose, defs_file)
             else:
@@ -156,6 +162,9 @@ class ChordVoicings:
 
     def append(self, grid):
         self.voicings.append(grid)
+
+    def push_to_front(self, grid):
+        self.voicings.insert(0, grid)
         
     def sort_by_playability(self):
         self.voicings.sort(key=lambda x: x.playability, reverse=True)
@@ -195,8 +204,18 @@ class ChordChart:
             else:
                 print("******** Unable to load %s" % f)
         else:
-            self.error = "Instrument not found"    
+            self.error = "Instrument not found"
+            
+    def add_grid(self, definition):
+        grid = ChordDiagram()
+        grid.parse_definition(definition)
+        if grid.name not in self.grids:
+            self.grids[grid.name] = ChordVoicings(grid)
+        else:
+            self.grids[grid.name].push_to_front(grid)
+        
 
+        
     def load(self, f):
         self.load_file(f.split("\\n"))
                     

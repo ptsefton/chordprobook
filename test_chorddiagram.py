@@ -192,6 +192,7 @@ class TestChorddiagram(unittest.TestCase):
         #chart.get_default("F#7").show()
         self.assertEqual(chart.grid_as_md("F#7///"), chart.grid_as_md("F#7"))
         self.assertEqual(chart.normalise_chord_name("Fadd9"), "F9")
+        self.assertEqual(chart.normalise_chord_name("Am7-5"), "Am7-5")
         
 if __name__ == '__main__':
     unittest.main()

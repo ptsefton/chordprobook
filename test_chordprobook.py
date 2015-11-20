@@ -6,15 +6,20 @@ import chordprobook as cpb
 class TestStuff(unittest.TestCase):
 
   def test_directive(self):
-      d = cpb.directive("{title: This is a my title}")
+      d = cpb.directive("{title: This is my title}")
       self.assertEqual(d.type, cpb.directive.title)
-      d = cpb.directive("{st: This: is a my: subtitle title}")
+      self.assertEqual(d.value, "This is my title")
+      
+      d = cpb.directive("{st: This: is my: subtitle}")
       self.assertEqual(d.type, cpb.directive.subtitle)
+      
       d = cpb.directive("{grids}")
       self.assertEqual(d.type, cpb.directive.grids)
+      
       #Allow extra space
       d = cpb.directive(" {grids}   ")
       self.assertEqual(d.type, cpb.directive.grids)
+      
       #Allow things to have values, or not
       d = cpb.directive(" {grids: C#7}   ")
       self.assertEqual(d.type, cpb.directive.grids)
@@ -22,6 +27,17 @@ class TestStuff(unittest.TestCase):
       d = cpb.directive(" {grids: C#7 Bbsus4   }   ")
       self.assertEqual(d.type, cpb.directive.grids)
       self.assertEqual(d.value, "C#7 Bbsus4")
+
+      #This is a directive, for now, but the value is bad
+      d = cpb.directive(" {grids: C#7 Bbsus4   } {title: ASDASD}   ")
+      self.assertEqual(d.value, "C#7 Bbsus4   } {title: ASDASD")
+
+      
+      # These are not directives
+      d = cpb.directive("{title: This is my title ")
+      self.assertEqual(d.type, None)
+      d = cpb.directive("{{title: This is my title} ")
+      self.assertEqual(d.type, None)
       
   def test_files(self):
     song = "{title: something}\n{files: *.cho}{dirs: ./samples}"
@@ -58,7 +74,136 @@ class TestStuff(unittest.TestCase):
     song = cpb.cp_song("{title: A Song!}\nSome stuff\n{key: C#}\n#A comment\n#or two", transpose=3)
     self.assertEqual(song.key, "E")
     self.assertEqual(song.to_html(), '<div class="song">\n<div class="page">\n<h1 id="a-song-e">A Song! (E)</h1>\n<div class="song-page">\n<div class="song-text">\n<p>Some stuff</p>\n</div>\n</div>\n</div>\n</div>\n</div>\n')
+
+    song = cpb.cp_song("""
+    {title: Test}
+    {soc}
+    {c: Chorus}
+    This is the chorus
+    CHorus chorus
+    {eoc}
     
+    After the chorus
+
+    """)
+    result = """
+
+> **Chorus**    
+> This is the chorus    
+> CHorus chorus
+
+After the chorus
+
+
+"""
+    self.assertEqual(song.text, result)
+
+    song = cpb.cp_song("""
+{title: Test}
+{sot}
+This is where some
+    Preformatted
+    Tab goes
+    --5---5----5
+    1---2--2--2-
+    3-3-3-3-3-3-
+    --9--9--9-9-
+{eot}
+After the tab
+
+    """)
+    result = """
+    This is where some    
+        Preformatted    
+        Tab goes    
+        --5---5----5    
+        1---2--2--2-    
+        3-3-3-3-3-3-    
+        --9--9--9-9-    
+After the tab
+
+
+"""
+
+    self.assertEqual(song.text, result)
+
+    song = cpb.cp_song("""
+{title: Test}
+{sot}
+This is where some
+    Preformatted
+    Tab goes
+    --5---5----5
+    1---2--2--2-
+    3-3-3-3-3-3-
+    --9--9--9-9-
+{soc}
+{c: Chorus}
+Where someone forgot to close the tab
+{eoc}
+After the mess
+
+    """)
+    result = """
+    This is where some    
+        Preformatted    
+        Tab goes    
+        --5---5----5    
+        1---2--2--2-    
+        3-3-3-3-3-3-    
+        --9--9--9-9-
+
+> **Chorus**    
+> Where someone forgot to close the tab    
+After the mess
+
+
+"""
+    #print(song.text)
+    self.assertEqual(song.text, result)
+
+
+    song = cpb.cp_song("""
+{title: Test}
+{start_of_chorus}
+{c: Here's a chorus with tab in it}
+{sot}
+This is where some
+    Preformatted
+    Tab goes
+    --5---5----5
+    1---2--2--2-
+    3-3-3-3-3-3-
+    --9--9--9-9-
+{eot}
+Still in the chorus
+{eoc}
+After the chorus
+
+    """)
+    result = """
+
+> **Here's a chorus with tab in it**    
+>     This is where some    
+>         Preformatted    
+>         Tab goes    
+>         --5---5----5    
+>         1---2--2--2-    
+>         3-3-3-3-3-3-    
+>         --9--9--9-9-    
+> Still in the chorus    
+After the chorus
+
+
+"""
+
+    song = cpb.cp_song("{instrument: Thongaphone}") 
+    self.assertEqual( "Thongaphone", song.instruments.get_instrument_by_name("Thongaphone").name)
+    self.assertEqual( "Thongaphone", song.instruments.get_instrument_by_name("Thongaphone").name)
+
+    song = cpb.cp_song("{instrument: Thongaphone}\n{define: C#7 frets 0 1 0 1 0 1 0 1}\n{define: C#7-5 frets 0 1 0 1 0 1 0 1}")
+    song.instruments.get_instrument_by_name("Thongaphone").chart.get_default("C#7-5").show()
+   
     
   def test_transpose(self):
     c = cpb.transposer(2)

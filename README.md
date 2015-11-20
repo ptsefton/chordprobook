@@ -96,7 +96,10 @@ Requires pandoc 1.15.0.6 or later  and wkhtmltopdf installed on on your path.
 ## The local dialect of Chordpro format
 
 Chordpro format has no formal definition, and many different
-implementations. Chordpro files are plain-text files with chords
+implementations. This implementation is designed to be relaxed and
+pragmatic about what it accepts.
+
+Chordpro files are plain-text files with chords
 inline in square brackets, eg [C]. It uses formatting 'directives'.
 
 ### Chords
@@ -137,6 +140,20 @@ Formatting / Directive         |      Description  | Rendered as
 {eot} {end_of_tab} | End of tab | Finishes the fixed-width formatting
 {book: path_to_book} | For use in setlist files, a path to a book file relative to the setlist file or an absolute path | 
 {files: } & {dirs: }| A file-glob pattern to match, eg {files: *.cho} in a space separated list of directories| For use in book files only, does a recursive search in the directories for files matching the pattern. If the song has a {transpose: } directive it will use the first one 
+
+### Implementation
+
+This implementation will:
+
+* Look for one-directive per line.
+* Accept leading and trailing space before and after directives.
+* Automatically close tab-blocks when it encounters valid directives
+  (the alternative is to render directives inside tab-blocks as plain-text, but this is almost
+  certainly not what a user would want)
+
+I am still undecided about:
+* How to handle extra text before or after a declaration
+* How to handle two directives on one line
 
 ### Book files
 A book file is a text file with a list of paths with and optional title (see [samples/sample-book.txt](samples/sample-book.txt)).
