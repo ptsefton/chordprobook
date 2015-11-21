@@ -202,8 +202,14 @@ After the chorus
     self.assertEqual( "Thongaphone", song.instruments.get_instrument_by_name("Thongaphone").name)
 
     song = cpb.cp_song("{instrument: Thongaphone}\n{define: C#7 frets 0 1 0 1 0 1 0 1}\n{define: C#7-5 frets 0 1 0 1 0 1 0 1}")
-    song.instruments.get_instrument_by_name("Thongaphone").chart.get_default("C#7-5").show()
+    #song.instruments.get_instrument_by_name("Thongaphone").chart.get_default("C#7-5").show()
+    self.assertEqual("{define: C#7-5 frets 0 1 0 1 0 1 0 1}", song.instruments.get_instrument_by_name("Thongaphone").chart.get_default("C#7-5").to_chordpro())
    
+    song = cpb.cp_song("{instrument: Uke}\n{define: C frets 12 12 12 15}")
+    song.instruments.get_instrument_by_name("Soprano Ukulele").chart.get_default("C").show()
+    self.assertEqual("{define: C base-fret 11 frets 1 1 1 4}", song.instruments.get_instrument_by_name("Soprano Ukulele").chart.get_default("C").to_chordpro())
+
+
     
   def test_transpose(self):
     c = cpb.transposer(2)
