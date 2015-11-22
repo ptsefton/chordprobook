@@ -1,4 +1,4 @@
-#!usr/bin/env python3
+open#!usr/bin/env python3
 import unittest
 import chorddiagram as cd
 from chorddiagram import String, Dot, Instruments
@@ -118,7 +118,6 @@ class TestChorddiagram(unittest.TestCase):
         d.parse_definition(aaugchord)
         d.draw()
         self.assertEqual(d.num_strings, 4)
-        print(d.to_md())
         # TODO - check serialisation of this chord with fingers and all
         
         # Chord with non-played strings
@@ -183,7 +182,11 @@ class TestChorddiagram(unittest.TestCase):
         d.parse_definition(stupid)        
         d.draw()
         self.assertEqual(d.non_played_strings, 1)
-        print(d.to_md())
+        
+    
+       
+        
+        
 
   def test_grid(self):
         chart = cd.ChordChart()
@@ -193,6 +196,21 @@ class TestChorddiagram(unittest.TestCase):
         self.assertEqual(chart.grid_as_md("F#7///"), chart.grid_as_md("F#7"))
         self.assertEqual(chart.normalise_chord_name("Fadd9"), "F9")
         self.assertEqual(chart.normalise_chord_name("Am7-5"), "Am7-5")
+        self.assertEqual(chart.get_default("Gbm7").to_chordpro(), chart.get_default("F#m7").to_chordpro())
+
+        F_sharp_chord_def = "{define: F#m7 base-fret 7 frets 2 1 2 0}"
+        Gb_chord_def = "{define: Gbm7 base-fret 7 frets 2 1 2 0}"
+        c = cd.ChordChart()
+        c.add_grid(Gb_chord_def)
+        self.assertEqual(c.get_default("Gbm7").to_chordpro(), F_sharp_chord_def)
+
+                
+
+        c = cd.ChordChart()
+        c.add_grid(Gb_chord_def)
+        self.assertEqual(c.get_default("F#m7").to_chordpro(), F_sharp_chord_def)
+        self.assertEqual(c.get_default("F#m7//").to_chordpro(), F_sharp_chord_def)
+        self.assertEqual(c.get_default("F#m7!").to_chordpro(), F_sharp_chord_def)
         
 if __name__ == '__main__':
     unittest.main()

@@ -209,6 +209,7 @@ class ChordChart:
     def add_grid(self, definition):
         grid = ChordDiagram()
         grid.parse_definition(definition)
+        grid.name = self.normalise_chord_name(grid.name)
         if grid.name not in self.grids:
             self.grids[grid.name] = ChordVoicings(grid)
         else:
@@ -225,6 +226,7 @@ class ChordChart:
             if line.startswith("{define:"):
                 grid = ChordDiagram()
                 grid.parse_definition(line)
+                grid.name = self.normalise_chord_name(grid.name)
                 if self.transposer.offset > 0:
                     grid.name = self.transposer.transpose_chord(grid.name)
                 if grid.name not in self.grids:
@@ -242,6 +244,8 @@ class ChordChart:
         
         # Normalise "add" for ninths, elevenths etc - TODO sharps as well
         chord_name = re.sub("add(\d+)","\\1", chord_name)
+        tr = transposer(0)
+        chord_name = tr.transpose_chord(chord_name)
         return chord_name
                 
     def grid_as_md(self, chord_name):

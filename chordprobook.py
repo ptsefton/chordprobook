@@ -169,7 +169,7 @@ class cp_song:
                     self.title += dir.value
                     
                 elif dir.type == directive.subtitle:
-                    self.title += dir.value
+                    new_text += "\n**%s**\n" % dir.value
                     
                 elif dir.type == directive.key:
                     self.original_key = dir.value
