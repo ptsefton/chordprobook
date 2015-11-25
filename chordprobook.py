@@ -402,7 +402,7 @@ class cp_song_book:
                     self.__get_file_list(directiv.value, dir_list)
 
     def __songs_to_html(self, instrument_name, args, output_file):
-        all_songs = self.sets
+        all_songs = self.sets_md
         for song  in self.songs:
             song.format(instrument_name = instrument_name, stand_alone=False)
             all_songs += song.to_html()
@@ -435,15 +435,15 @@ class cp_song_book:
             #subprocess.call(["open", pdf_path])
 
     def to_html_and_pdf(self,args, output_file):
-    
         self.contents = "# Contents\n\n"
-        self.sets = ""
         #TODO Depends on template so should be passed as an option
+        self.sets_md = ""
         start_page = 3
-        self.reorder(start_page) 
         for set in self.sets:
-            self.sets += set.to_html()
+            set.format()
+            self.sets_md += set.to_html()
             start_page += 1
+        self.reorder(start_page)    
         page_count = start_page
         for song  in self.songs:
             if not song.blank:
@@ -455,7 +455,6 @@ class cp_song_book:
         if self.instrument_name_passed == None:
             if self.default_instrument_names != []:
                 for instrument_name in self.default_instrument_names:
-                    print("Looping")
                     self.__songs_to_html(instrument_name, args, output_file)
             else:
                 self.__songs_to_html(None, args, output_file)
@@ -919,6 +918,7 @@ def convert():
         list = None
     else:
        list = open(args["setlist"]).read()
+       args["keep_order"] = True
        set_dir, set_name = os.path.split(args["setlist"])
        list, bookfile = extract_book_filename(list)
        if bookfile != None and not args["book_file"]:
