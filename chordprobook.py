@@ -296,7 +296,8 @@ class cp_song:
             suffix_string = "_key_%s" % self.key
         else:
             suffix_string = "_" + str(trans) if trans != 0 else ""
-        suffix_string += "_" + instrument_name.lower().replace(" ","_")
+        if instrument_name != None:
+            suffix_string += "_" + instrument_name.lower().replace(" ","_")
         
         temp_file = tempfile.NamedTemporaryFile(suffix=".html")
         html_path = temp_file.name
@@ -468,6 +469,7 @@ class cp_song_book:
     def save_as_single_sheets(self):
         for song in self.songs:
             if song.path != None:
+                
                 for trans in song.standard_transpositions:
                     if self.instrument_name_passed != None:
                         instruments=[instrument_name_passed]
@@ -479,7 +481,7 @@ class cp_song_book:
                         #TODO - move to to_stand_alone_html
                         #song.title += " with chords for %s" % args['instrument']
 
-                   
+                    song.save_as_single_sheet(None, trans)
             
                         
     def order_by_setlist(self, setlist):
