@@ -66,7 +66,7 @@ def extract_book_filename(text, book = None):
 
 class directive:
     """Simple data structure for a directive, with name and optional value"""
-    title, subtitle, key, start_chorus, end_chorus, start_tab, end_tab, start_bridge, end_bridge, transpose, new_page, define, grids, comment, instrument, tuning = range(0,16)
+    title, subtitle, key, start_chorus, end_chorus, start_tab, end_tab, start_bridge, end_bridge, transpose, new_page, define, grids, comment, instrument, tuning, dirs, files = range(0,18)
     directives = {"t": title,
                   "title": title,
                   "st": subtitle,
@@ -94,7 +94,9 @@ class directive:
                   "comment": comment,
                   "c": comment,
                   "instrument": instrument,
-                  "tuning": tuning}
+                  "tuning": tuning,
+                  "dirs": dirs,
+                  "files": files}
     
         
     def __init__(self, line):
@@ -116,10 +118,10 @@ class cp_song:
         if instruments == None:
             self.instruments = Instruments()
         else:
-            self.instruments = copy.deepcopy(instruments)
+            self.instruments = instruments
+        self.local_instruments = None
         # Look-up
         self.instrument_name = instrument_name
-        self.current_instrument = None
         self.local_instrument_names = []
         self.text = song
         self.key = None
@@ -140,7 +142,7 @@ class cp_song:
         in_chorus = False
         in_tab = False
         new_text = ""
-        
+        current_instrument = None
         for line in self.text.split("\n"):
             dir = directive(line)
             if dir.type == None:
@@ -197,11 +199,14 @@ class cp_song:
                     self.pages += 1
                 elif dir.type == directive.instrument:
                     inst_name = dir.value
-                    current_instrument = self.instruments.get_instrument_by_name(inst_name)
+                    if self.local_instruments == None:
+                        self.local_instruments = Instruments()
+                    current_instrument = self.local_instruments.get_instrument_by_name(inst_name)
+                    self.local_instrument_names.append(inst_name)
                     if current_instrument == None:
                         current_instrument = Instrument(name = inst_name)
                         current_instrument.chart = ChordChart()
-                        self.instruments.add_instrument(current_instrument)
+                        self.local_instruments.add_instrument(current_instrument)
                     else:
                         current_instrument.load_chord_chart()
           
@@ -223,18 +228,31 @@ class cp_song:
         self.text, self.standard_transpositions = extract_transposition(self.text)
      
         
-    def format(self, transpose=None):
+    def format(self, transpose=None, instrument_name=None, stand_alone=True):
         """
         Create a markdown version of the song, transposed if necessary,
         does the last-minute formatting on the song incuding transposition
         and fetching chord grids """
-        if self.instrument_name != None:
-            self.grids = self.instruments.get_instrument_by_name(self.instrument_name).chart
-        else:
-            self.grids = None
+        if instrument_name == None:
+            instrument_name = self.instrument_name
+        local_grids = None
+        self.grids = None
+        if instrument_name != None:
+            instrument = self.grids = self.instruments.get_instrument_by_name(instrument_name)
+            if instrument != None:
+                self.grids = instrument.chart
+                if self.grids == None:
+                    instrument.load_chord_chart()
+                    self.grids = instrument.chart
+            if  self.local_instruments != None and instrument_name in self.local_instrument_names:
+                local_grids = self.local_instruments.get_instrument_by_name(instrument_name).chart
+    
+        if local_grids == None:
+            local_grids = self.grids
         if transpose != None:
             self.transposer = transposer(transpose)
-        self.chords_used = []    
+        self.chords_used = []
+          
         def format_chord(chord):
             if self.transposer.offset != 0:
                 chord = self.transposer.transpose_chord(chord)
@@ -253,11 +271,16 @@ class cp_song:
             
         key_string = self.get_key_string()
         title = "%s %s" % (self.title, key_string)
+        if stand_alone and instrument_name != None:
+            title = "%s for %s" % (title, instrument_name)
+            
         grid_md = ""
         if self.grids != None:
             grid_md = "<div class='grids'>"
-            for chord_name in self.chords_used:                
-                md = self.grids.grid_as_md(chord_name)
+            for chord_name in self.chords_used:
+                md = local_grids.grid_as_md(chord_name)
+                if md == None:         
+                    md = self.grids.grid_as_md(chord_name)
                 if md != None:
                     grid_md += "<div style='float:left;align:center'>%s<br/>%s</div>" % (md, chord_name)
             grid_md += "<div style='clear:left'></div></div>"   
@@ -266,9 +289,26 @@ class cp_song:
        
         
         self.md = song
+
+    def save_as_single_sheet(self, instrument_name, trans):
+        self.format(transpose = trans, instrument_name=instrument_name)
+        if self.key != None:
+            suffix_string = "_key_%s" % self.key
+        else:
+            suffix_string = "_" + str(trans) if trans != 0 else ""
+        suffix_string += "_" + instrument_name.lower().replace(" ","_")
+        
+        temp_file = tempfile.NamedTemporaryFile(suffix=".html")
+        html_path = temp_file.name
+        open(html_path, 'w').write(self.to_stand_alone_html())
+        pdf_path = "%s%s.pdf" % (self.path, suffix_string )
+        print("Saving to %s" % pdf_path)
+        command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', html_path, pdf_path]
+        subprocess.call(command)
+        
     def to_html(self):
         #TODO STANDALONE
-        self.format()
+       
         song = """
 <div class='song'>
 <div class='page'>
@@ -291,18 +331,157 @@ class cp_song:
         return "(%s)" % self.key if self.key != None else ""
 
 class cp_song_book:
-    def __init__(self, songs = [], keep_order = False, title="Songbook"):
-        self.songs = songs
+    def __init__(self, songs = [], keep_order = False, title=None, instruments = None, instrument_name=None, path="."):
+        self.path = path
+        self.dir, self.filename = os.path.split(self.path)
+        self.title = None
+        self.songs = []
+        self.default_instrument_names = []
+        if instruments == None:
+            self.instruments = Instruments()
+        else:
+            self.instruments = instruments 
+        self.instrument_name_passed = instrument_name
+        self.text = ""
         self.keep_order = keep_order
-        self.title = title
         self.sets = [] #Song-like objects to hold rip-out-able set lists
+    
+    def set_path(self,path):
+        self.path = path
+        self.dir, self.filename = os.path.split(self.path)
 
+        
     def to_md(self):
         md = "---\ntitle: %s\n---\n" % self.title
         for song in self.songs:
             md += song.md
         return md
+
+    def __get_file_list(self, files, dir_list):
+        if dir_list == []:
+            dir_list = ['.']
+        for dir in dir_list:
+            for root, dirnames, filenames in os.walk(os.path.join(self.dir,dir.strip())):
+                for filename in fnmatch.filter(filenames, files):
+                     if not filename.startswith("."):
+                        self.add_song(open(os.path.join(root, filename)))
+                        
+    def add_song(self,file, transpose=0):
+        song = cp_song(file.read(), path=file.name, transpose=transpose, instruments = self.instruments, instrument_name=self.instrument_name_passed)
+        self.songs.append(song)
         
+    def load_from_text(self, text, relative_to="."):
+        self.text = text
+        dir_list = []
+        for line in self.text.split("\n"):
+            directiv = directive(line)
+            if directiv.type == None:
+                if not line.startswith("#") and not line == "":
+                    #Assume this is a path
+                    #Look for transpose
+                    transpose = 0
+                    if "{" in line:
+                        line, direct = line.split("{")
+                        transpose_dir = directive("{" + direct)
+                        if transpose_dir.type == directive.transpose:
+                            trans = transpose_dir.value.split(" ")
+                            transpositions = []
+                            transpositions += [int(x) for x in trans]
+                            transpose = transpositions[0]
+                    song_path = os.path.join(self.dir, line.strip())
+                    self.add_song(open(song_path), transpose)                    
+            else:
+                if directiv.type == directive.title and self.title == None:
+                    self.title = directiv.value
+                elif directiv.type == directive.instrument:
+                    self.default_instrument_names.append(directiv.value)
+                elif directiv.type == directive.dirs:
+                    dir_list.append(directiv.value)
+                elif directiv.type == directiv.files:
+                    self.__get_file_list(directiv.value, dir_list)
+
+    def __songs_to_html(self, instrument_name, args, output_file):
+        all_songs = self.sets
+        for song  in self.songs:
+            song.format(instrument_name = instrument_name, stand_alone=False)
+            all_songs += song.to_html()
+        if instrument_name != None:
+            suffix = "_%s" % instrument_name.lower()
+        else:
+            suffix = ""
+        output_file += suffix
+        if args['html']:
+            html_path = output_file
+        else:
+            temp_file = tempfile.NamedTemporaryFile(suffix=".html")
+            html_path = temp_file.name
+        if args['pdf']:
+            pdf_path = output_file + ".pdf"
+        else:
+            pdf_path = None
+        open(html_path, 'w').write( html_book.format(all_songs,
+                                                      title=self.title,
+                                                      for_print = args['a4'],
+                                                      contents=pypandoc.convert(self.contents,
+                                                                                "html",
+                                                                                format="md")))
+        if pdf_path != None:
+            print("Outputting PDF:", pdf_path)
+            command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', '--outline',
+                       '--outline-depth', '1','--header-right', "[page]/[toPage]",
+                       '--header-line', '--header-left', "%s" % self.title, html_path, pdf_path]
+            subprocess.call(command)
+            #subprocess.call(["open", pdf_path])
+
+    def to_html_and_pdf(self,args, output_file):
+    
+        self.contents = "# Contents\n\n"
+        self.sets = ""
+        #TODO Depends on template so should be passed as an option
+        start_page = 3
+        self.reorder(start_page) 
+        for set in self.sets:
+            self.sets += set.to_html()
+            start_page += 1
+        page_count = start_page
+        for song  in self.songs:
+            if not song.blank:
+                self.contents += "<p>%s <span style='float:right'>%s</span></p>" % (song.title, str(page_count)) 
+            page_count += song.pages
+        #Make a table of contents
+        #TODO - Move this to book class
+        
+        if self.instrument_name_passed == None:
+            if self.default_instrument_names != []:
+                for instrument_name in self.default_instrument_names:
+                    print("Looping")
+                    self.__songs_to_html(instrument_name, args, output_file)
+            else:
+                self.__songs_to_html()
+        else:
+            self.__songs_to_html(instrument_name = instrument_name_passed)
+            
+            
+
+
+        
+    def save_as_single_sheets(self):
+        for song in self.songs:
+            if song.path != None:
+                for trans in song.standard_transpositions:
+                    if self.instrument_name_passed != None:
+                        instruments=[instrument_name_passed]
+                    else:
+                         instruments = song.local_instrument_names
+                         
+                    for instrument_name in instruments:
+                        song.save_as_single_sheet(instrument_name, trans)
+                        #TODO - move to to_stand_alone_html
+                        #song.title += " with chords for %s" % args['instrument']
+
+                   
+            
+                        
     def order_by_setlist(self, setlist):
         """
         Use a setlist to order the book. Setlist will already have {title: } and {book: }
@@ -329,8 +508,7 @@ class cp_song_book:
             if potential_song.strip() != "":
                 if potential_song.startswith("# "):
                     potential_song = potential_song.replace("# ","").strip()
-                    
-                    # Use songs to represent sets, so each set gets a sinlge page up front of the book
+                    # Use songs to represent sets, so each set gets a single page up front of the book
                     # the text of which will scale up nice and big courtesy of the song scaling algorithm
                     if current_song != None and current_set != None:
                         current_song.title = "End %s :: %s" % (current_set.title, current_song.title)
@@ -749,41 +927,26 @@ def convert():
        
     
     if args["files"] != None:
+       book = cp_song_book(keep_order = args['keep_order'], title=args["title"],instruments = instruments, instrument_name=args["instrument"])
        if args["book_file"]:
             book_file = args["files"][0]
+            book.set_path(book_file.name)
             book_dir, book_name = os.path.split(book_file.name)
             #base output path on book unless user passed a different name
             if args["file_stem"] == default_output_file:
                 output_file, _ = os.path.splitext(book_name)
                 output_file = os.path.join(book_dir, output_file)
             text = book_file.read()
-            text, file_list = extract_files(text, book_dir)
-            text, args["title"] = extract_title(text, args["title"] )
+            book.load_from_text(text)
             
-            for song_path in file_list:
-                song = cp_song(open(song_path).read(), path=song_path, instruments = instruments, instrument_name=args["instrument"])
-                for trans in song.standard_transpositions:
-                    s = copy.deepcopy(song)
-                    s.format(transpose = trans)
-                    songs.append(s)
-                
-            for line in text.split("\n"):
-                # Do we need to transpose this one?
-                line, transpositions = extract_transposition(line)
-                t = transpositions[1] if len(transpositions) > 1 else 0
-                line = re.sub("(?i)^#.*","", line) #Lose comments
-                line = line.strip()
-                if line != "":
-                    song_path = os.path.join(book_dir, line.strip())
-                    songs.append(cp_song(open(song_path).read(), transpose=t, path=song_path, grids = chart,))
        else:
            for f in args['files']:
-                songs.append(cp_song(f.read(), path=f.name, instruments = instruments, instrument_name=args["instrument"]))
+                book.add_song(f)
     else:
         print("ERROR: You need to pass one or more files to process")
   
     # Make all the input files into a book object
-    book = cp_song_book(songs, keep_order = args['keep_order'], title=args["title"])
+   
     
     # If there's a setlist file use it
     if args["setlist"] != None:
@@ -822,68 +985,10 @@ def convert():
    
     #PDF is generated from HTML, BTW
     if args['one_doc']: #Assume standalone PDF
-      for song in book.songs:
-        if song.path != None:
-            for trans in song.standard_transpositions:
-                if trans != 0:
-                    song.format(transpose = trans)
-
-                if song.key != None:
-                        suffix_string = "_key_%s" % song.key
-                else:
-                    suffix_string = "_" + str(trans) if trans != 0 else ""
-
-                if args['instrument'] != None:
-                    suffix_string += "_" + args['instrument'].lower().replace(" ","_")
-                    song.title += " with chords for %s" % args['instrument']
-                temp_file = tempfile.NamedTemporaryFile(suffix=".html")
-                html_path = temp_file.name
-                open(html_path, 'w').write(song.to_stand_alone_html())
-                pdf_path = "%s%s.pdf" % (song.path, suffix_string )
-                command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', html_path, pdf_path]
-                subprocess.call(command)
+        book.save_as_single_sheets()
         
     elif args['html'] or args['pdf']:
-        if args['html']:
-            html_path = output_file + ".html"
-        else:
-            temp_file = tempfile.NamedTemporaryFile(suffix=".html")
-            html_path = temp_file.name
-        
-        contents = "# Contents\n\n"
-        #TODO Depends on template so should be passed as an option
-        start_page = 3
-        book.reorder(start_page) 
-        all_songs = ""
-        for set in book.sets:
-            all_songs += set.to_html()
-            start_page += 1
-        page_count = start_page
-        #Make a table of contents
-        #TODO - Move this to book class
-        for song  in book.songs:
-            if not song.blank:
-                contents += "<p>%s <span style='float:right'>%s</span></p>" % (song.title, str(page_count)) 
-                song.format()
-            page_count += song.pages
-            all_songs += song.to_html()
-        contents += "</table>"
-        
-        open(html_path, 'w').write( html_book.format(all_songs,
-                                                      title=title,
-                                                      for_print = args['a4'],
-                                                      contents=pypandoc.convert(contents,
-                                                                                "html",
-                                                                                format="md")))
-
-        if args['pdf']:
-            pdf_path = output_file + ".pdf"
-            print("Outputting PDF:", pdf_path)
-            command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', '--outline',
-                       '--outline-depth', '1','--header-right', "[page]/[toPage]",
-                       '--header-line', '--header-left', "%s" % title, html_path, pdf_path]
-            subprocess.call(command)
-            #subprocess.call(["open", pdf_path])
+        book.to_html_and_pdf(args, output_file)
         
 if __name__ == "__main__":
     convert()

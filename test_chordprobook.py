@@ -5,11 +5,35 @@ import chordprobook as cpb
 
 class TestStuff(unittest.TestCase):
 
+  def test_book(self):
+      book_path = "samples/sample-book.txt"
+      sample_book_text = open(book_path).read()
+      b = cpb.cp_song_book(path=book_path)
+      b.load_from_text(sample_book_text)
+      self.assertEqual(len(b.songs), 4)
+      self.assertEqual(b.songs[1].key, "C")
+      self.assertEqual(b.songs[2].key, "Bb")
+      
+      book_path="samples/sample-book-lazy.txt"
+      sample_book_text = open(book_path).read()
+      b = cpb.cp_song_book( path=book_path)
+      b.load_from_text(sample_book_text)
+      self.assertEqual(len(b.songs), 4)
+      self.assertEqual(b.title, "Sample songs")
+     
+      book_path="samples/sample-book-lazy-uke.txt"
+      sample_book_text = open(book_path).read()
+      b = cpb.cp_song_book(path=book_path)
+      b.load_from_text(sample_book_text)
+      self.assertEqual(len(b.songs), 4)
+      self.assertEqual(b.title, "Sample songs")
+      self.assertEqual(b.default_instrument_names[0],"Ukulele")
+
   def test_directive(self):
       d = cpb.directive("{title: This is my title}")
       self.assertEqual(d.type, cpb.directive.title)
-      self.assertEqual(d.value, "This is my title")
       
+      self.assertEqual(d.value, "This is my title")
       d = cpb.directive("{st: This: is my: subtitle}")
       self.assertEqual(d.type, cpb.directive.subtitle)
       
@@ -39,11 +63,6 @@ class TestStuff(unittest.TestCase):
       d = cpb.directive("{{title: This is my title} ")
       self.assertEqual(d.type, None)
       
-  def test_files(self):
-    song = "{title: something}\n{files: *.cho}{dirs: ./samples}"
-    song, files = cpb.extract_files(song)
-    #OK, so this is a pretty lame test, but at least there is one!
-    self.assertEqual(len(files), 5)
     
 
   def test_reorder(self):
@@ -198,16 +217,18 @@ After the chorus
 """
 
     song = cpb.cp_song("{instrument: Thongaphone}") 
-    self.assertEqual( "Thongaphone", song.instruments.get_instrument_by_name("Thongaphone").name)
-    self.assertEqual( "Thongaphone", song.instruments.get_instrument_by_name("Thongaphone").name)
+    self.assertEqual( "Thongaphone", song.local_instruments.get_instrument_by_name("Thongaphone").name)
+    self.assertEqual( "Thongaphone", song.local_instruments.get_instrument_by_name("Thongaphone").name)
 
     song = cpb.cp_song("{instrument: Thongaphone}\n{define: C#7 frets 0 1 0 1 0 1 0 1}\n{define: C#7-5 frets 0 1 0 1 0 1 0 1}")
     #song.instruments.get_instrument_by_name("Thongaphone").chart.get_default("C#7-5").show()
-    self.assertEqual("{define: C#7-5 frets 0 1 0 1 0 1 0 1}", song.instruments.get_instrument_by_name("Thongaphone").chart.get_default("C#7-5").to_chordpro())
+    self.assertEqual("{define: C#7-5 frets 0 1 0 1 0 1 0 1}", song.local_instruments.get_instrument_by_name("Thongaphone").chart.get_default("C#7-5").to_chordpro())
    
     song = cpb.cp_song("{instrument: Uke}\n{define: C frets 12 12 12 15}")
-    song.instruments.get_instrument_by_name("Soprano Ukulele").chart.get_default("C").show()
-    self.assertEqual("{define: C base-fret 11 frets 1 1 1 4}", song.instruments.get_instrument_by_name("Soprano Ukulele").chart.get_default("C").to_chordpro())
+    #song.instruments.get_instrument_by_name("Soprano Ukulele").chart.get_default("C").show()
+    song.format(instrument_name = "Nope!")
+    
+    self.assertEqual("{define: C base-fret 11 frets 1 1 1 4}", song.local_instruments.get_instrument_by_name("Soprano Ukulele").chart.get_default("C").to_chordpro())
 
 
     
