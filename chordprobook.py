@@ -457,9 +457,9 @@ class cp_song_book:
                     print("Looping")
                     self.__songs_to_html(instrument_name, args, output_file)
             else:
-                self.__songs_to_html(instrument_name, args, output_file)
+                self.__songs_to_html(None, args, output_file)
         else:
-            self.__songs_to_html(instrument_name = instrument_name_passed)
+            self.__songs_to_html(instrument_name, args, output_file)
             
             
 
