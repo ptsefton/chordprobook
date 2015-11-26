@@ -5,6 +5,30 @@ import chordprobook as cpb
 
 class TestStuff(unittest.TestCase):
 
+  def test_TOC(self):
+      book_text = ""
+      slotmachine = "./samples/slot_machine_baby.cho\n"
+      book_text += slotmachine * 30
+      b = cpb.cp_song_book()
+      b.load_from_text(book_text)
+      toc = cpb.TOC(b, 3)
+
+      
+      self.assertEqual(len(toc.pages), 1)
+      book_text += slotmachine * 60
+      b = cpb.cp_song_book()
+      b.load_from_text(book_text)
+      toc = cpb.TOC(b, 3)
+      print(toc.format())
+      self.assertEqual(len(toc.pages), 3)
+      
+      book_text += slotmachine * 100
+      b = cpb.cp_song_book()
+      b.load_from_text(book_text)
+      toc = cpb.TOC(b, 3)
+      print(toc.format())
+      self.assertEqual(len(toc.pages), 5)
+      
   def test_book(self):
       book_path = "samples/sample-book.txt"
       sample_book_text = open(book_path).read()

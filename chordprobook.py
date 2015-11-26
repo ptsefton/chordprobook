@@ -9,6 +9,7 @@ import tempfile
 from chorddiagram import ChordChart, transposer, Instruments, Instrument
 import copy
 import fnmatch
+import math
 
 
 def extract_files(text, relative_to="."):
@@ -63,6 +64,62 @@ def extract_book_filename(text, book = None):
         book_filename = book_search.group(2)
         text = re.sub(book_re, "", text)
     return text, book_filename
+
+class TOC:
+    ideal_songs_per_page = 40
+    max_songs_per_page = 50
+    
+    def __init__(self, book, start_page):
+       
+        self.entries = []
+        
+        def chunked(iterable, n):
+            
+            """ Split iterable into ``n`` iterables of similar size
+            From: http://stackoverflow.com/questions/24483182/python-split-list-into-n-chunks
+
+            """
+            chunksize = int(math.ceil(len(iterable) / n))
+            return [iterable[i * chunksize:i * chunksize + chunksize] for i in range(n)]
+        
+        page_count = start_page
+        song_count = 0
+        for song  in book.sets:
+            if not song.blank:
+                self.entries.append("Set: %s <span style='float:right'>%s</span>    " % ( song.title, str(page_count)))
+            page_count += song.pages
+            
+        for song in book.songs:
+            if not song.blank:
+                song_count += 1
+                self.entries.append("%s %s <span style='float:right'>%s</span>    " % (str(song_count), song.title, str(page_count)))
+            page_count += song.pages
+            
+        num_entries = len(self.entries)
+        if num_entries > TOC.max_songs_per_page:
+            self.target_num_pages = int(math.ceil(num_entries / TOC.ideal_songs_per_page ))
+            self.pages = chunked(self.entries,self.target_num_pages)
+        else:
+            self.pages = [self.entries]     
+
+    def format(self):
+        contents = ""
+        for page in self.pages:
+            contents += """
+<div class='song'>
+<div class='page'>
+<div class='song-page'>
+<div class='song-text'>
+
+%s
+
+</div>
+</div>
+</div>
+</div>
+""" % "\n".join(page)
+        return(contents)
+        
 
 class directive:
     """Simple data structure for a directive, with name and optional value"""
@@ -190,13 +247,15 @@ class cp_song:
                     
                 elif dir.type == directive.start_tab:
                     in_tab = True
+                    #new_text += "FOUND TAB\n"
                     
-                elif dir.type == directive.end_tab :
+                elif dir.type == directive.end_tab:
                     in_tab = False
                     
                 elif dir.type == directive.new_page:
                     new_text +=  "\n<!-- new_page -->\n"
                     self.pages += 1
+                    
                 elif dir.type == directive.instrument:
                     inst_name = dir.value
                     if self.local_instruments == None:
@@ -350,7 +409,9 @@ class cp_song_book:
     def set_path(self,path):
         self.path = path
         self.dir, self.filename = os.path.split(self.path)
-
+        
+    def sort_alpha(self):
+        self.songs.sort(key= lambda song: re.sub("(?i)^(the|a|\(.*?\)) ", "", song.title.lower()))
         
     def to_md(self):
         md = "---\ntitle: %s\n---\n" % self.title
@@ -435,26 +496,22 @@ class cp_song_book:
             #subprocess.call(["open", pdf_path])
 
     def to_html_and_pdf(self,args, output_file):
-        self.contents = "# Contents\n\n"
+        self.contents = ""
         #TODO Depends on template so should be passed as an option
         self.sets_md = ""
         start_page = 3
         for set in self.sets:
             set.format()
             self.sets_md += set.to_html()
-            start_page += 1
-        self.reorder(start_page)    
-        page_count = start_page
-        for song  in self.songs:
-            if not song.blank:
-                self.contents += "<p>%s <span style='float:right'>%s</span></p>" % (song.title, str(page_count)) 
-            page_count += song.pages
-        #Make a table of contents
-        #TODO - Move this to book class
+        
+        self.reorder(start_page)
+        
+        toc = TOC(self, start_page)
+        self.contents = toc.format()
         
         if self.instrument_name_passed == None:
             if self.default_instrument_names != []:
-                for instrument_name in self.default_instrument_names:
+                for instrument_name in [None] + self.default_instrument_names:
                     self.__songs_to_html(instrument_name, args, output_file)
             else:
                 self.__songs_to_html(None, args, output_file)
@@ -507,20 +564,27 @@ class cp_song_book:
         current_song = None
         for potential_song in setlist.split("\n"):
             if potential_song.strip() != "":
+                if potential_song.startswith("{") and potential_song.endswith("}"):
+                    dir = directive(potential_song)
+                    if dir.type == directive.title:
+                        self.title = dir.value
+                        
                 if potential_song.startswith("# "):
                     potential_song = potential_song.replace("# ","").strip()
                     # Use songs to represent sets, so each set gets a single page up front of the book
                     # the text of which will scale up nice and big courtesy of the song scaling algorithm
                     if current_song != None and current_set != None:
                         current_song.title = "End %s :: %s" % (current_set.title, current_song.title)
-                        
                     current_set = cp_song("{title: %s}" % potential_song)
                     self.sets.append(current_set)
                     new_set = True
 
                 elif potential_song.startswith("## "): # A song
                     song_name = potential_song.replace("## ", "").strip()
+
                     song_name, transpositions = extract_transposition(song_name)
+                   
+                        
                     restring = song_name.replace(" ", ".*?").lower()
                     regex = re.compile(restring)
                     found_song = False
@@ -529,6 +593,8 @@ class cp_song_book:
                         if re.search(regex, song.title.lower()) != None:
                             #Copy the song in case it is in the setlist twice with different treatment, such as keys or notes
                             current_song = copy.deepcopy(song)
+                            if transpositions == [0]:
+                                transpositions = current_song.standard_transpositions
                             if new_set:
                                 current_song.title = "Start %s :: %s" % (current_set.title, current_song.title)
                                 new_set = False
@@ -738,15 +804,9 @@ p {
 <h1>%s</h1>
 </div>
 </div>
-<div class='song'>
-<div class='page'>
-<div class='song-page'>
-<div class='song-text'>
+
 %s
-</div>
-</div>
-</div>
-</div>
+
 
         """
 
@@ -897,7 +957,6 @@ def convert():
         
     out_dir = "."
     os.makedirs(out_dir, exist_ok=True)
-    songs = []
     output_file =  args["file_stem"]
 
 
@@ -953,7 +1012,6 @@ def convert():
     # If there's a setlist file use it
     if args["setlist"] != None:
        #Let the setlist override titles set elsewere
-       list, args["title"] = extract_title(list, args["title"] )
        book.order_by_setlist(list)
        if args["book_file"] or args["file_stem"] == default_output_file:
             set_dir, set_name = os.path.split(args["setlist"])
@@ -961,7 +1019,7 @@ def convert():
             output_file = os.path.join(set_dir, output_file)
 
     if args["alphabetically"]:
-        songs.sort(key= lambda song: re.sub("(?i)^(the|a|\(.*?\)) ", "", song.title.lower()))
+        book.sort_alpha()
 
     title = args['title']
 
