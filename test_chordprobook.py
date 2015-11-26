@@ -19,14 +19,12 @@ class TestStuff(unittest.TestCase):
       b = cpb.cp_song_book()
       b.load_from_text(book_text)
       toc = cpb.TOC(b, 3)
-      print(toc.format())
       self.assertEqual(len(toc.pages), 3)
       
       book_text += slotmachine * 100
       b = cpb.cp_song_book()
       b.load_from_text(book_text)
       toc = cpb.TOC(b, 3)
-      print(toc.format())
       self.assertEqual(len(toc.pages), 5)
       
   def test_book(self):
@@ -140,7 +138,6 @@ After the chorus
 
 """
     self.assertEqual(song.text, result)
-
     song = cpb.cp_song("""
 {title: Test}
 {sot}
@@ -156,13 +153,15 @@ After the tab
 
     """)
     result = """
-    This is where some    
-        Preformatted    
-        Tab goes    
-        --5---5----5    
-        1---2--2--2-    
-        3-3-3-3-3-3-    
-        --9--9--9-9-    
+```    
+This is where some    
+    Preformatted    
+    Tab goes    
+    --5---5----5    
+    1---2--2--2-    
+    3-3-3-3-3-3-    
+    --9--9--9-9-    
+```    
 After the tab
 
 
@@ -183,26 +182,21 @@ This is where some
 {soc}
 {c: Chorus}
 Where someone forgot to close the tab
-{eoc}
-After the mess
-
-    """)
+{eoc}""")
     result = """
-    This is where some    
-        Preformatted    
-        Tab goes    
-        --5---5----5    
-        1---2--2--2-    
-        3-3-3-3-3-3-    
-        --9--9--9-9-
+```    
+This is where some    
+    Preformatted    
+    Tab goes    
+    --5---5----5    
+    1---2--2--2-    
+    3-3-3-3-3-3-    
+    --9--9--9-9-
 
 > **Chorus**    
-> Where someone forgot to close the tab    
-After the mess
-
-
+> Where someone forgot to close the tab
 """
-    #print(song.text)
+    print(song.text)
     self.assertEqual(song.text, result)
 
 
@@ -239,7 +233,9 @@ After the chorus
 
 
 """
+    # TODO TEST IS MISSING!
 
+    
     song = cpb.cp_song("{instrument: Thongaphone}") 
     self.assertEqual( "Thongaphone", song.local_instruments.get_instrument_by_name("Thongaphone").name)
     self.assertEqual( "Thongaphone", song.local_instruments.get_instrument_by_name("Thongaphone").name)

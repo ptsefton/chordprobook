@@ -209,14 +209,16 @@ class cp_song:
                         new_text += "> "
                     if in_tab:
                         #Four spaces in Markdown means preformatted
-                        new_text += "    "
+                        pass
                     else:
                         #Highlight chords
                         line = line.replace("][","] [").strip()
                         line = re.sub("\[(.*?)\]","**[\\1]**",line)
                     new_text += "%s\n" % line
             else:
-                in_tab = False #Assume user has forgotten to close a tab block
+                #if in_tab:
+                #    in_tab = False #Assume user has forgotten to close a tab block
+                #    new_text += "```\n"
                 if dir.type == directive.comment:
                     if in_chorus:
                         #">" is Markdown for blockquote
@@ -245,12 +247,14 @@ class cp_song:
                 elif dir.type in [directive.end_chorus, directive.end_bridge]:
                     in_chorus = False
                     
-                elif dir.type == directive.start_tab:
+                elif dir.type == directive.start_tab and not in_tab:
                     in_tab = True
-                    #new_text += "FOUND TAB\n"
+                    new_text += "```\n"
                     
-                elif dir.type == directive.end_tab:
+                elif dir.type == directive.end_tab and in_tab:
+                    new_text += "```\n"
                     in_tab = False
+                    
                     
                 elif dir.type == directive.new_page:
                     new_text +=  "\n<!-- new_page -->\n"
