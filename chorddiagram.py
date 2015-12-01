@@ -437,7 +437,7 @@ class ChordDiagram:
                 if dot.fret == None:
                     draw.text((x - w/2, self.string_top - h), "x", self.dot_color)
                 elif dot.fret != 0:
-                    y = self.string_top + f * self.fret_spacing
+                    y = self.string_top + f * self.fret_spacing - r
                     draw.ellipse((x-r, y-r, x+r, y+r), ChordDiagram.dot_color)
                     if dot.finger != None:
                         draw.text((x - w / 2 ,y - h /2 ),
