@@ -75,15 +75,21 @@ class TOC:
         
         def chunked(iterable, n):
             
-            """ Split iterable into ``n`` iterables of similar size
+            """
+            Split iterable into ``n`` iterables of similar size
             From: http://stackoverflow.com/questions/24483182/python-split-list-into-n-chunks
 
             """
             chunksize = int(math.ceil(len(iterable) / n))
             return [iterable[i * chunksize:i * chunksize + chunksize] for i in range(n)]
         
-        page_count = start_page
+        
         song_count = 0
+        num_entries = len(book.sets) + len([i for i in book.songs if not i.blank])
+        if num_entries > TOC.max_songs_per_page:
+            self.target_num_pages = int(math.ceil(num_entries / TOC.ideal_songs_per_page ))
+            
+        page_count = start_page +  self.target_num_pages
         for song  in book.sets:
             if not song.blank:
                 self.entries.append("Set: %s <span style='float:right'>%s</span>    " % ( song.title, str(page_count)))
@@ -92,15 +98,13 @@ class TOC:
         for song in book.songs:
             if not song.blank:
                 song_count += 1
-                self.entries.append("%s %s <span style='float:right'>%s</span>    " % (str(song_count), song.title, str(page_count)))
+                self.entries.append("%s <span style='float:right'>%s</span>    " % (song.title, str(page_count)))
             page_count += song.pages
             
-        num_entries = len(self.entries)
         if num_entries > TOC.max_songs_per_page:
-            self.target_num_pages = int(math.ceil(num_entries / TOC.ideal_songs_per_page ))
             self.pages = chunked(self.entries,self.target_num_pages)
         else:
-            self.pages = [self.entries]     
+            self.pages = [self.entries]   
 
     def format(self):
         contents = ""
@@ -336,7 +340,7 @@ class cp_song:
         key_string = self.get_key_string()
         title = "%s %s" % (self.title, key_string)
         if stand_alone and instrument_name != None:
-            title = "%s for %s" % (title, instrument_name)
+            title = "%s (%s)" % (title, instrument_name)
             
         grid_md = ""
         if self.grids != None:
@@ -468,17 +472,18 @@ class cp_song_book:
                     dir_list.append(directiv.value)
                 elif directiv.type == directiv.files:
                     self.__get_file_list(directiv.value, dir_list)
-        if self.title == None:
-            self.title =  cp_song_book.default_title
+
 
     def __songs_to_html(self, instrument_name, args, output_file):
         all_songs = self.sets_md
+        if self.title == None:
+            self.title = cp_song_book.default_title
         for song  in self.songs:
             song.format(instrument_name = instrument_name, stand_alone=False)
             all_songs += song.to_html()
             
         if instrument_name != None:
-            suffix = "_%s" % instrument_name.lower()
+            suffix = "_%s" % instrument_name.lower().replace(" ", "_")
             title_suffix = " (for&nbsp;%s)" % instrument_name
         else:
             suffix = ""
@@ -494,6 +499,8 @@ class cp_song_book:
             pdf_path = output_file + ".pdf"
         else:
             pdf_path = None
+        print("Outputting html", html_path)
+       
         open(html_path, 'w').write( html_book.format(all_songs,
                                                       title=self.title + title_suffix,
                                                       for_print = args['a4'],
@@ -502,7 +509,7 @@ class cp_song_book:
                                                                                 format="md")))
         if pdf_path != None:
             print("Outputting PDF:", pdf_path)
-            command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', '--outline',
+            command = ['wkhtmltopdf', '-s','A4', '--enable-javascript', '--print-media-type', '--outline',
                        '--outline-depth', '1','--header-right', "[page]/[toPage]",
                        '--header-line', '--header-left', "%s" % self.title, html_path, pdf_path]
             subprocess.call(command)
@@ -512,7 +519,7 @@ class cp_song_book:
         self.contents = ""
         #TODO Depends on template so should be passed as an option
         self.sets_md = ""
-        start_page = 3
+        start_page = 2
         for set in self.sets:
             set.format()
             self.sets_md += set.to_html()
@@ -541,15 +548,13 @@ class cp_song_book:
                 
                 for trans in song.standard_transpositions:
                     if self.instrument_name_passed != None:
-                        instruments=[instrument_name_passed]
+                        instruments=[self.instrument_name_passed]
                     else:
                          instruments = song.local_instrument_names
                          
                     for instrument_name in instruments:
                         song.save_as_single_sheet(instrument_name, trans)
-                        #TODO - move to to_stand_alone_html
-                        #song.title += " with chords for %s" % args['instrument']
-
+                        
                     song.save_as_single_sheet(None, trans)
             
                         
@@ -680,7 +685,7 @@ $("div.page").each(function() {
  var heading = page.children("h1.song-title");
  if (heading.length > 0) {
   
-    heading.css('font-size', ("100px" ));
+    heading.css('font-size', ("40px" ));
     while (heading.width() > page.width()) {
       heading.css('font-size', (parseInt(heading.css('font-size')) - 1) +"px" );
     }
@@ -696,7 +701,7 @@ $("div.page").each(function() {
  
  if (text.length > 0)
  {
-    song_page.height( height_remaining);
+   song_page.height( height_remaining);
    // Make text bigger until it is too big
    while( height_remaining * %(cols)s > text.height()) {
     text.css('font-size', (parseInt(text.css('font-size')) + 1) +"px" );
@@ -706,7 +711,7 @@ $("div.page").each(function() {
     }
    // Make text smaller until it is just right
    i = 0;
-   while( height_remaining * %(cols)s  < text.height()) {
+   while( height_remaining * %(cols)s < text.height()) {
     
      text.css('font-size', (parseInt(text.css('font-size')) - 1) +"px" );
       i++;
@@ -719,21 +724,17 @@ $("div.page").each(function() {
  i = 0;
  
  if (title.length > 0) {
-   /*
-   while( height_remaining * %(cols)s > text.height()) {  
-      title.css('font-size', (parseInt(title.css('font-size')) + 1) +"px" );
-      console.log("i:", i , "xtitle: ", title.width(), "page:", page.width());
-    }
-    */
+  
+   
     while (title.width() < page.width()) {
 console.log("i:", i, "ztitle: ", title.width(), "page:", page.width());
           i++;
           title.css('font-size', (parseInt(title.css('font-size')) + 1) +"px" );
           if (i > 1000) {break}
     }
-    title.css('font-size', (parseInt(title.css('font-size')) + 1) - "px" );
+    title.css('font-size', (parseInt(title.css('font-size')) + 1) - "px" ); 
  }
-
+  
 
  
     //console.log(page.find("h1").html(), "PAGE HEIGHT TO MATCH", height_remaining, "CONTENTS HEIGHT", text.height(), "FONT SIZE", text.css('font-size') );
@@ -865,8 +866,8 @@ p {
 
 <style>
 .page {
-width: 23cm;
-height: 30cm;
+width: 20cm;
+height: 29.5cm;
 padding: 0cm;
 margin: 0cm;
 border-style: solid;
@@ -882,6 +883,9 @@ position: relative;
  text-align: center;
 }
 div.grids img {
+ border-style: solid;
+border-width: 1px;
+border-color: green;
 }
 div.song-page {
 padding: 0cm;
@@ -896,7 +900,7 @@ font-size: 2px;
 
 
 img {
-     padding: 0px 0px 0px 0pconsole.log("not", heading.width(), page.width());x;
+     padding: 0px 0px 0px 0px;
      margin: 0px 0px 0px 0px;
      -webkit-margin-before: 0px;
      -webkit-margin-after: 0px;
@@ -908,6 +912,7 @@ h1.book-title {
   font-size: 1pt;
   display: inline-block;
 }
+
 h1.song-title {
      text-align: center;
      padding: 0px 0px 0px 0px;
@@ -929,6 +934,7 @@ div {
         page-break-inside: avoid;
     }
     div.song-page{
+        
         page-break-inside: avoid;
     }
 }
@@ -1073,7 +1079,6 @@ def convert():
 
     if args['instrument'] != None:
         output_file += "_" + args['instrument'].lower().replace(" ","_")
-        title += " with chords for %s" % args['instrument']
         
 
     if  args['epub']:
