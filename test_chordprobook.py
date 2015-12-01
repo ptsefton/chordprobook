@@ -114,7 +114,8 @@ class TestStuff(unittest.TestCase):
     self.assertEqual(song.title, "A Song!")
     song = cpb.cp_song("{title: A Song!}\nSome stuff\n{key: C#}\n#A comment\n#or two", transpose=3)
     self.assertEqual(song.key, "E")
-    self.assertEqual(song.to_html(), '<div class="song">\n<div class="page">\n<h1 id="a-song-e">A Song! (E)</h1>\n<div class="song-page">\n<div class="song-text">\n<p>Some stuff</p>\n</div>\n</div>\n</div>\n</div>\n</div>\n')
+    song.format()
+    self.assertEqual(song.to_html(), '<div class="song">\n<div class="page">\n<h1 class="song-title">\nA Song! (E)\n</h1>\n<div class="song-page">\n<div class="song-text">\n<p>Some stuff</p>\n</div>\n</div>\n</div>\n</div>\n</div>\n')
 
     song = cpb.cp_song("""
     {title: Test}
@@ -196,7 +197,6 @@ This is where some
 > **Chorus**    
 > Where someone forgot to close the tab
 """
-    print(song.text)
     self.assertEqual(song.text, result)
 
 
@@ -234,8 +234,6 @@ After the chorus
 
 """
     # TODO TEST IS MISSING!
-
-    
     song = cpb.cp_song("{instrument: Thongaphone}") 
     self.assertEqual( "Thongaphone", song.local_instruments.get_instrument_by_name("Thongaphone").name)
     self.assertEqual( "Thongaphone", song.local_instruments.get_instrument_by_name("Thongaphone").name)

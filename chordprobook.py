@@ -193,7 +193,8 @@ class cp_song:
         self.parse()
         if self.title == "":
             self.title = title
-        self.format()
+        #TODO: Needed?
+        #self.format()
           
     def parse(self):
         in_chorus = False
@@ -348,7 +349,7 @@ class cp_song:
                     grid_md += "<div style='float:left;align:center'>%s<br/>%s</div>" % (md, chord_name)
             grid_md += "<div style='clear:left'></div></div>"   
       
-        song = "# %s\n%s\n<div class='song-page'><div class='song-text'>\n%s\n%s\n\n</div></div>" % ( title, grid_md, self.notes_md, song)
+        song = "<h1 class='song-title'>%s</h1>\n%s\n<div class='song-page'><div class='song-text'>\n%s\n%s\n\n</div></div>" % ( title, grid_md, self.notes_md, song)
        
         
         self.md = song
@@ -395,10 +396,11 @@ class cp_song:
         return "(%s)" % self.key if self.key != None else ""
 
 class cp_song_book:
+    default_title = 'Songbook'
     def __init__(self, songs = [], keep_order = False, title=None, instruments = None, instrument_name=None, path="."):
         self.path = path
         self.dir, self.filename = os.path.split(self.path)
-        self.title = None
+        self.title = title
         self.songs = []
         self.default_instrument_names = []
         if instruments == None:
@@ -409,6 +411,7 @@ class cp_song_book:
         self.text = ""
         self.keep_order = keep_order
         self.sets = [] #Song-like objects to hold rip-out-able set lists
+       
     
     def set_path(self,path):
         self.path = path
@@ -465,19 +468,25 @@ class cp_song_book:
                     dir_list.append(directiv.value)
                 elif directiv.type == directiv.files:
                     self.__get_file_list(directiv.value, dir_list)
+        if self.title == None:
+            self.title =  cp_song_book.default_title
 
     def __songs_to_html(self, instrument_name, args, output_file):
         all_songs = self.sets_md
         for song  in self.songs:
             song.format(instrument_name = instrument_name, stand_alone=False)
             all_songs += song.to_html()
+            
         if instrument_name != None:
             suffix = "_%s" % instrument_name.lower()
+            title_suffix = " (for&nbsp;%s)" % instrument_name
         else:
             suffix = ""
+            title_suffix = ""
+    
         output_file += suffix
         if args['html']:
-            html_path = output_file
+            html_path = output_file + ".html"
         else:
             temp_file = tempfile.NamedTemporaryFile(suffix=".html")
             html_path = temp_file.name
@@ -486,7 +495,7 @@ class cp_song_book:
         else:
             pdf_path = None
         open(html_path, 'w').write( html_book.format(all_songs,
-                                                      title=self.title,
+                                                      title=self.title + title_suffix,
                                                       for_print = args['a4'],
                                                       contents=pypandoc.convert(self.contents,
                                                                                 "html",
@@ -666,8 +675,9 @@ $("div.page").each(function() {
  var page_width =page.width();
  var song_page = page.children("div.song-page");
  var text = song_page.children("div.song-text");
- var heading = page.children("h1");
 
+ 
+ var heading = page.children("h1.song-title");
  if (heading.length > 0) {
   
     heading.css('font-size', ("100px" ));
@@ -686,16 +696,16 @@ $("div.page").each(function() {
  
  if (text.length > 0)
  {
-  
     song_page.height( height_remaining);
    // Make text bigger until it is too big
    while( height_remaining * %(cols)s > text.height()) {
     text.css('font-size', (parseInt(text.css('font-size')) + 1) +"px" );
     i++;
   
-    if (i > 50) {break}
+    if (i > 60) {break}
     }
    // Make text smaller until it is just right
+   i = 0;
    while( height_remaining * %(cols)s  < text.height()) {
     
      text.css('font-size', (parseInt(text.css('font-size')) - 1) +"px" );
@@ -703,9 +713,33 @@ $("div.page").each(function() {
 
        if (i > 100) {break}
     }
-    console.log(page.find("h1").html(), "PAGE HEIGHT TO MATCH", height_remaining, "CONTENTS HEIGHT", text.height(), "FONT SIZE", text.css('font-size') );
+
+
+ var title = text.children("h1.book-title");
+ i = 0;
+ 
+ if (title.length > 0) {
+   /*
+   while( height_remaining * %(cols)s > text.height()) {  
+      title.css('font-size', (parseInt(title.css('font-size')) + 1) +"px" );
+      console.log("i:", i , "xtitle: ", title.width(), "page:", page.width());
+    }
+    */
+    while (title.width() < page.width()) {
+console.log("i:", i, "ztitle: ", title.width(), "page:", page.width());
+          i++;
+          title.css('font-size', (parseInt(title.css('font-size')) + 1) +"px" );
+          if (i > 1000) {break}
+    }
+    title.css('font-size', (parseInt(title.css('font-size')) + 1) - "px" );
+ }
+
+
+ 
+    //console.log(page.find("h1").html(), "PAGE HEIGHT TO MATCH", height_remaining, "CONTENTS HEIGHT", text.height(), "FONT SIZE", text.css('font-size') );
   }
 });
+
 
 };
 $(function() {
@@ -751,6 +785,7 @@ background-color: #CCFF33;
 
 
 h1 {
+    
     -webkit-column-span: all;
      padding: 0px 0px 0px 0px;
      margin: 0px 0px 0px 0px;
@@ -804,8 +839,11 @@ p {
         frontmatter = """
 <div class='song'>
 <div class='page'>
-
-<h1>%s</h1>
+<div class='song-page'>
+<div class='song-text'>
+<h1 class="book-title">%s</h1>
+</div>
+</div>
 </div>
 </div>
 
@@ -844,7 +882,6 @@ position: relative;
  text-align: center;
 }
 div.grids img {
-
 }
 div.song-page {
 padding: 0cm;
@@ -864,7 +901,15 @@ img {
      -webkit-margin-before: 0px;
      -webkit-margin-after: 0px;
 }
-h1 {
+
+h1.book-title {
+  white-space: normal;
+  text-align: center;
+  font-size: 1pt;
+  display: inline-block;
+}
+h1.song-title {
+     text-align: center;
      padding: 0px 0px 0px 0px;
      margin: 0px 0px 0px 0px;
      white-space: nowrap;
@@ -919,7 +964,6 @@ output = "markdown"
     
 def convert():
     default_output_file = "songbook"
-    default_title = 'Songbook!'
     parser = argparse.ArgumentParser()
     parser.add_argument('files', type=argparse.FileType('r'), nargs="*", default=None, help='List of files')
     parser.add_argument('-a', '--alphabetically', action='store_true', help='Sort songs alphabetically')
@@ -947,7 +991,7 @@ def convert():
                         '--setlist',
                         default=None,
                         help ="Use a setlist file in markdown format to filter the book, one song per line, and keep facing pages together. Setlist lines can be one or more words from the song title starting with '## ', with '# ' for the names of sets and other markdown as you require in between you can also add a setlist line: {title: Title of setlist}")
-    parser.add_argument('--title', default=default_title, help='Title to use for the book, if there is no title in a book file or setlist file')
+    parser.add_argument('--title', default=None, help='Title to use for the book, if there is no title in a book file or setlist file')
     
    
 
