@@ -735,15 +735,21 @@ $("div.page").each(function() {
   
    
     while (title.width() < page.width()) {
-console.log("i:", i, "ztitle: ", title.width(), "page:", page.width());
+
           i++;
           title.css('font-size', (parseInt(title.css('font-size')) + 1) +"px" );
           if (i > 1000) {break}
     }
-    title.css('font-size', (parseInt(title.css('font-size')) + 1) - "px" ); 
- }
+   
   
-
+    while (title.height() > page_height - 200) {
+          i++;
+          console.log("Title height", title.height(), "page height", page_height);
+          title.css('font-size', (parseInt(title.css('font-size')) - 1) + "px" );
+          if (i > 2000) {break}
+    }
+   
+ }
  
     //console.log(page.find("h1").html(), "PAGE HEIGHT TO MATCH", height_remaining, "CONTENTS HEIGHT", text.height(), "FONT SIZE", text.css('font-size') );
   }
@@ -875,7 +881,7 @@ p {
 <style>
 .page {
 width: 20cm;
-height: 29.5cm;
+height: 29cm;
 padding: 0cm;
 margin: 0cm;
 border-style: solid;
