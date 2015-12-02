@@ -4,7 +4,13 @@ import chordprobook as cpb
 
 
 class TestStuff(unittest.TestCase):
+  def test_chord_markup_normaliser(self):
+     self.assertEqual(cpb.normalize_chord_markup("xxxxxxx[A] yyyy"), "xxxxxxx [A] yyyy")
+     self.assertEqual(cpb.normalize_chord_markup("[A]yyyy"), "[A] yyyy")
+     self.assertEqual(cpb.normalize_chord_markup("xxxxxxx[A]"), "xxxxxxx [A]")
+     self.assertEqual(cpb.normalize_chord_markup("xxxxxxx [A]yyyy"), "xxxxxxx [A] yyyy")
 
+      
   def test_TOC(self):
       book_text = ""
       slotmachine = "./samples/slot_machine_baby.cho\n"

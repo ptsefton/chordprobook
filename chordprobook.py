@@ -88,6 +88,8 @@ class TOC:
         num_entries = len(book.sets) + len([i for i in book.songs if not i.blank])
         if num_entries > TOC.max_songs_per_page:
             self.target_num_pages = int(math.ceil(num_entries / TOC.ideal_songs_per_page ))
+        else:
+            self.target_num_pages = 1
             
         page_count = start_page +  self.target_num_pages
         for song  in book.sets:
@@ -170,7 +172,11 @@ class directive:
             if name in directive.directives:
                 self.type = directive.directives[name]
                 self.value = self.value.strip()
-
+                
+def normalize_chord_markup(line):
+        line = re.sub("(\w)(\[.*?\])( |$)","\\1 \\2\\3", line)
+        line = re.sub("(^| )(\[.*?\])(\w)","\\1\\2 \\3", line)  
+        return line
 
 class cp_song:
     """ Represents a song, with the text, key, chord grids etc"""
@@ -199,7 +205,7 @@ class cp_song:
             self.title = title
         #TODO: Needed?
         #self.format()
-          
+         
     def parse(self):
         in_chorus = False
         in_tab = False
@@ -209,6 +215,7 @@ class cp_song:
             dir = directive(line)
             if dir.type == None:
                 if not line.startswith('#'):
+                    line = normalize_chord_markup(line)
                     if in_chorus:
                         #">" is Markdown for blockquote
                         new_text += "> "
@@ -287,6 +294,7 @@ class cp_song:
             self.text = new_text
             #Add four spaces to mid-stanza line ends to force Markdown to add breaks
             self.text = re.sub("(.)\n(.)", "\\1    \\n\\2", self.text)
+            
                
     def __find_title(self):
         self.text, self.title = extract_title(self.text, title=self.title)
