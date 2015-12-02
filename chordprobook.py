@@ -536,7 +536,7 @@ class cp_song_book:
             else:
                 self.__songs_to_html(None, args, output_file)
         else:
-            self.__songs_to_html(instrument_name, args, output_file)
+            self.__songs_to_html(self.instrument_name_passed, args, output_file)
             
             
 
@@ -695,7 +695,7 @@ $("div.page").each(function() {
  var grids_height = page.children("div.grids").height();
  var heading_height = heading.height();
  var chord_grids = page.children("div.grids").children("img").length;
- var height_remaining = page_height - grids_height - heading_height;
+ var height_remaining = page_height - grids_height - heading_height -10;
 
  var i = 0;
  
@@ -882,11 +882,13 @@ position: relative;
  font-weight: bold;
  text-align: center;
 }
+
 div.grids img {
  border-style: solid;
-border-width: 1px;
-border-color: green;
+ border-width: 1px;
+ border-color: white;
 }
+
 div.song-page {
 padding: 0cm;
 margin: 0cm;
@@ -1076,10 +1078,7 @@ def convert():
         book.sort_alpha()
 
     title = args['title']
-
-    if args['instrument'] != None:
-        output_file += "_" + args['instrument'].lower().replace(" ","_")
-        
+     
 
     if  args['epub']:
         epub_path = output_file + ".epub"
