@@ -137,7 +137,7 @@ Formatting / Directive         |      Description  | Rendered as
 {sot} {start_of_tab} | Start of tab (tablature) | Rendered in a fixed width (monospace) font, as per the HTML \<pre> element. NOTE: Tabs that are acutal text-formatted representations of the fingerboard will not be transposed, although chords in square brackets will, so you can use tab-blocks to format intros or breaks where chords line up under each other 
 {eot} {end_of_tab} | End of tab | Finishes the fixed-width formatting
 {book: path_to_book} | For use in setlist files, a path to a book file relative to the setlist file or an absolute path | 
-{files: } & {dirs: }| A file-glob pattern to match, eg {files: *.cho} in a space separated list of directories| For use in book files only, does a recursive search in the directories for files matching the pattern. If the song has a {transpose: } directive it will use the first one 
+{files: } & {dirs: }| A file-glob pattern to match, eg {files: *.cho} in a space separated list of directories| For use in book files only, does a recursive search in the directories for files matching the pattern. If the song has a {transpose: } directive it will generate multiple pages, one for each transposition.
 
 ### Implementation
 
