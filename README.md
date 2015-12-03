@@ -21,20 +21,16 @@ This is alpha code, until there are other people using it will
 continue to develop without branches and may make breaking
 changes. Let me know if you want a more stable release.
 
-There are some (patchy) unit tests, I will improve this over time.
-
-Most of the song parsing uses brute force regular expressions, this
-performs pretty well, but I am thinking about implementing a
-simple line-by line parser with states.
+There are some (patchy) unit tests, I have been improving this with most of the changes I make.
 
 ## Features
 
 * Generate books from files passed on the command line
 
-* Generate books from a book file which is a list of files
+* Generate books from a book file, which is a list of files, or a pattern to match (eg *.cho)
 
 * Reorder songs using a setlist file using either of the above ways of
-selecting files
+selecting files, for using in performance
 
 * Show chord grids at the top of the page for a range of instruments
   (I could use some help getting better chord definition
@@ -43,16 +39,15 @@ selecting files
 
 If you play with a group you can maintain a songbook for the
 group to play from, then create setlists which are ordered subsets of that book by typing abbreviated titles
-into a text file, and generating a book from that. The setlist will be printed as a table of contents
-for the book, on the back of the cover page so you can rip it off an
-put it on the floor, unless you're viewing in on a tablet.
+into a text file in markdown format, and generating a book from that. The setlists are added as pages you can 
+put on the floor, like a real rock n roll band.
 
 ### PDF
 
-* **Formats songs to fit the page** as best it can (good for ageing eyes
+* **Formats songs to fit the page** as best it can making the text as big as possible (good for ageing eyes
    and working in the dark). This feat is accompished by creating an HTML document, via Pandoc, with CSS to render the pages at A4 size then using wkhtmltopdf to create a PDF.
 
-* **Generates individual song-sheets including multiple keys** transposed from the original.
+* **Generates individual song-sheets in multiple keys and for multiple instruments** transposed from the original.
 
 * **Produces a PDF table of contents** which works well on tablets for navigation.
 
@@ -64,14 +59,14 @@ put it on the floor, unless you're viewing in on a tablet.
 
 ### HTML output
 
-This is still experimental, but the idea is to produce HTML that fills the screen for use on tablets, phones, etc with swipe navigatoin.
+This is still experimental, but the idea is to produce HTML that fills the screen for use on tablets, phones, etc with swipe navigation.
 
 
 
 ### Probably won't do
 * Make a GUI, but see the comment below about auto-creating PDF
 
-* Display chords above text.
+* Display chord names above text.
 
 ## Audience
 
@@ -89,6 +84,7 @@ Requires pandoc 1.15.0.6 or later  and wkhtmltopdf installed on on your path.
 
     ```brew install pandoc --HEAD```
 * Download and install [wkhtmltopdf](http://wkhtmltopdf.org/downloads.html)
+
 * Install dependencies using pip3:
 
     ```pip3 install pypandoc```
@@ -113,14 +109,14 @@ don't write [CAug] use [Caug].
 
 Some charts use ! and / inside chords to indicate a staccato chord or
 rhythm respectively. This works, and will be recognised for the
-purposes of transcribing the song:
+purposes of transposing the song:
 
 ``` [C / / / ] [F / /] [C!]```
 
 
 ### Other formatting
 
-Directives are lines beginning and ending with { and }.
+Directives are lines beginning and ending with { and }, whitespae before and after the braces is ignored, but if there is text outside of them then the line is not treated as a directive.
 
 None of the directives are case sensitive and they are all optional. Title, subtitle, key and transpose can be placed anywhere, but by convention are put at the top of the file.
 
@@ -131,6 +127,8 @@ Formatting / Directive         |      Description  | Rendered as
 {key: \<A...G>} | The key of the song     | Will be added to the title in brackets like ```(Key of G)``` if present.
 {transpose: +1 +2 -2} | A space separted list of semitone deltas.  | In a song file, when called in single-song mode the software will automatically produce extra versions transposed as per the directive. In this case if the song is in C it would be transposed to C#, D and Bb. Can be used in a book file or a setlist file at the end of a line after a file-path or the title of the song, respectively.
 {C: Some comment} {Comment: Some comment} | Notes on the song  | A third level heading
+{instrument: } | Name of an instrument you'd like to display chord grids for. Can occur multiple times in song or book files (not yet in setlists) | A set of chord grids across the top of the song's first page, if the instrument is know to the software. chordpro.py --instruments will list the instruments known 
+{define: } | In the context of an {instrument: } directove above will define fingering for a chord for that instrument. Uses the same conventions as over at [uke-geeks](http://blog.ukegeeks.com/users-guide/how-do-i-define-my-own-chords/) except that here chords have to start with [A-G] | Causes a chord grid (if chords are being rendered) to appear at the top of the song 
 {new+page} {np} | New page | A page break. When generating HTML and PDF the software will attempt to fill each page to the screen or paper size respectively as best it can.
 {start_of_chorus} {soc} | Start of chorus. Usually followed by some variant of {c: Chorus} | Chorus is rendendered as an indendented block. TODO: make this configurable via stylesheets. In .docx format the chorus is rendered using ```Block Text``` style.
 {start_of_bridge} {sob} | Start of bridge. Usually followed by some variant of {c: Bridge} | Same behaviour as chorus
@@ -147,9 +145,6 @@ This implementation will:
 
 * Look for one-directive per line.
 * Accept leading and trailing space before and after directives.
-* Automatically close tab-blocks when it encounters valid directives
-  (the alternative is to render directives inside tab-blocks as plain-text, but this is almost
-  certainly not what a user would want)
 
 I am still undecided about:
 * How to handle extra text before or after a declaration
@@ -161,6 +156,11 @@ A book file is a text file with a list of paths with and optional title (see [sa
 To transpose the song, add a positive or negative integer at after the (partial) song name, separated by a space. eg:
 ```./songs/my-song.cho {transpose: +2}```
 
+A book file may also have 'lazy' loading via directives on how to find song files.
+
+*  To specifiy one or more directories in which to look use one or more dir directives ```{dir: ./some-path}``
+
+*  To speficy a set of files use a file-glob expression, eg this matches all files that end in .cho ```{files: *.cho}``
 
 ### Setlist files
 
@@ -209,8 +209,7 @@ optional arguments:
   -f FILE_STEM, --file-stem FILE_STEM
                         Base file name, without extension, for output files
   --html                Output HTML book, defaults to screen-formatting use
-                        --a4 option for printing (PDF generation not working
-                        unless you chose --a4 for now
+                        --a4 option for printing 
   -w, --word            Output .docx format
   -p, --pdf             Output pdf
   -r REFERENCE_DOCX, --reference-docx REFERENCE_DOCX
@@ -276,6 +275,10 @@ optional arguments:
   *.cho}`` and specify a space separated directory of file names, like ``{dirs:
   *./covers .originals}```
   
+  ```./chordprobook.py -b samples/sample-book-lazy.txt ```
+
+* To automatically include chord grids, add {instrument: } directives to a bookfile, eg:
+
   ```./chordprobook.py -b samples/sample-book-lazy.txt ```
 
 * To make sure the order of songs is preserved exactly, for example to
