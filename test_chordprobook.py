@@ -18,7 +18,6 @@ class TestStuff(unittest.TestCase):
       b = cpb.cp_song_book()
       b.load_from_text(book_text)
       toc = cpb.TOC(b, 3)
-
       
       self.assertEqual(len(toc.pages), 1)
       book_text += slotmachine * 60
@@ -43,17 +42,21 @@ class TestStuff(unittest.TestCase):
       self.assertEqual(b.songs[2].key, "Bb")
       
       book_path="samples/sample-book-lazy.txt"
+      """This one has auto-transpose turned on"""
       sample_book_text = open(book_path).read()
       b = cpb.cp_song_book( path=book_path)
       b.load_from_text(sample_book_text)
-      self.assertEqual(len(b.songs), 4)
+      self.assertEqual(len(b.songs), 8)
       self.assertEqual(b.title, "Sample songs")
      
       book_path="samples/sample-book-lazy-uke.txt"
       sample_book_text = open(book_path).read()
       b = cpb.cp_song_book(path=book_path)
       b.load_from_text(sample_book_text)
+     
       self.assertEqual(len(b.songs), 4)
+      self.assertEqual(b.songs[3].transpose, -3)
+      self.assertEqual(b.songs[3].title, "Universe")
       self.assertEqual(b.title, "Sample songs")
       self.assertEqual(b.default_instrument_names[0],"Ukulele")
 
@@ -123,6 +126,16 @@ class TestStuff(unittest.TestCase):
     song.format()
     self.assertEqual(song.to_html(), '<div class="song">\n<div class="page">\n<h1 class="song-title">\nA Song! (E)\n</h1>\n<div class="song-page">\n<div class="song-text">\n<p>Some stuff</p>\n</div>\n</div>\n</div>\n</div>\n</div>\n')
 
+
+    # Test auto-apply of classes
+    song = cpb.cp_song("{title: A Song!}\nSome stuff\n{key: C#}\n.♂\n")
+    self.assertEqual(song.key, "C#")
+    self.assertEqual(song.title, "A Song!")
+    song.format()
+    self.assertEqual(song.text, "<span>")
+
+
+    
     song = cpb.cp_song("""
     {title: Test}
     {soc}

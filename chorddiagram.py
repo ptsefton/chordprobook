@@ -300,6 +300,7 @@ class ChordDiagram:
         self.setup()
         
     def to_data_URI(self):
+        """Convert pic binary data to a data URI for use in web pages"""
         self.draw()
         output = BytesIO()
         self.img.save(output, format='PNG')
@@ -310,6 +311,7 @@ class ChordDiagram:
         return("<img width='%s' height='%s' alt='%s' src='%s' />" % (self.box_width, self.box_height, self.name, self.to_data_URI()))
 
     def to_chordpro(self):
+        """ Turn into {define: declaration. Warning! Not finished! See tests for current functionality. """
         chordpro = "{define: %s " % self.name;
         if self.base_fret != 0:
             chordpro += "base-fret %s " % str(self.base_fret)
@@ -450,6 +452,7 @@ class ChordDiagram:
 
             
     def show(self):
+        """Pop up a chord diagram. Usueful for debugging"""
         self.draw()
         self.img.show()
 
