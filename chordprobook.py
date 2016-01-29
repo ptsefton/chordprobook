@@ -734,7 +734,10 @@ $("div.page").each(function() {
    song_page.height( height_remaining);
    // Make text bigger until it is too big
    while( height_remaining * %(cols)s > text.height()) {
-    text.css('font-size', (parseInt(text.css('font-size')) + 1) +"px" );
+    var text_size = parseInt(text.css('font-size'));
+    
+    if (text_size > 25) {break}
+    text.css('font-size', ( text_size + 1) +"px" );
     i++;
   
     if (i > 60) {break}
@@ -782,7 +785,6 @@ $("div.page").each(function() {
 $(function() {
   fill_page()
 });
-
 """
         web_template = """
 <html>

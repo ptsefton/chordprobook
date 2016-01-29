@@ -243,7 +243,7 @@ class ChordChart:
         chord_name = re.sub("(/* *)*$","", chord_name)
         
         # Normalise "add" for ninths, elevenths etc - TODO sharps as well
-        chord_name = re.sub("add(\d+)","\\1", chord_name)
+        chord_name = re.sub("[aA]dd(\d+)","\\1", chord_name)
         tr = transposer(0)
         chord_name = tr.transpose_chord(chord_name)
         return chord_name
