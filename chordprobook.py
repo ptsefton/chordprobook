@@ -145,8 +145,11 @@ class directive:
                 self.value = self.value.strip()
                 
 def normalize_chord_markup(line):
-        line = re.sub("(\w)(\[.*?\])( |$)","\\1 \\2\\3", line)
-        line = re.sub("(^| )(\[.*?\])(\w)","\\1\\2 \\3", line)  
+        """ Put space around chords before and after word boundaries """
+        print(line)
+        line = re.sub("(\w)(\[[^\]]*?\])( |$)","\\1 \\2\\3", line)
+        line = re.sub("(^| )(\[[[^\]]*?\])(\w)","\\1\\2 \\3", line)
+        print(line)
         return line
 
 class cp_song:
@@ -343,7 +346,7 @@ class cp_song:
                 if md == None:         
                     md = self.grids.grid_as_md(chord_name)
                 if md != None:
-                    grid_md += "<div style='float:left;align:center'>%s<br/>%s</div>" % (md, chord_name)
+                    grid_md += "<div style='float:left;align:center'>%s<br/>%s</div><br/>" % (chord_name,md)
             grid_md += "<div style='clear:left'></div></div>"   
       
         song = "<h1 class='song-title'>%s</h1>\n%s\n<div class='song-page'><div class='song-text'>\n%s\n%s\n\n</div></div>" % ( title, grid_md, self.notes_md, song)
@@ -722,7 +725,7 @@ $("div.page").each(function() {
  }
 
  var text_height = text.height();
- var grids_height = page.children("div.grids").height();
+ var grids_height = 0; // page.children("div.grids").height();
  var heading_height = heading.height();
  var chord_grids = page.children("div.grids").children("img").length;
  var height_remaining = page_height - grids_height - heading_height -10;
@@ -910,6 +913,7 @@ p {
     margin-top: 0;
 }
 
+
 p:last-child {
    margin-bottom: 0;
 }
@@ -929,12 +933,15 @@ position: relative;
  font-size: 18pt;
  font-weight: bold;
  text-align: center;
+ float: right;
 }
 
 div.grids img {
  border-style: solid;
  border-width: 1px;
  border-color: white;
+ width: 30;
+ height: 30;
 }
 
 div.song-page {
