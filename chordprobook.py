@@ -145,11 +145,9 @@ class directive:
                 self.value = self.value.strip()
                 
 def normalize_chord_markup(line):
-        """ Put space around chords before and after word boundaries """
-        print(line)
+        """ Put space around chords before and after word boundaries but not within words """
         line = re.sub("(\w)(\[[^\]]*?\])( |$)","\\1 \\2\\3", line)
-        line = re.sub("(^| )(\[[[^\]]*?\])(\w)","\\1\\2 \\3", line)
-        print(line)
+        line = re.sub("(^| )(\[[^\]]*?\])(\w)","\\1\\2 \\3", line)
         return line
 
 class cp_song:
@@ -194,6 +192,7 @@ class cp_song:
                     if in_chorus:
                         #">" is Markdown for blockquote
                         new_text += "> "
+                        
                     if in_tab:
                         #Four spaces in Markdown means preformatted
                         pass
@@ -202,7 +201,9 @@ class cp_song:
                         line = line.replace("][","] [").strip()
                         line = re.sub("\[(.*?)\]","**[\\1]**",line)
                         if line.startswith("."):
-                            line = re.sub("^\.(.*? )(.*)","<span class='\\1'>\\1\\2</span>", line)
+                            print("GOTDOT", line)
+                            line = re.sub("^\.(.*?) (.*)","<span class='\\1'>\\1 \\2</span>", line)
+                            print(line)
                     new_text += "%s\n" % line
             else:
                

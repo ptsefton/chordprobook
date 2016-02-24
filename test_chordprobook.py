@@ -9,6 +9,8 @@ class TestStuff(unittest.TestCase):
      self.assertEqual(cpb.normalize_chord_markup("[A]yyyy"), "[A] yyyy")
      self.assertEqual(cpb.normalize_chord_markup("xxxxxxx[A]"), "xxxxxxx [A]")
      self.assertEqual(cpb.normalize_chord_markup("xxxxxxx [A]yyyy"), "xxxxxxx [A] yyyy")
+     self.assertEqual(cpb.normalize_chord_markup("[A7]xxxxxxx[A]yyyy[A9]"), "[A7] xxxxxxx[A]yyyy [A9]")
+     self.assertEqual(cpb.normalize_chord_markup("When he chucked me off the[D] pier at Woolloomoo[G]loo [C] [G]"), "When he chucked me off the [D] pier at Woolloomoo[G]loo [C] [G]")
 
       
   def test_TOC(self):
@@ -127,12 +129,11 @@ class TestStuff(unittest.TestCase):
     self.assertEqual(song.to_html(), '<div class="song">\n<div class="page">\n<h1 class="song-title">\nA Song! (E)\n</h1>\n<div class="song-page">\n<div class="song-text">\n<p>Some stuff</p>\n</div>\n</div>\n</div>\n</div>\n</div>\n')
 
 
-    # Test auto-apply of classes
-    song = cpb.cp_song("{title: A Song!}\nSome stuff\n{key: C#}\n.♂\n")
+    # Test auto-apply of classes to lines beginning with a .
+    song = cpb.cp_song("{title: A Song!}\nSome stuff\n{key: C#}\n.♂ Mark this up as class ♂ \n")
     self.assertEqual(song.key, "C#")
     self.assertEqual(song.title, "A Song!")
-    song.format()
-    self.assertEqual(song.text, "<span>")
+    self.assertEqual(song.text, "Some stuff    \n<span class='♂'>♂ Mark this up as class ♂</span>\n\n")
 
 
     
