@@ -203,8 +203,9 @@ optional arguments:
   -i INSTRUMENT, --instrument INSTRUMENT
                         Show chord grids for the given instrument. Eg
                         --instrument "Soprano Ukulele"
-  --instruments         chord grids for the given instrument, then quit use
-                        any of the names or aliases listed under AKA
+  --instruments         List known instruments and their alises then quit. You
+                        use any of the names or aliases listed under AKA with
+                        the --instument option
   -k, --keep-order      Preserve song order for playing as a setlist (inserts
                         blank pages to keep multi page songs on facing pages
   --a4                  Format for printing (web page output)
