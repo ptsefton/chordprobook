@@ -42,8 +42,8 @@ class TOC:
     
     def __init__(self, book, start_page):
        
-        self.entries = []
-        
+        entries = []
+        sets = []
         def chunked(iterable, n):
             
             """
@@ -61,23 +61,27 @@ class TOC:
             self.target_num_pages = int(math.ceil(num_entries / TOC.ideal_songs_per_page ))
         else:
             self.target_num_pages = 1
-            
+
+
         page_count = start_page +  self.target_num_pages
         for song  in book.sets:
             if not song.blank:
-                self.entries.append("Set: %s <span style='float:right'>%s</span>    " % ( song.title, str(page_count)))
+                sets.append("Set: %s <span style='float:right'>%s</span>    " % ( song.title, str(page_count)))
             page_count += song.pages
             
         for song in book.songs:
             if not song.blank:
                 song_count += 1
-                self.entries.append("%s %s <span style='float:right'> %s</span>    " % (song.title, song.get_key_string(), str(page_count)))
+                entries.append("%s %s <span style='float:right'> %s</span>    " % (song.title, song.get_key_string(), str(page_count)))
             page_count += song.pages
-            
+
+        entries.sort(key= lambda title: re.sub("(?i)^(the|a|\(.*?\)) ", "", title))
+        entries = sets + entries
+        
         if num_entries > TOC.max_songs_per_page:
-            self.pages = chunked(self.entries,self.target_num_pages)
+            self.pages = chunked(entries,self.target_num_pages)
         else:
-            self.pages = [self.entries]   
+            self.pages = [entries]   
 
     def format(self):
         contents = ""
@@ -176,7 +180,7 @@ class cp_song:
         if self.title == "":
             self.title = title
        
-         
+            
     def parse(self):
         """ Deal with directives and turn song into markdown"""
         in_chorus = False
@@ -201,9 +205,7 @@ class cp_song:
                         line = line.replace("][","] [").strip()
                         line = re.sub("\[(.*?)\]","**[\\1]**",line)
                         if line.startswith("."):
-                            print("GOTDOT", line)
                             line = re.sub("^\.(.*?) (.*)","<span class='\\1'>\\1 \\2</span>", line)
-                            print(line)
                     new_text += "%s\n" % line
             else:
                
@@ -617,35 +619,34 @@ class cp_song_book:
                     dir = directive(potential_song)
                     if dir.type == directive.title:
                         self.title = dir.value
-                        
+                potential_song = re.sub("\s+", " ", potential_song)        
                 if potential_song.startswith("# "):
                     potential_song = potential_song.replace("# ","").strip()
                     # Use songs to represent sets, so each set gets a single page up front of the book
                     # the text of which will scale up nice and big courtesy of the song scaling algorithm
                     if current_song != None and current_set != None:
-                        current_song.title = "End %s :: %s" % (current_set.title, current_song.title)
+                        current_song.title = "%s {End of %s}" % (current_song.title, current_set.title)
                     current_set = cp_song("{title: %s}" % potential_song)
                     self.sets.append(current_set)
                     new_set = True
 
                 elif potential_song.startswith("## "): # A song
+                    
                     song_name = potential_song.replace("## ", "").strip()
-
                     song_name, transpositions = extract_transposition(song_name)
-                   
-                        
-                    restring = song_name.replace(" ", ".*?").lower()
+                    restring = song_name.replace(" +", ".*?").lower()
                     regex = re.compile(restring)
                     found_song = False
-
+               
                     for song in self.songs:
                         if re.search(regex, song.title.lower()) != None:
                             #Copy the song in case it is in the setlist twice with different treatment, such as keys or notes
+                            prev_song = current_song
                             current_song = copy.deepcopy(song)
                             if transpositions == [0]:
                                 transpositions = current_song.standard_transpositions
                             if new_set:
-                                current_song.title = "Start %s :: %s" % (current_set.title, current_song.title)
+                                current_song.title = "%s {Start of %s}" % (song.title, current_set.title)
                                 new_set = False
                             if len(transpositions) > 1 and transpositions[1] != 0:
                                 current_song.format(transpose = transpositions[1])
@@ -654,12 +655,16 @@ class cp_song_book:
                             new_order.append(current_song)
                             current_set.text +=  "## %s\n" % song_name
                             found_song = True
+                            
                     if not found_song:
                         new_order.append(cp_song("{title: %s (not found)}" % song_name))
+                        
                 elif current_song != None:
                     current_song.notes_md += potential_song + "\n\n"
                     current_set.text +=  potential_song + "\n\n"
+        
         self.songs = new_order
+       
         
     def reorder(self, start_page, old = None, new_order=[], waiting = []):
         """Reorder songs in the book so two-page songs start on an even page
@@ -1032,7 +1037,7 @@ def convert():
     parser.add_argument('files', type=argparse.FileType('r'), nargs="*", default=None, help='List of files')
     parser.add_argument('-a', '--alphabetically', action='store_true', help='Sort songs alphabetically')
     parser.add_argument('-i', '--instrument', default=None, help='Show chord grids for the given instrument. Eg --instrument "Soprano Ukulele"')
-    parser.add_argument('--instruments', action='store_true', help='chord grids for the given instrument, then quit use any of the names or aliases listed under AKA')
+    parser.add_argument('--instruments', action='store_true', help='List known instruments and their alises then quit. You use any of the names or aliases listed under AKA with the --instument option')
     parser.add_argument('-k',
                         '--keep-order',
                         action='store_true',
