@@ -5,7 +5,7 @@ import chordprobook as cpb
 
 class TestStuff(unittest.TestCase):
   def test_chord_markup_normaliser(self):
-        self.assertEqual(cpb.normalize_chord_markuprkup("xxxxxxx[A] yyyy"), "xxxxxxx [A] yyyy")
+     self.assertEqual(cpb.normalize_chord_markup("xxxxxxx[A] yyyy"), "xxxxxxx [A] yyyy")
      self.assertEqual(cpb.normalize_chord_markup("[A]yyyy"), "[A] yyyy")
      self.assertEqual(cpb.normalize_chord_markup("xxxxxxx[A]"), "xxxxxxx [A]")
      self.assertEqual(cpb.normalize_chord_markup("xxxxxxx [A]yyyy"), "xxxxxxx [A] yyyy")
@@ -20,19 +20,30 @@ class TestStuff(unittest.TestCase):
       b = cpb.cp_song_book()
       b.load_from_text(book_text)
       toc = cpb.TOC(b, 3)
-      
       self.assertEqual(len(toc.pages), 1)
+      self.assertEqual(len(b.songs),30)
+      
+      
       book_text += slotmachine * 60
       b = cpb.cp_song_book()
       b.load_from_text(book_text)
       toc = cpb.TOC(b, 3)
       self.assertEqual(len(toc.pages), 3)
-      
-      book_text += slotmachine * 100
+      self.assertEqual(len(b.songs), 90)
+
+      book_text += slotmachine * 40
       b = cpb.cp_song_book()
       b.load_from_text(book_text)
       toc = cpb.TOC(b, 3)
-      self.assertEqual(len(toc.pages), 5)
+      self.assertEqual(len(toc.pages), 4)
+      self.assertEqual(len(b.songs), 131)
+      
+      book_text += slotmachine * 80
+      b = cpb.cp_song_book()
+      b.load_from_text(book_text)
+      toc = cpb.TOC(b, 3)
+      self.assertEqual(len(toc.pages), 6)
+      self.assertEqual(len(b.songs), 211)
       
   def test_book(self):
       book_path = "samples/sample-book.txt"

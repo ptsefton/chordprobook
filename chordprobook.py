@@ -68,6 +68,7 @@ class TOC:
             if not song.blank:
                 sets.append("Set: %s <span style='float:right'>%s</span>    " % ( song.title, str(page_count)))
             page_count += song.pages
+      
             
         for song in book.songs:
             if not song.blank:
@@ -81,7 +82,14 @@ class TOC:
         if num_entries > TOC.max_songs_per_page:
             self.pages = chunked(entries,self.target_num_pages)
         else:
-            self.pages = [entries]   
+            self.pages = [entries]
+            
+        
+       
+        #Make sure that there isn't a song on the back of a setlist
+        if  (len(self.pages) + len(book.sets)) % 2 == 0:
+            book.songs.insert(0, cp_song("", title="", blank=True))
+     
 
     def format(self):
         contents = ""
@@ -671,11 +679,11 @@ class cp_song_book:
            Unless this is a set-list in which case insert blanks. Recursive."""
         
         def make_blank():
-            new_order.append(cp_song("{title:This page intentionally left blank}", blank=True))
+            new_order.append(cp_song("", title="", blank=True))
             
         if old == None:
             old = self.songs
-
+        
         if old == []:            
             if start_page % 2 == 1 and waiting != []:
                 make_blank()
@@ -694,16 +702,17 @@ class cp_song_book:
             start_page += old[0].pages
             
         elif old[0].pages % 2 == 0:
-            print("saving ", old[0].title)
             # Have a two page spread, so save it
             if self.keep_order:
                 make_blank()
                 new_order.append(old[0])
+                start_page += 1
             else:
                 waiting.append(old[0])
         else:
             new_order.append(old[0])
             start_page += old[0].pages
+            
         self.reorder(start_page, old[1:], new_order, waiting)    
                     
                 
