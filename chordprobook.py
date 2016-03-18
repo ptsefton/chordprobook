@@ -352,13 +352,19 @@ class cp_song:
         grid_md = ""
         if self.grids != None:
             grid_md = "<div class='grids'>"
+            chords_in_text =  (len(self.chords_used) > 12)
+            if chords_in_text:
+                song += "\n<!-- new_page -->\n"
             for chord_name in self.chords_used:
                 md = local_grids.grid_as_md(chord_name)
                 if md == None:         
                     md = self.grids.grid_as_md(chord_name)
                 if md != None:
-                    grid_md += "<div style='float:left;align:center'>%s<br/>%s</div><br/>" % (chord_name,md)
-            grid_md += "<div style='clear:left'></div></div>"   
+                    if chords_in_text:
+                        song += "<figure style='display: inline-block'>%s<figcaption>%s</figcaption></figure>" % (md, chord_name)
+                    else:
+                        grid_md += "%s<br>%s<br><br>" % (md, chord_name)
+            grid_md += "</div>"   
       
         song = "<h1 class='song-title'>%s</h1>\n%s\n<div class='song-page'><div class='song-text'>\n%s\n%s\n\n</div></div>" % ( title, grid_md, self.notes_md, song)
         self.md = song
@@ -378,7 +384,7 @@ class cp_song:
         with open(html_path, 'w') as html:
             html.write(self.to_stand_alone_html())
         pdf_path = "%s%s.pdf" % (self.path, suffix_string )
-        print("Saving to %s" % pdf_path)
+        print("Saving to %s" % (pdf_path))
         command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', html_path, pdf_path]
         subprocess.call(command)
         
@@ -538,7 +544,7 @@ class cp_song_book:
             pdf_path = output_file + ".pdf"
         else:
             pdf_path = None
-        print("Outputting html", html_path)
+        #print("Outputting html", html_path)
         with open(html_path, 'w') as html:
             html.write( html_book.format(all_songs,
                                         title=self.title + title_suffix,
@@ -724,42 +730,38 @@ function fill_page() {
 
 $("div.page").each(function() {
  var page = $(this);
- var page_height = page.height();
  var page_width =page.width();
  var song_page = page.children("div.song-page");
  var text = song_page.children("div.song-text");
-
+ var grids = page.children("div.grids");
  
  var heading = page.children("h1.song-title");
+
+
+ // Fit song title across top of page
  if (heading.length > 0) {
-  
     heading.css('font-size', ("40px" ));
     while (heading.width() > page.width()) {
       heading.css('font-size', (parseInt(heading.css('font-size')) - 1) +"px" );
     }
  }
 
- var text_height = text.height();
- var grids_height = 0; // page.children("div.grids").height();
+  //Fit chord grids into page height
+ while (grids.height() > page.height()) {
+   img_height =  parseInt(page.find("div.grids img").css('height'));
+   if (img_height < 10) {break}
+   page.find("div.grids img").css('height', img_height - 5);
+ }
+
+ 
  var heading_height = heading.height();
- var chord_grids = page.children("div.grids").children("img").length;
- var height_remaining = page_height - grids_height - heading_height -10;
+ var height_remaining = page.height()  - heading_height;
 
  var i = 0;
  
  if (text.length > 0)
  {
    song_page.height( height_remaining);
-   // Make text bigger until it is too big
-   while( height_remaining * %(cols)s > text.height()) {
-    var text_size = parseInt(text.css('font-size'));
-    
-    if (text_size > 25) {break}
-    text.css('font-size', ( text_size + 1) +"px" );
-    i++;
-  
-    if (i > 60) {break}
-    }
    // Make text smaller until it is just right
    i = 0;
    while( height_remaining * %(cols)s < text.height()) {
@@ -769,8 +771,10 @@ $("div.page").each(function() {
 
        if (i > 100) {break}
     }
-
-
+  //Hack - some songs were running off page
+  if (grids.height() > 10) {
+    text.css('font-size', (parseInt(text.css('font-size')) - 1) +"px" );
+  }
  var title = text.children("h1.book-title");
  i = 0;
  
@@ -785,14 +789,15 @@ $("div.page").each(function() {
     }
    
   
-    while (title.height() > page_height - 200) {
+    while (title.height() > page.height() - 200) {
           i++;
-          console.log("Title height", title.height(), "page height", page_height);
+         
           title.css('font-size', (parseInt(title.css('font-size')) - 10) + "px" );
           if (i > 2000) {break}
     }
    
  }
+
  
     //console.log(page.find("h1").html(), "PAGE HEIGHT TO MATCH", height_remaining, "CONTENTS HEIGHT", text.height(), "FONT SIZE", text.css('font-size') );
   }
@@ -945,7 +950,7 @@ position: relative;
 }
 
 .grids {
- font-size: 18pt;
+ font-size: 14pt;
  font-weight: bold;
  text-align: center;
  float: right;
@@ -955,8 +960,8 @@ div.grids img {
  border-style: solid;
  border-width: 1px;
  border-color: white;
- width: 30;
- height: 30;
+ height: 100; 
+ width: auto; 
 }
 
 div.song-page {
@@ -967,7 +972,7 @@ border-width: 1px;
 overflow: hidden;
 border-color: #FFFFF;
 page-break-inside: avoid;
-font-size: 2px;
+font-size: 26px;
 }
 
 
