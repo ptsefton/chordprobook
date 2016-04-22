@@ -62,7 +62,6 @@ put on the floor, like a real rock n roll band.
 This is still experimental, but the idea is to produce HTML that fills the screen for use on tablets, phones, etc with swipe navigation.
 
 
-
 ### Probably won't do
 * Make a GUI, but see the comment below about auto-creating PDF
 
@@ -87,7 +86,7 @@ Requires pandoc 1.15.0.6 or later  and wkhtmltopdf installed on on your path.
 
 * Install dependencies using pip3:
 
-    ```pip3 install pypandoc```
+    ```pip3 install pypandoc pillow pyaml```
 
 ## The local dialect of Chordpro format
 
@@ -132,7 +131,7 @@ Formatting / Directive         |      Description  | Rendered as
 {C: Some comment} {Comment: Some comment} | Notes on the song  | A third level heading
 {instrument: } | Name of an instrument you'd like to display chord grids for. Can occur multiple times in song or book files (not yet in setlists) | A set of chord grids across the top of the song's first page, if the instrument is know to the software. chordpro.py --instruments will list the instruments known 
 {define: } | In the context of an {instrument: } directove above will define fingering for a chord for that instrument. Uses the same conventions as over at [uke-geeks](http://blog.ukegeeks.com/users-guide/how-do-i-define-my-own-chords/) except that here chords have to start with [A-G] | Causes a chord grid (if chords are being rendered) to appear at the top of the song 
-{new+page} {np} | New page | A page break. When generating HTML and PDF the software will attempt to fill each page to the screen or paper size respectively as best it can.
+{new+page}<br>{np} | New page | A page break. When generating HTML and PDF the software will attempt to fill each page to the screen or paper size respectively as best it can.
 {start_of_chorus} {soc} | Start of chorus. Usually followed by some variant of {c: Chorus} | Chorus is rendendered as an indendented block. TODO: make this configurable via stylesheets. In .docx format the chorus is rendered using ```Block Text``` style.
 {start_of_bridge} {sob} | Start of bridge. Usually followed by some variant of {c: Bridge} | Same behaviour as chorus
 {eoc} {end_of_chorus} | End of chorus | Everything between the {soc} and {eoc} is in an indented block 
