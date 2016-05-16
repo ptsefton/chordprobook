@@ -369,7 +369,7 @@ class cp_song:
         song = "<h1 class='song-title'>%s</h1>\n%s\n<div class='song-page'><div class='song-text'>\n%s\n%s\n\n</div></div>" % ( title, grid_md, self.notes_md, song)
         self.md = song
 
-    def save_as_single_sheet(self, instrument_name, trans):
+    def save_as_single_sheet(self, instrument_name, trans, out_dir):
         self.format(transpose = trans, instrument_name=instrument_name)
         if self.key != None:
             suffix_string = "_key_%s" % self.key
@@ -383,7 +383,11 @@ class cp_song:
         html_path = temp_file.name
         with open(html_path, 'w') as html:
             html.write(self.to_stand_alone_html())
-        pdf_path = "%s%s.pdf" % (self.path, suffix_string )
+        path, filename = os.path.split(self.path)
+        pdf_file = "%s%s.pdf" % (filename, suffix_string )
+        pdf_dir = os.path.join(path, out_dir)
+        os.makedirs(pdf_dir, exist_ok=True)
+        pdf_path = os.path.join(pdf_dir, pdf_file)
         print("Saving to %s" % (pdf_path))
         command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', html_path, pdf_path]
         subprocess.call(command)
@@ -589,7 +593,7 @@ class cp_song_book:
 
 
         
-    def save_as_single_sheets(self):
+    def save_as_single_sheets(self, out_dir):
         for song in self.songs:
             if song.path != None:
                 
@@ -600,9 +604,9 @@ class cp_song_book:
                          instruments = song.local_instrument_names
                          
                     for instrument_name in instruments:
-                        song.save_as_single_sheet(instrument_name, trans)
+                        song.save_as_single_sheet(instrument_name, trans, out_dir)
                         
-                    song.save_as_single_sheet(None, trans)
+                    song.save_as_single_sheet(None, trans, out_dir)
             
                         
     def order_by_setlist(self, setlist):
@@ -1050,6 +1054,7 @@ def convert():
     parser = argparse.ArgumentParser()
     parser.add_argument('files', type=argparse.FileType('r'), nargs="*", default=None, help='List of files')
     parser.add_argument('-a', '--alphabetically', action='store_true', help='Sort songs alphabetically')
+    parser.add_argument('-d', '--directory', default='.', help='Directory in which to put the output, relative to the book, setlist or indivudal file. If you want to put files somwhere specific, use a full path starting with "/": defaults to "." ')
     parser.add_argument('-i', '--instrument', default=None, help='Show chord grids for the given instrument. Eg --instrument "Soprano Ukulele"')
     parser.add_argument('--instruments', action='store_true', help='List known instruments and their alises then quit. You use any of the names or aliases listed under AKA with the --instument option')
     parser.add_argument('-k',
@@ -1085,9 +1090,7 @@ def convert():
     if args["instruments"]:
         instruments.describe()
         exit()
-        
-    out_dir = "."
-    os.makedirs(out_dir, exist_ok=True)
+    out_dir = args["directory"]
     output_file =  args["file_stem"]
 
 
@@ -1101,7 +1104,7 @@ def convert():
             if chart == None:
                 print(instrument.error)
         else:
-            print("No such instrument on file. Try ./chordprobook.py --instruments to get a list")
+            print("No such instrument on file. Try typing ./chordprobook.py --instruments to get a list")
 
     #Is there a setlist file?
     if args["setlist"] == None:
@@ -1128,11 +1131,13 @@ def convert():
             #base output path on book unless user passed a different name
             if args["file_stem"] == default_output_file:
                 output_file, _ = os.path.splitext(book_name)
-                output_file = os.path.join(book_dir, output_file)
+                output_file = os.path.join(book_dir, out_dir, output_file)
+                print ("SETTING OUT ", output_file)
             text = book_file.read()
             book.load_from_text(text)
             
        else:
+           output_file = os.path.join(out_dir, output_file)
            for f in args['files']:
                 book.add_song(f)
     else:
@@ -1147,8 +1152,8 @@ def convert():
        book.order_by_setlist(list)
        if args["book_file"] or args["file_stem"] == default_output_file:
             set_dir, set_name = os.path.split(args["setlist"])
-            output_file, _ = os.path.splitext(set_name)
-            output_file = os.path.join(set_dir, output_file)
+            
+            output_file = os.path.join(set_dir, out_dir, set_name)
 
     if args["alphabetically"]:
         book.sort_alpha()
@@ -1173,7 +1178,7 @@ def convert():
    
     #PDF is generated from HTML, BTW
     if args['one_doc']: #Assume standalone PDF
-        book.save_as_single_sheets()
+        book.save_as_single_sheets(out_dir)
         
     elif args['html'] or args['pdf']:
         book.to_html_and_pdf(args, output_file)
