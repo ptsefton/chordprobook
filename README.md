@@ -185,12 +185,15 @@ To transpose the song, add a positive or negative integer at after the path, sep
 
 To see  usage info, type:
 ```
-chordprobook.py --help
+python3 chordprobook.py --help
+```
+And you'll see this:
 
-usage: chordprobook.py [-h] [-a] [-i INSTRUMENT] [--instruments] [-k] [--a4]
-                       [-e] [-f FILE_STEM] [--html] [-w] [-p]
-                       [-r REFERENCE_DOCX] [-o] [-b] [-s SETLIST]
-                       [--title TITLE]
+```
+usage: chordprobook.py [-h] [-a] [-d DIRECTORY] [-i INSTRUMENT]
+                       [--instruments] [-k] [--a4] [-e] [-f FILE_STEM]
+                       [--html] [-w] [-p] [-r REFERENCE_DOCX] [-o] [-b]
+                       [-s SETLIST] [--title TITLE]
                        [files [files ...]]
 
 positional arguments:
@@ -199,6 +202,11 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -a, --alphabetically  Sort songs alphabetically
+  -d DIRECTORY, --directory DIRECTORY
+                        Directory in which to put the output, relative to the
+                        book, setlist or indivudal file. If you want to put
+                        files somwhere specific, use a full path starting with
+                        "/": defaults to "."
   -i INSTRUMENT, --instrument INSTRUMENT
                         Show chord grids for the given instrument. Eg
                         --instrument "Soprano Ukulele"
@@ -212,7 +220,8 @@ optional arguments:
   -f FILE_STEM, --file-stem FILE_STEM
                         Base file name, without extension, for output files
   --html                Output HTML book, defaults to screen-formatting use
-                        --a4 option for printing 
+                        --a4 option for printing (PDF generation not working
+                        unless you chose --a4 for now
   -w, --word            Output .docx format
   -p, --pdf             Output pdf
   -r REFERENCE_DOCX, --reference-docx REFERENCE_DOCX
