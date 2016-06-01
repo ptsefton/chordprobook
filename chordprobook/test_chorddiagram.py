@@ -1,7 +1,7 @@
-open#!usr/bin/env python3
+#!usr/bin/env python3
 import unittest
-import chorddiagram as cd
-from chorddiagram import String, Dot, Instruments
+import chordprobook as cd
+from chordprobook import String, Dot, Instruments
 
 class TestIntruments(unittest.TestCase):
   """

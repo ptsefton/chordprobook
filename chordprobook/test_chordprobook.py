@@ -1,6 +1,7 @@
 #!usr/bin/env python3
 import unittest
 import chordprobook as cpb
+import tempfile
 
 
 class TestStuff(unittest.TestCase):
@@ -14,8 +15,9 @@ class TestStuff(unittest.TestCase):
 
       
   def test_TOC(self):
+      #Check that we can build a table of contents and split it across multiple pages when necessary
       book_text = ""
-      slotmachine = "./samples/slot_machine_baby.cho\n"
+      slotmachine = "../samples/slot_machine_baby.cho\n"
       book_text += slotmachine * 30
       b = cpb.cp_song_book()
       b.load_from_text(book_text)
@@ -44,9 +46,24 @@ class TestStuff(unittest.TestCase):
       toc = cpb.TOC(b, 3)
       self.assertEqual(len(toc.pages), 6)
       self.assertEqual(len(b.songs), 211)
+
+  def test_single_song_multitple_pdf(self):
+      b = cpb.cp_song_book()
+      b.add_song_from_text("{title: This is a song!}\n{key: Db}", "test1")
+      with tempfile.TemporaryDirectory() as tmp:
+          result = b.save_as_single_sheets(tmp)
+      self.assertEqual(len(result), 1)
+      b = cpb.cp_song_book()
+      self.assertEqual(result[0]["title"], "This is a song! (C#)")
+      b.add_song_from_text("{title: This is a second song!}\n{key: Db}\n{tr: +1 +2}", "test1")
+      with tempfile.TemporaryDirectory() as tmp:
+          result = b.save_as_single_sheets(tmp)
+      self.assertEqual(len(result), 3)
+      self.assertEqual(result[1]["title"], "This is a second song! (D)")
+      
       
   def test_book(self):
-      book_path = "samples/sample-book.txt"
+      book_path = "../samples/sample-book.txt"
       sample_book_text = open(book_path).read()
       b = cpb.cp_song_book(path=book_path)
       b.load_from_text(sample_book_text)
@@ -54,7 +71,7 @@ class TestStuff(unittest.TestCase):
       self.assertEqual(b.songs[1].key, "C")
       self.assertEqual(b.songs[2].key, "Bb")
       
-      book_path="samples/sample-book-lazy.txt"
+      book_path="../samples/sample-book-lazy.txt"
       """This one has auto-transpose turned on"""
       sample_book_text = open(book_path).read()
       b = cpb.cp_song_book( path=book_path)
@@ -62,7 +79,7 @@ class TestStuff(unittest.TestCase):
       self.assertEqual(len(b.songs), 8)
       self.assertEqual(b.title, "Sample songs")
      
-      book_path="samples/sample-book-lazy-uke.txt"
+      book_path="../samples/sample-book-lazy-uke.txt"
       sample_book_text = open(book_path).read()
       b = cpb.cp_song_book(path=book_path)
       b.load_from_text(sample_book_text)
@@ -110,13 +127,16 @@ class TestStuff(unittest.TestCase):
     
 
   def test_reorder(self):
-    one1 = cpb.cp_song("{title: 1 page}")
-    one2 = cpb.cp_song("{title: 1 page}")
-    two1 = cpb.cp_song("{title: 2 page}")
-    two1.pages = 2
-    two2 = cpb.cp_song("{title: 2 page}")
-    two2.pages = 2
-    book = cpb.cp_song_book([one1,two1, one2, two2])
+    one1 = "{title: 1 page}"
+    one2 = "{title: 1 page}"
+    two1 = "{title: 2 page}\n{new_page}\nxxx"
+    two2 = "{title: 2 page}\n{new_page}\yxxx"
+   
+    book = cpb.cp_song_book()
+    book.add_song_from_text(one1, "1")
+    book.add_song_from_text(one2, "2")
+    book.add_song_from_text(two1, "3")
+    book.add_song_from_text(two2, "4")
     page = 3
     book.reorder(page)
     for song in book.songs:
