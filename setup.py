@@ -27,6 +27,8 @@ setup(
         "Operating System :: OS Independent",
     
         ],
+        install_requires = ['pypandoc', 'pillow', 'pyaml'],
+        scripts=['mksong'],
     long_description = """\
 This is a Python 3 script to convert collections of chordpro formatted song charts to 
 PDF, HTML, epub, and word processing doc formats including chord diagrams.

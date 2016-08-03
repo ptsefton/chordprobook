@@ -1,0 +1,6 @@
+{title: Sample songs}
+
+./i_called_your_name.cho.txt
+./slot_machine_baby.cho.txt
+./slot_machine_baby.cho.txt {transpose: -2}
+./uni-verse.cho.txt

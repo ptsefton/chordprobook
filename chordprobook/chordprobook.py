@@ -6,7 +6,6 @@ import os, os.path
 import subprocess
 import pypandoc
 import tempfile
-
 import copy
 import fnmatch
 import math
@@ -1373,9 +1372,8 @@ blockquote {
 -webkit-column-break-inside:avoid;
 margin-left: 0px;
 margin-right: 0px;
-background-color: #CCFF33;
-}
 
+}
 
 h1 {
     
@@ -1406,7 +1404,7 @@ div {
     border-width: 1px;
 }
 p {
-  
+     -webkit-margin-before: 0em;
      -webkit-margin-after: .5em;
 }
 @media print  
@@ -1468,6 +1466,18 @@ p {
 p:last-child {
    margin-bottom: 0;
 }
+
+p, blockquote {
+     -webkit-margin-before: 0em;
+     -webkit-margin-after: .6em;
+}
+
+blockquote {
+  border-left: 5px solid #c00;
+  padding-left: 5px;
+  margin-left: 0em;
+}
+
 .page {
 width: 20cm;
 height: 29cm;
@@ -1569,147 +1579,4 @@ div {
             
         return web_template % (title, script % {'cols': cols}, frontmatter, html)
         
-        
-
-    
-output = "markdown"
-
-
-    
-def convert():
-    default_output_file = "songbook"
-    parser = argparse.ArgumentParser()
-    parser.add_argument('files', type=argparse.FileType('r'), nargs="*", default=None, help='List of files')
-    parser.add_argument('-a', '--alphabetically', action='store_true', help='Sort songs alphabetically')
-    parser.add_argument('-d', '--directory', default='.', help='Directory in which to put the output, relative to the book, setlist or indivudal file. If you want to put files somwhere specific, use a full path starting with "/": defaults to "." ')
-    parser.add_argument('-i', '--instrument', default=None, help='Show chord grids for the given instrument. Eg --instrument "Soprano Ukulele"')
-    parser.add_argument('--instruments', action='store_true', help='List known instruments and their alises then quit. You use any of the names or aliases listed under AKA with the --instument option')
-    parser.add_argument('-k',
-                        '--keep-order',
-                        action='store_true',
-                        help='Preserve song order for playing as a setlist (inserts blank pages to keep multi page songs on facing pages')
-    parser.add_argument('--a4', action='store_true', default=True, help='Format for printing (web page output)')
-    parser.add_argument('-e', '--epub', action='store_true', help='Output epub book')
-    parser.add_argument('-f', '--file-stem', default=default_output_file, help='Base file name, without extension, for output files')
-    parser.add_argument( '--html', action='store_true', default=False, help='Output HTML book, defaults to screen-formatting use --a4 option for printing (PDF generation not working unless you chose --a4 for now')
-    parser.add_argument('-w', '--word', action='store_true', help='Output .docx format')
-    parser.add_argument('-p', '--pdf', action='store_true', help='Output pdf', default=True)
-    parser.add_argument('-r', '--reference-docx', default = None, help="Reference docx file to use (eg with Heading 1 having a page-break before)")
-    parser.add_argument('-o','--one-doc', action='store_true', help='Output a single document per song: assumes you want A4 PDF')
-    parser.add_argument('-b',
-                        '--book-file',
-                        action='store_true',
-                        help ="""First file contains a list of files, each line optionally followed by a transposition (+|-)\d\d?
-                                 eg to transpose up one tone:
-                                 song-file.cho +2, you can also add a title line: {title: Title of book}""")
-    parser.add_argument('-s',
-                        '--setlist',
-                        default=None,
-                        help ="Use a setlist file in markdown format to filter the book, one song per line, and keep facing pages together. Setlist lines can be one or more words from the song title starting with '## ', with '# ' for the names of sets and other markdown as you require in between you can also add a setlist line: {title: Title of setlist}")
-    parser.add_argument('--title', default=None, help='Title to use for the book, if there is no title in a book file or setlist file')
-    
    
-
-    args = vars(parser.parse_args())
-    #Need to be able to pass this into songs now
-    instruments = Instruments()
-    
-    if args["instruments"]:
-        instruments.describe()
-        exit()
-    out_dir = args["directory"]
-    output_file =  args["file_stem"]
-
-
-    
-    # Do we want chord grids?
-    if args["instrument"] != None:
-        instrument = instruments.get_instrument_by_name(args['instrument'])
-        if instrument != None:
-            instrument.load_chord_chart()
-            chart = instrument.chart
-            if chart == None:
-                print(instrument.error)
-        else:
-            print("No such instrument on file. Try typing ./chordprobook.py --instruments to get a list")
-
-    #Is there a setlist file?
-    if args["setlist"] == None:
-        list = None
-    else:
-       with open(args["setlist"]) as sets_file:
-           list = sets_file.read()
-       args["keep_order"] = True
-       set_dir, set_name = os.path.split(args["setlist"])
-       list, bookfile = extract_book_filename(list)
-       if bookfile != None and not args["book_file"]:
-           #No book file passed so use the one we found in the setlist
-           args["files"] = [open(os.path.join(set_dir,bookfile),'r')]
-           args["book_file"] = True
-           
-       
-    
-    if args["files"] != None:
-       book = cp_song_book(keep_order = args['keep_order'], title=args["title"],instruments = instruments, instrument_name=args["instrument"])
-       if args["book_file"]:
-            book_file = args["files"][0]
-            book.set_path(book_file.name)
-            book_dir, book_name = os.path.split(book_file.name)
-            #base output path on book unless user passed a different name
-            if args["file_stem"] == default_output_file:
-                output_file, _ = os.path.splitext(book_name)
-                output_file = os.path.join(book_dir, out_dir, output_file)
-                print ("SETTING OUT ", output_file)
-            text = book_file.read()
-            book.load_from_text(text)
-            
-       else:
-           output_file = os.path.join(out_dir, output_file)
-           for f in args['files']:
-                book.add_song_from_file(f)
-    else:
-        print("ERROR: You need to pass one or more files to process")
-  
-    # Make all the input files into a book object
-   
-    
-    # If there's a setlist file use it
-    if args["setlist"] != None:
-       #Let the setlist override titles set elsewere
-       book.order_by_setlist(list)
-       if args["book_file"] or args["file_stem"] == default_output_file:
-            set_dir, set_name = os.path.split(args["setlist"])
-            
-            output_file = os.path.join(set_dir, out_dir, set_name)
-
-    if args["alphabetically"]:
-        book.sort_alpha()
-
-    title = args['title']
-     
-    #TODO: Make this into separate methods
-    if  args['epub']:
-        epub_path = output_file + ".epub"
-        xtra =[ "--toc-depth=1","--epub-chapter-level=1"] #, "--epub-stylesheet=songbook.css"] 
-        pypandoc.convert(book.to_md(), "epub", format="md", outputfile=epub_path, extra_args=xtra)
-        #subprocess.call(["open", epub_path])
- 
-    if  args["word"]:
-        word_path = output_file + ".docx"
-        xtra = ["--toc", "--data-dir=.", "--toc-depth=1"]
-        if args["reference_docx"] != None:
-            xtra.append('--reference-docx=%s' % args["reference_docx"])
-        pypandoc.convert(book.to_md(), "docx", format="md", outputfile=word_path, extra_args=xtra)
-        #subprocess.call(["open", word_path])
-        
-   
-    #PDF is generated from HTML, BTW
-    if args['one_doc']: #Assume standalone PDF
-        book.save_as_single_sheets(out_dir)
-        
-        
-    elif args['html'] or args['pdf']:
-        book.to_html_and_pdf(args, output_file)
-        
-if __name__ == "__main__":
-    convert()

@@ -22,6 +22,7 @@
     -  Tenor Uke
   chord_definitions: chord_data/soprano_ukulele_chords.cho
 
+
 -
   name: Ukulele Open C
   tuning: GCEG
@@ -35,6 +36,15 @@
    name: Mandolin
    tuning: GDAE
    chord_definitions: chord_data/mandolin_chords.cho
+
+-
+  name: Tenor Guitar
+  tuning: CGDA
+  alternate_names:
+    -  Tenor Banjo
+    -  Mandola
+  chord_definitions: chord_data/mandolin_chords.cho
+  transpose: +7
 
 -
    name: Guitar

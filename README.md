@@ -77,16 +77,45 @@ Status: Alpha / mostly works for me  on OS X 10.10.5.
 
 ## Installation on OS X (you're on your own on other platforms)
 
-Requires pandoc 1.15.0.6 or later  and wkhtmltopdf installed on on your path.
+Requires pandoc 1.15.0.6 or later  and wkhtmltopdf installed on on
+your path.
+
+NOTE: It is recommended that you use a Python 3 virtual
+environment.
+
+*  To create one, first get the brew version of Python 3
+
+   ```brew install python3```
+
+* Create a virtual environment
+
+	```mkdir ~/virtualenvs```
+	```pyvenv ~/virtualenvs/chorprobook```
+
+* Activate the virtual env
+
+    ```. ~/virtualenvs/chordprobook/bin/activate```
 
 * Install Pandoc HEAD using [brew](http://brew.sh/):
 
     ```brew install pandoc --HEAD```
+
 * Download and install [wkhtmltopdf](http://wkhtmltopdf.org/downloads.html)
 
-* Install dependencies using pip3:
+* Download from Github:
 
-    ```pip3 install pypandoc pillow pyaml```
+    ```git clone https://github.com/ptsefton/chordprobook.git```
+
+* Activate your virutal environment:
+
+    ```.  ~/virtualenvs/chordprobook/bin/activate```
+
+* Install
+
+    ```cd chordprobook```
+    ```pip3 install .```
+
+* To check that you have a commandline client now, type ```mksong --help```
 
 ## The local dialect of Chordpro format
 
@@ -132,7 +161,7 @@ Formatting / Directive         |      Description  | Rendered as
 {instrument: } | Name of an instrument you'd like to display chord grids for. Can occur multiple times in song or book files (not yet in setlists) | A set of chord grids across the top of the song's first page, if the instrument is know to the software. chordpro.py --instruments will list the instruments known 
 {define: } | In the context of an {instrument: } directove above will define fingering for a chord for that instrument. Uses the same conventions as over at [uke-geeks](http://blog.ukegeeks.com/users-guide/how-do-i-define-my-own-chords/) except that here chords have to start with [A-G] | Causes a chord grid (if chords are being rendered) to appear at the top of the song 
 {new+page}<br>{np} | New page | A page break. When generating HTML and PDF the software will attempt to fill each page to the screen or paper size respectively as best it can.
-{start_of_chorus} {soc} | Start of chorus. Usually followed by some variant of {c: Chorus} | Chorus is rendendered as an indendented block. TODO: make this configurable via stylesheets. In .docx format the chorus is rendered using ```Block Text``` style.
+{start_of_chorus} {soc} | Start of chorus. Could be followed by some variant of {c: Chorus} | Chorus is rendendered as an indendented block. TODO: make this configurable via stylesheets. In .docx format the chorus is rendered using ```Block Text``` style.
 {start_of_bridge} {sob} | Start of bridge. Usually followed by some variant of {c: Bridge} | Same behaviour as chorus
 {eoc} {end_of_chorus} | End of chorus | Everything between the {soc} and {eoc} is in an indented block 
 {eob} {end_of_bridge} | End of bridge | Same behviour as chorus
@@ -145,7 +174,7 @@ Formatting / Directive         |      Description  | Rendered as
 
 This implementation will:
 
-* Look for one-directive per line.
+* Look for one directive per line (Except in setlists)
 * Accept leading and trailing space before and after directives.
 
 I am still undecided about:
@@ -153,7 +182,7 @@ I am still undecided about:
 * How to handle two directives on one line
 
 ### Book files
-A book file is a text file with a list of paths with and optional title (see [samples/sample-book.txt](samples/sample-book.txt)).
+A book file is a text file with a list of paths with and optional title (see [samples/sample.book.txt](samples/sample.book.txt)).
 
 To transpose the song, add a positive or negative integer at after the (partial) song name, separated by a space. eg:
 ```./songs/my-song.cho {transpose: +2}```
@@ -166,7 +195,7 @@ A book file may also have 'lazy' loading via directives on how to find song file
 
 ### Setlist files
 
-The setlist consists of an optional {title: } directive, and optional {book: <path>} directive followed by a list of songs, one per line.   (see [samples/sample-book.txt](samples/setlist.txt)).
+The setlist consists of an optional {title: } directive, and optional {book: <path>} directive followed by a list of songs, one per line.   (see [samples/sample.setlist.md](samples/sample.setlist.md)).
 
 If there is no {book: } directive then the setlist will be selected
 from the song files passed in as arguments:  see the examples below.
@@ -185,16 +214,15 @@ To transpose the song, add a positive or negative integer at after the path, sep
 
 To see  usage info, type:
 ```
-python3 chordprobook.py --help
+mksong --help
 ```
 And you'll see this:
 
 ```
-usage: chordprobook.py [-h] [-a] [-d DIRECTORY] [-i INSTRUMENT]
-                       [--instruments] [-k] [--a4] [-e] [-f FILE_STEM]
-                       [--html] [-w] [-p] [-r REFERENCE_DOCX] [-o] [-b]
-                       [-s SETLIST] [--title TITLE]
-                       [files [files ...]]
+usage: mksong [-h] [-a] [-d DIRECTORY] [-i INSTRUMENT] [--instruments] [-k]
+              [--a4] [-e] [-f FILE_STEM] [--html] [-w] [-p]
+              [-r REFERENCE_DOCX] [-o] [-b] [-s SETLIST] [--title TITLE]
+              [files [files ...]]
 
 positional arguments:
   files                 List of files
@@ -253,65 +281,65 @@ optional arguments:
 * To make a PDF book (defaults to songbook.pdf) from a set of chordpro
   files:
 
-   ```./chordprobook samples/*.cho```
+   ```mksong samples/*.cho.txt```
 
     Which is equivalent to:
 
-    ```./chordprobook --pdf --a4  samples/*.cho```
+    ```mksong --pdf --a4  samples/*.cho.txt```
 
 *  To add a file name and a title to the book.
  
-    ```./chordprobook --file-stem=my_book --title="My book"  samples/*.cho```
+    ```mksong --file-stem=my_book --title="My book"  samples/*.cho.txt```
 
 *  If you'd like it sorted alphabetically by title:
 
-    ```./chordprobook -a --file-stem=my_book --title="My book"  samples/*.cho```
+    ```mksong -a --file-stem=my_book --title="My book"  samples/*.cho.txt```
 
 * To add chord grids for soprano ukulele:
-	```./chordprobook -a --file-stem=my_book --title="My book"	--instrument Uke samples/*.cho```
+	```mksong -a --file-stem=my_book --title="My book"	--instrument Uke samples/*.cho.txt```
 
 * To find out what instruments are supported:
-	```./chordprobook.py --instruments```
+	```mksong.py --instruments```
 
 * To use an instrument name with space, quote it:
-	```./chordprobook -a --file-stem=my_book --title="My book"	--instrument "5 String Banjo" samples/*.cho```
+	```mksong -a --file-stem=my_book --title="My book"	--instrument "5 String Banjo" samples/*.cho.txt```
 
 * To build a book from a list of files use a book file, containing a
    list of files, one per line and the -b
    flag. This will preserve the order you entered the songs except
    that it will make sure that two-page songs appear on facing pages.
   
-    ```./chordprobook.py -b samples/sample-book.txt```
+    ```mksong -b samples/sample.book.txt```
 
-* To build a book in a lazier way, use a directive such as ``{files:
-  *.cho}`` and specify a space separated directory of file names, like ``{dirs:
+* To build a book in a lazier way, use a directive such as ```{files:
+  *.cho.txt}``` and specify a space separated directory of file names, like ```{dirs:
   *./covers .originals}```
   
-  ```./chordprobook.py -b samples/sample-book-lazy.txt ```
+  ```mksong -b samples/sample-book-lazy.txt ```
 
 * To automatically include chord grids, add {instrument: } directives to a bookfile, eg:
 
-  ```./chordprobook.py -b samples/sample-book-lazy.txt ```
+  ```mksong -b samples/sample-lazy.txt ```
 
 * To make sure the order of songs is preserved exactly, for example to
   use as a setlist, use -k or --keep-order. This will insert blank
   pages if necessary.
 
-    ```./chordprobook.py -k -b samples/sample-book.txt```
+    ```mksong -k -b samples/sample.book.txt```
 
 *  To sort songs alphabetically add the -a or --alphabetical flag:
 
-    ```./chordprobook.py -a -b samples/sample-book.txt```
+    ```mksong -a -b samples/sample.book.txt```
     
 * To choose a subset of the songs in a book in a particular order use
   a setlist file. 
 
    Use this to filter all the songs in a directory using a setlist:
 
-    ```./chordprobook.py -s samples/setlist.txt samples/*.cho```
+    ```mksong -s samples/sample.setlist.md samples/*.cho.txt```
     
 *  Or use a book file and filter that:
 
-    ```./chordprobook.py -s samples/setlist.txt -b samples/sample-book.txt```
+    ```mksong -s samples/sample.setlist.md -b samples/sample.book.txt```
 
 
