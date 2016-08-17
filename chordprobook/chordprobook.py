@@ -228,7 +228,7 @@ class ChordChart:
 
         
     def load(self, f):
-        self.load_file(f.split("\\n"))
+        self.load_file(f.split("\n"))
                     
     def load_file(self, f):
         self.transposer.offset = 12 - self.transposer.offset
@@ -391,7 +391,7 @@ class ChordDiagram:
             self.box_height = int((self.box_height / ChordDiagram.default_frets) * self.num_frets)
             
         # Unscientific algorithm for rating chords: open is best, not too high up neck good, short reach good, non_played strings not good
-        self.playability = self.open_strings * 13 - self.max_fret * 29 - (self.max_fret - self.min_fret) * 7 - self.non_played_strings * 11
+        self.playability = self.open_strings * 50 - self.max_fret * 29 - (self.max_fret - self.min_fret) * 7 - self.non_played_strings * 11
 
         
     def draw(self):

@@ -43,8 +43,8 @@
   alternate_names:
     -  Tenor Banjo
     -  Mandola
-  chord_definitions: chord_data/mandolin_chords.cho
-  transpose: +7
+  chord_definitions: chord_data/tenor_guitar_chords.cho
+ 
 
 -
    name: Guitar
