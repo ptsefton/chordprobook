@@ -1,0 +1,59 @@
+-
+  name: Soprano Ukulele
+  tuning: GCEA
+  alternate_names:
+    -  Uke
+    -  Soprano Uke
+    - Ukulele
+  chord_definitions: chord_data/soprano_ukulele_chords.cho
+
+-
+  name: Baritone Ukulele
+  tuning: DGBE
+  alternate_names:
+    -  Baritone Uke
+  chord_definitions: chord_data/soprano_ukulele_chords.cho
+  transpose: +5
+  
+-
+  name: Tenor Ukulele
+  tuning: GCEA
+  alternate_names:
+    -  Tenor Uke
+  chord_definitions: chord_data/soprano_ukulele_chords.cho
+
+
+-
+  name: Ukulele Open C
+  tuning: GCEG
+  alternate_names:
+    -  Banjo Open C
+    -  Plucky
+  chord_definitions: chord_data/5_string_banjo_g_chords.cho
+  transpose: +7
+
+-
+   name: Mandolin
+   tuning: GDAE
+   chord_definitions: chord_data/mandolin_chords.cho
+
+-
+  name: Tenor Guitar
+  tuning: CGDA
+  alternate_names:
+    -  Tenor Banjo
+    -  Mandola
+  chord_definitions: chord_data/tenor_guitar_chords.cho
+ 
+
+-
+   name: Guitar
+   tuning: EADGBE
+   chord_definitions: chord_data/guitar_chords.cho
+
+-
+   name: 5 String Banjo G
+   tuning: DGBD
+   chord_definitions: chord_data/5_string_banjo_g_chords.cho
+   alternate_names:
+    -  5 String Banjo

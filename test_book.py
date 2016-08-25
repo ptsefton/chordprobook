@@ -1,59 +1,59 @@
 #!usr/bin/env python3
 import unittest
-import chordprobook as cpb
+import books
 import tempfile
-
+import chords
 
 class TestStuff(unittest.TestCase):
   def test_chord_markup_normaliser(self):
-     self.assertEqual(cpb.normalize_chord_markup("xxxxxxx[A] yyyy"), "xxxxxxx [A] yyyy")
-     self.assertEqual(cpb.normalize_chord_markup("[A]yyyy"), "[A] yyyy")
-     self.assertEqual(cpb.normalize_chord_markup("xxxxxxx[A]"), "xxxxxxx [A]")
-     self.assertEqual(cpb.normalize_chord_markup("xxxxxxx [A]yyyy"), "xxxxxxx [A] yyyy")
-     self.assertEqual(cpb.normalize_chord_markup("[A7]xxxxxxx[A]yyyy[A9]"), "[A7] xxxxxxx[A]yyyy [A9]")
-     self.assertEqual(cpb.normalize_chord_markup("When he chucked me off the[D] pier at Woolloomoo[G]loo [C] [G]"), "When he chucked me off the [D] pier at Woolloomoo[G]loo [C] [G]")
+     self.assertEqual(books.normalize_chord_markup("xxxxxxx[A] yyyy"), "xxxxxxx [A] yyyy")
+     self.assertEqual(books.normalize_chord_markup("[A]yyyy"), "[A] yyyy")
+     self.assertEqual(books.normalize_chord_markup("xxxxxxx[A]"), "xxxxxxx [A]")
+     self.assertEqual(books.normalize_chord_markup("xxxxxxx [A]yyyy"), "xxxxxxx [A] yyyy")
+     self.assertEqual(books.normalize_chord_markup("[A7]xxxxxxx[A]yyyy[A9]"), "[A7] xxxxxxx[A]yyyy [A9]")
+     self.assertEqual(books.normalize_chord_markup("When he chucked me off the[D] pier at Woolloomoo[G]loo [C] [G]"), "When he chucked me off the [D] pier at Woolloomoo[G]loo [C] [G]")
 
       
   def test_TOC(self):
       #Check that we can build a table of contents and split it across multiple pages when necessary
       book_text = ""
-      slotmachine = "../samples/slot_machine_baby.cho\n"
+      slotmachine = "samples/slot_machine_baby.cho.txt\n"
       book_text += slotmachine * 30
-      b = cpb.cp_song_book()
+      b = books.cp_song_book()
       b.load_from_text(book_text)
-      toc = cpb.TOC(b, 3)
+      toc = books.TOC(b, 3)
       self.assertEqual(len(toc.pages), 1)
       self.assertEqual(len(b.songs),30)
       
       
       book_text += slotmachine * 60
-      b = cpb.cp_song_book()
+      b = books.cp_song_book()
       b.load_from_text(book_text)
-      toc = cpb.TOC(b, 3)
+      toc = books.TOC(b, 3)
       self.assertEqual(len(toc.pages), 3)
       self.assertEqual(len(b.songs), 90)
 
       book_text += slotmachine * 40
-      b = cpb.cp_song_book()
+      b = books.cp_song_book()
       b.load_from_text(book_text)
-      toc = cpb.TOC(b, 3)
+      toc = books.TOC(b, 3)
       self.assertEqual(len(toc.pages), 4)
       self.assertEqual(len(b.songs), 131)
       
       book_text += slotmachine * 80
-      b = cpb.cp_song_book()
+      b = books.cp_song_book()
       b.load_from_text(book_text)
-      toc = cpb.TOC(b, 3)
+      toc = books.TOC(b, 3)
       self.assertEqual(len(toc.pages), 6)
       self.assertEqual(len(b.songs), 211)
 
   def test_single_song_multitple_pdf(self):
-      b = cpb.cp_song_book()
+      b = books.cp_song_book()
       b.add_song_from_text("{title: This is a song!}\n{key: Db}", "test1")
       with tempfile.TemporaryDirectory() as tmp:
           result = b.save_as_single_sheets(tmp)
       self.assertEqual(len(result), 1)
-      b = cpb.cp_song_book()
+      b = books.cp_song_book()
       self.assertEqual(result[0]["title"], "This is a song! (C#)")
       b.add_song_from_text("{title: This is a second song!}\n{key: Db}\n{tr: +1 +2}", "test1")
       with tempfile.TemporaryDirectory() as tmp:
@@ -63,25 +63,25 @@ class TestStuff(unittest.TestCase):
       
       
   def test_book(self):
-      book_path = "../samples/sample-book.txt"
+      book_path = "samples/sample.book.txt"
       sample_book_text = open(book_path).read()
-      b = cpb.cp_song_book(path=book_path)
+      b = books.cp_song_book(path=book_path)
       b.load_from_text(sample_book_text)
       self.assertEqual(len(b.songs), 4)
       self.assertEqual(b.songs[1].key, "C")
       self.assertEqual(b.songs[2].key, "Bb")
       
-      book_path="../samples/sample-book-lazy.txt"
+      book_path="samples/sample-lazy.book.txt"
       """This one has auto-transpose turned on"""
       sample_book_text = open(book_path).read()
-      b = cpb.cp_song_book( path=book_path)
+      b = books.cp_song_book( path=book_path)
       b.load_from_text(sample_book_text)
       self.assertEqual(len(b.songs), 8)
       self.assertEqual(b.title, "Sample songs")
      
-      book_path="../samples/sample-book-lazy-uke.txt"
+      book_path="samples/sample-lazy-uke.book.txt"
       sample_book_text = open(book_path).read()
-      b = cpb.cp_song_book(path=book_path)
+      b = books.cp_song_book(path=book_path)
       b.load_from_text(sample_book_text)
      
       self.assertEqual(len(b.songs), 4)
@@ -91,37 +91,37 @@ class TestStuff(unittest.TestCase):
       self.assertEqual(b.default_instrument_names[0],"Ukulele")
 
   def test_directive(self):
-      d = cpb.directive("{title: This is my title}")
-      self.assertEqual(d.type, cpb.directive.title)
+      d = books.directive("{title: This is my title}")
+      self.assertEqual(d.type, books.directive.title)
       
       self.assertEqual(d.value, "This is my title")
-      d = cpb.directive("{st: This: is my: subtitle}")
-      self.assertEqual(d.type, cpb.directive.subtitle)
+      d = books.directive("{st: This: is my: subtitle}")
+      self.assertEqual(d.type, books.directive.subtitle)
       
-      d = cpb.directive("{grids}")
-      self.assertEqual(d.type, cpb.directive.grids)
+      d = books.directive("{grids}")
+      self.assertEqual(d.type, books.directive.grids)
       
       #Allow extra space
-      d = cpb.directive(" {grids}   ")
-      self.assertEqual(d.type, cpb.directive.grids)
+      d = books.directive(" {grids}   ")
+      self.assertEqual(d.type, books.directive.grids)
       
       #Allow things to have values, or not
-      d = cpb.directive(" {grids: C#7}   ")
-      self.assertEqual(d.type, cpb.directive.grids)
+      d = books.directive(" {grids: C#7}   ")
+      self.assertEqual(d.type, books.directive.grids)
       self.assertEqual(d.value, "C#7")
-      d = cpb.directive(" {grids: C#7 Bbsus4   }   ")
-      self.assertEqual(d.type, cpb.directive.grids)
+      d = books.directive(" {grids: C#7 Bbsus4   }   ")
+      self.assertEqual(d.type, books.directive.grids)
       self.assertEqual(d.value, "C#7 Bbsus4")
 
       #This is a directive, for now, but the value is bad
-      d = cpb.directive(" {grids: C#7 Bbsus4   } {title: ASDASD}   ")
+      d = books.directive(" {grids: C#7 Bbsus4   } {title: ASDASD}   ")
       self.assertEqual(d.value, "C#7 Bbsus4   } {title: ASDASD")
 
       
       # These are not directives
-      d = cpb.directive("{title: This is my title ")
+      d = books.directive("{title: This is my title ")
       self.assertEqual(d.type, None)
-      d = cpb.directive("{{title: This is my title} ")
+      d = books.directive("{{title: This is my title} ")
       self.assertEqual(d.type, None)
       
     
@@ -132,7 +132,7 @@ class TestStuff(unittest.TestCase):
     two1 = "{title: 2 page}\n{new_page}\nxxx"
     two2 = "{title: 2 page}\n{new_page}\yxxx"
    
-    book = cpb.cp_song_book()
+    book = books.cp_song_book()
     book.add_song_from_text(one1, "1")
     book.add_song_from_text(one2, "2")
     book.add_song_from_text(two1, "3")
@@ -146,29 +146,29 @@ class TestStuff(unittest.TestCase):
       page += song.pages
 
   def test_auto_transpose(self):
-      song1 =  cpb.cp_song("{title: 1 page}\n{key: C}\n{transpose: +2 -3}")
+      song1 =  books.cp_song("{title: 1 page}\n{key: C}\n{transpose: +2 -3}")
       self.assertEqual(song1.standard_transpositions, [0, 2, -3])
 
       
   def test_parse(self):
-    song = cpb.cp_song("{title: A Song!}\nSome stuff\n{key: C#}\n")
+    song = books.cp_song("{title: A Song!}\nSome stuff\n{key: C#}\n")
     self.assertEqual(song.key, "C#")
     self.assertEqual(song.title, "A Song!")
-    song = cpb.cp_song("{title: A Song!}\nSome stuff\n{key: C#}\n#A comment\n#or two", transpose=3)
+    song = books.cp_song("{title: A Song!}\nSome stuff\n{key: C#}\n#A comment\n#or two", transpose=3)
     self.assertEqual(song.key, "E")
     song.format()
     self.assertEqual(song.to_html(), '<div class="song">\n<div class="page">\n<h1 class="song-title">\nA Song! (E)\n</h1>\n<div class="song-page">\n<div class="song-text">\n<p>Some stuff</p>\n</div>\n</div>\n</div>\n</div>\n</div>\n')
 
 
     # Test auto-apply of classes to lines beginning with a .
-    song = cpb.cp_song("{title: A Song!}\nSome stuff\n{key: C#}\n.♂ Mark this up as class ♂ \n")
+    song = books.cp_song("{title: A Song!}\nSome stuff\n{key: C#}\n.♂ Mark this up as class ♂ \n")
     self.assertEqual(song.key, "C#")
     self.assertEqual(song.title, "A Song!")
     self.assertEqual(song.text, "Some stuff    \n<span class='♂'>♂ Mark this up as class ♂</span>\n\n")
 
 
     
-    song = cpb.cp_song("""
+    song = books.cp_song("""
     {title: Test}
     {soc}
     {c: Chorus}
@@ -190,7 +190,7 @@ After the chorus
 
 """
     self.assertEqual(song.text, result)
-    song = cpb.cp_song("""
+    song = books.cp_song("""
 {title: Test}
 {sot}
 This is where some
@@ -221,7 +221,7 @@ After the tab
 
     self.assertEqual(song.text, result)
 
-    song = cpb.cp_song("""
+    song = books.cp_song("""
 {title: Test}
 {sot}
 This is where some
@@ -251,7 +251,7 @@ This is where some
     self.assertEqual(song.text, result)
 
 
-    song = cpb.cp_song("""
+    song = books.cp_song("""
 {title: Test}
 {start_of_chorus}
 {c: Here's a chorus with tab in it}
@@ -285,15 +285,15 @@ After the chorus
 
 """
     # TODO TEST IS MISSING!
-    song = cpb.cp_song("{instrument: Thongaphone}") 
+    song = books.cp_song("{instrument: Thongaphone}") 
     self.assertEqual( "Thongaphone", song.local_instruments.get_instrument_by_name("Thongaphone").name)
     self.assertEqual( "Thongaphone", song.local_instruments.get_instrument_by_name("Thongaphone").name)
 
-    song = cpb.cp_song("{instrument: Thongaphone}\n{define: C#7 frets 0 1 0 1 0 1 0 1}\n{define: C#7-5 frets 0 1 0 1 0 1 0 1}")
+    song = books.cp_song("{instrument: Thongaphone}\n{define: C#7 frets 0 1 0 1 0 1 0 1}\n{define: C#7-5 frets 0 1 0 1 0 1 0 1}")
     #song.instruments.get_instrument_by_name("Thongaphone").chart.get_default("C#7-5").show()
     self.assertEqual("{define: C#7-5 frets 0 1 0 1 0 1 0 1}", song.local_instruments.get_instrument_by_name("Thongaphone").chart.get_default("C#7-5").to_chordpro())
    
-    song = cpb.cp_song("{instrument: Uke}\n{define: C frets 12 12 12 15}")
+    song = books.cp_song("{instrument: Uke}\n{define: C frets 12 12 12 15}")
     #song.instruments.get_instrument_by_name("Soprano Ukulele").chart.get_default("C").show()
     song.format(instrument_name = "Nope!")
     
@@ -302,17 +302,17 @@ After the chorus
 
     
   def test_transpose(self):
-    c = cpb.transposer(2)
+    c = chords.transposer(2)
     self.assertEqual(c.transpose_note("C"), "D")
-    c = cpb.transposer(1)
+    c = chords.transposer(1)
     self.assertEqual(c.transpose_note("B"), "C")
-    c = cpb.transposer(2)
+    c = chords.transposer(2)
     self.assertEqual(c.transpose_chord("C"), "D")
-    c = cpb.transposer(1)
+    c = chords.transposer(1)
     self.assertEqual(c.transpose_chord("C7"), "C#7")
-    c = cpb.transposer(1)
+    c = chords.transposer(1)
     self.assertEqual(c.transpose_chord("Asus4"), "Bbsus4")
-    c = cpb.transposer(-1)
+    c = chords.transposer(-1)
     self.assertEqual(c.transpose_chord("C#7"), "C7")
     self.assertEqual(c.transpose_chord("Cm"), "Bm")
     self.assertEqual(c.transpose_chord("G#m/B"), "Gm/Bb")
