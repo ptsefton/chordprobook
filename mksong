@@ -1,6 +1,8 @@
 #! /usr/bin/env python3
-from chordprobook.chordprobook import *
 import argparse
+import os
+import books
+import instruments as inst
     
 def convert():
     default_output_file = "songbook"
@@ -38,7 +40,7 @@ def convert():
 
     args = vars(parser.parse_args())
     #Need to be able to pass this into songs now
-    instruments = Instruments()
+    instruments = inst.Instruments()
     
     if args["instruments"]:
         instruments.describe()
@@ -57,7 +59,7 @@ def convert():
             if chart == None:
                 print(instrument.error)
         else:
-            print("No such instrument on file. Try typing ./chordprobook.py --instruments to get a list")
+            print("No such instrument on file. Try typing ./mksong --instruments to get a list")
 
     #Is there a setlist file?
     if args["setlist"] == None:
@@ -76,7 +78,7 @@ def convert():
        
     
     if args["files"] != None:
-       book = cp_song_book(keep_order = args['keep_order'], title=args["title"],instruments = instruments, instrument_name=args["instrument"])
+       book = books.cp_song_book(keep_order = args['keep_order'], title=args["title"],instruments = instruments, instrument_name=args["instrument"])
        if args["book_file"]:
             book_file = args["files"][0]
             book.set_path(book_file.name)

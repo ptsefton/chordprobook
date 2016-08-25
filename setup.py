@@ -4,10 +4,12 @@ from distutils.command.install import INSTALL_SCHEMES
 for scheme in INSTALL_SCHEMES.values():
     scheme['data'] = scheme['purelib']
 setup(
-    name = "chorprobook",
-    packages = ["chordprobook"],
+    name = "chordprobook",
+    packages = [""],
+    py_modules=['books','chords','instruments'],
+
     package_data={   
-   'chordprobook': ['instruments.yaml','chord_data/*.cho'] 
+    '': ['instruments.yaml','chord_data/*.cho'] 
      },
     version = "0.1",
     description = "Chordpro songsheet and book generator",

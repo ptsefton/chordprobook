@@ -5,15 +5,15 @@
 import argparse
 import os
 import pypandoc
-from chordprobook.chordprobook import cp_song,  ChordChart, transposer, Instruments, Instrument
-import chordprobook.chordprobook as chordprobook
+import chords
+import instruments as inst
 
 class charter:
     variants = [("", "black"), ("7", "red"), ("m", "blue"),  ("m7", "purple"), ("maj7", "pink"), ("6", "green"), ("sus4", "cadetblue"),("9", "darkorchid"), ("dim", "goldenrod")]
 
     def page_for_instrument(instrument, name):
         """Single page chart"""
-        transposer = chordprobook.transposer()
+        transposer = chords.transposer()
         page_text = "# %s chords\n\n" % name
         page_text += "<table>"
         #page_text += "<tr>"
@@ -72,7 +72,7 @@ def make_book():
 
     args = vars(parser.parse_args())
     #Need to be able to pass this into songs now
-    instruments = Instruments()
+    instruments = inst.Instruments()
     
     if args["instruments"]:
         instruments.describe()
