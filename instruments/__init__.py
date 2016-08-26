@@ -99,9 +99,8 @@ class Instrument:
        
         if defs_file != None:
             path, file = os.path.split(os.path.realpath(__file__))
-            defs_file = os.path.join(path, defs_file)
+            defs_file = os.path.join(path, "..", "chords", defs_file)
             print(defs_file)
-            if os.path.exists(defs_file):
-                self.chart = chords.ChordChart(self.transpose, defs_file)
-            else:
-                self.error = "Chord defs file not found: %s"  % defs_file
+           
+            self.chart = chords.ChordChart(self.transpose, defs_file)
+           

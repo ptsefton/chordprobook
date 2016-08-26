@@ -5,11 +5,11 @@ for scheme in INSTALL_SCHEMES.values():
     scheme['data'] = scheme['purelib']
 setup(
     name = "chordprobook",
-    packages = [""],
-    py_modules=['books','chords','instruments'],
+    packages=['books','chords','instruments'],
 
     package_data={   
-    '': ['instruments.yaml','chord_data/*.cho'] 
+    'instruments': ['instruments.yaml'],
+    'chords' : ['chord_data/*.cho'] 
      },
     version = "0.1",
     description = "Chordpro songsheet and book generator",
