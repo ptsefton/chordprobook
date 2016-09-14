@@ -13,8 +13,8 @@ from PIL import Image, ImageFont, ImageDraw
 from io import BytesIO
 import base64
 import yaml
-import chords
-import instruments as inst
+import chordprobook.chords as chords
+import chordprobook.instruments
 
 
 
@@ -170,7 +170,7 @@ class cp_song:
     def __init__(self, song, title="Song", transpose=0, blank = False, path = None, instruments = None, instrument_name=None):
         self.blank = blank
         if instruments == None:
-            self.instruments = inst.Instruments()
+            self.instruments = chordprobook.instruments.Instruments()
         else:
             self.instruments = instruments
         self.local_instruments = None
@@ -276,11 +276,11 @@ class cp_song:
                 elif dir.type == directive.instrument:
                     inst_name = dir.value
                     if self.local_instruments == None:
-                        self.local_instruments = inst.Instruments()
+                        self.local_instruments = chordprobook.instruments.Instruments()
                     current_instrument = self.local_instruments.get_instrument_by_name(inst_name)
                     self.local_instrument_names.append(inst_name)
                     if current_instrument == None:
-                        current_instrument = inst.Instrument(name = inst_name)
+                        current_instrument = chordprobook.instruments.Instrument(name = inst_name)
                         current_instrument.chart = chords.ChordChart()
                         self.local_instruments.add_instrument(current_instrument)
                     else:
@@ -438,7 +438,7 @@ class cp_song_book:
         self.songs = [] #songs
         self.default_instrument_names = []
         if instruments == None:
-            self.instruments = inst.Instruments()
+            self.instruments = chordprobook.instruments.Instruments()
         else:
             self.instruments = instruments 
         self.instrument_name_passed = instrument_name

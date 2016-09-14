@@ -1,5 +1,6 @@
 import unittest
-import instruments as inst
+import chordprobook
+import chordprobook.instruments as inst
 
 class TestIntruments(unittest.TestCase):
   """

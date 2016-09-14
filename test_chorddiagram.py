@@ -1,7 +1,7 @@
 #!usr/bin/env python3
 import unittest
-import chords
-import instruments as inst
+import chordprobook.chords as chords
+import chordprobook.instruments
 
 class TestChorddiagram(unittest.TestCase):
 

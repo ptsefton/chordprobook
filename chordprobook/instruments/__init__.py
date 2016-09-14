@@ -1,6 +1,6 @@
 import os
 import yaml
-import chords
+import chordprobook.chords
 
 class Instruments:
     """Class to represent the set of instruments we know about, 
@@ -102,5 +102,5 @@ class Instrument:
             defs_file = os.path.join(path, "..", "chords", defs_file)
             print(defs_file)
            
-            self.chart = chords.ChordChart(self.transpose, defs_file)
+            self.chart = chordprobook.chords.ChordChart(self.transpose, defs_file)
            

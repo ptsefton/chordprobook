@@ -1,8 +1,9 @@
 #!usr/bin/env python3
 import unittest
-import books
 import tempfile
-import chords
+
+import chordprobook.books as books
+import chordprobook.chords as chords
 
 class TestStuff(unittest.TestCase):
   def test_chord_markup_normaliser(self):

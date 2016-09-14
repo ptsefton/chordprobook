@@ -13,7 +13,9 @@ from PIL import Image, ImageFont, ImageDraw
 from io import BytesIO
 import base64
 import yaml
-import instruments as inst
+import chordprobook
+import chordprobook.instruments
+#import chordprobook.instruments as inst
 
 class transposer:
    
@@ -105,7 +107,7 @@ class ChordChart:
         relative tuning eg DGBE should find GCEA
 
         """
-        instruments = inst.Instruments()
+        instruments = chordprobook.instruments.Instruments()
         defs_file = instruments.get_chordpro_file_by_name(instrument_name)
         path, file = os.path.split(os.path.realpath(__file__))
         if defs_file != None:

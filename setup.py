@@ -1,19 +1,13 @@
-# chardet's setup.py
 from distutils.core import setup
-from distutils.command.install import INSTALL_SCHEMES
-for scheme in INSTALL_SCHEMES.values():
-    scheme['data'] = scheme['purelib']
 setup(
-    name = "chordprobook",
-    packages=['books','chords','instruments'],
-
+    packages=['chordprobook', 'chordprobook.books', 'chordprobook.instruments', 'chordprobook.chords'],
+    #py_modules =[ 'chordprobook', 'chordprobook.books', 'chordprobook.instruments', 'chordprobook.chords'],
     package_data={   
-    'instruments': ['instruments.yaml'],
-    'chords' : ['chord_data/*.cho'] 
+    'chordprobook.instruments': ['instruments.yaml'],
+    'chordprobook.chords' : ['chord_data/*.cho'] 
      },
     version = "0.1",
     description = "Chordpro songsheet and book generator",
-    
     author = "Peter Sefton",
     author_email = "pt@ptsefton.com",
     url = "https://github.com/ptsefton/chordprobook",
