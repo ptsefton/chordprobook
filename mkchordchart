@@ -1,19 +1,32 @@
 #! /usr/bin/env python3
+"""Simple script to generate a chort-chartfor a given instrument, or tuning. Outputs HTML"""
 
-
-"""Simple script to generate a chort-chart book for a given instrument in HTML"""
 import argparse
 import os
 import pypandoc
-import chords
-import instruments as inst
+
+import chordprobook
+import chordprobook.chords
+import chordprobook.instruments
 
 class charter:
-    variants = [("", "black"), ("7", "red"), ("m", "blue"),  ("m7", "purple"), ("maj7", "pink"), ("6", "green"), ("sus4", "cadetblue"),("9", "darkorchid"), ("dim", "goldenrod")]
+    """ Placeholder for functions to generate chord charts and chord definitions"""
+    variants = [("", "black"), ("7", "red"), ("m", "blue"),  ("m7", "purple"), ("maj7", "pink"), ("6", "green"), ("sus4", "cadetblue"),("9", "darkorchid"),("add9", "darkorchid"), ("dim", "goldenrod")]
 
-    def page_for_instrument(instrument, name):
+    def generate_chord_defs(instrument, reach, fingers, unplayed):
+        """ Make up chord definitions for tuning that has been passed in"""
+        transposer = chordprobook.chords.transposer()
+        for note_index  in range(0,12):
+            note =  transposer.get_note(note_index)
+            for (variant, colour) in charter.variants:
+                chord_name = note + variant
+                chord = chordprobook.chords.Chord(chord_name)
+                chord.find_fingerings(instrument, reach=reach, fingers=fingers, unplayed=unplayed)
+                chord.add_to_chordchart(instrument.chart)
+                
+    def page_for_instrument(chart, name):
         """Single page chart"""
-        transposer = chords.transposer()
+        transposer = chordprobook.chords.transposer()
         page_text = "# %s chords\n\n" % name
         page_text += "<table>"
         #page_text += "<tr>"
@@ -21,26 +34,30 @@ class charter:
         #    page_text += "<td style='text-align:center'>%s</td>" % variant
         #page_text += "</tr>\n"
         for note_index  in range(0,12):
+            #TODO: Get rid of this dodgy code
             note =  transposer.get_note(note_index)
             page_text += "<tr>"
             #page_text += "<td>%s</td>" % note
             for (variant, colour) in charter.variants:
                 chord_name = note + variant
-                chord_name = instrument.chart.normalise_chord_name(chord_name)
-                if chord_name in instrument.chart.grids:
-                    chord = instrument.chart.grids[chord_name]
+                chord_name = chart.normalise_chord_name(chord_name)
+                if chord_name in chart.grids:
+                    chord = chart.grids[chord_name]
                     page_text += "<td style='text-align:center;text-color: %s id='%s'>" % (colour, chord_name)
                     page_text += chord.voicings[0].to_md()
                     page_text += "<br />" + chord_name
                     page_text += "</td>"
+                else:
+                    page_text += "<td></td>"
             page_text += "</tr>\n"
         output_file = "%s-chords.html" % name.replace(" ","") 
         pypandoc.convert(page_text, "html", format="md", outputfile=output_file)
         print("Created %s" % output_file)
 
 
-    def book_for_instrument(instrument, name):
-        transposer = chordprobook.transposer()
+    def book_for_instrument(chart, name):
+        """All chords for a particular instrument"""
+        transposer = chordprobook.chords.transposer()
         page_text = "# %s chords\n\n" % name
         variants = [("", "black"), ("7", "red"), ("m", "blue"),  ("m7", "purple"), ("maj7", "pink"), ("6", "green"), ("sus4", "cadetblue"),("9", "darkorchid"), ("dim", "goldenrod")]
 
@@ -48,9 +65,9 @@ class charter:
             note =  transposer.get_note(note_index)
             for (variant, colour) in charter.variants:
                 chord_name = note + variant
-                chord_name = instrument.chart.normalise_chord_name(chord_name)
-                if chord_name in  instrument.chart.grids:
-                    chord = instrument.chart.grids[chord_name]
+                chord_name = chart.normalise_chord_name(chord_name)
+                if chord_name in  chart.grids:
+                    chord = chart.grids[chord_name]
                     #page_text += "\n\n## %s\n\n" % chord_name
                     for voicing in chord.voicings:
                         page_text += "<div style='float: left; text-align:center; color: %s ' id='%s'>" % (colour, chord_name)
@@ -58,7 +75,9 @@ class charter:
                         page_text +=  "<br />" + chord_name
                         page_text += "</div>"
         output_file =  "%s-all-chords.html" % name.replace(" ","")
-        pypandoc.convert(page_text, "html", format="md", outputfile=output_file)
+        #pypandoc.convert(page_text, "html", format="md", outputfile=output_file)
+        with open(output_file, 'w') as out:
+            out.write(page_text)
         print("Created %s" % output_file)
   
 
@@ -68,11 +87,15 @@ def make_book():
     parser.add_argument('-a', '--all', action='store_true', help='Print all chords (default is just one)')
     parser.add_argument('-i', '--instrument', default=None, help='Show chord grids for the given instrument. Eg --instrument "Soprano Ukulele"')
     parser.add_argument('--instruments', action='store_true', help='chord grids for the given instrument, then quit use any of the names or aliases listed under AKA')
-  
+    parser.add_argument('-t', '--tuning', default="None", help='A string representing the tuning of an instrument. Eg guitar DADBAG or uke GCEA')
+    parser.add_argument('-r', '--reach', type=int, default=4, help='Maximum reach: largest number frets spanned by a chord')
+    parser.add_argument('-f', '--fingers',type=int,  default=4, help='Maximum number of fingers allowed')
+    parser.add_argument('-u', '--unplayed',type=int,  default=4, help='Maximum number of unplayed strings allowed')
+    parser.add_argument('-c', '--chordpro',  action='store_true', help='Output chordpro format (for use with --tuning)')
+
 
     args = vars(parser.parse_args())
-    #Need to be able to pass this into songs now
-    instruments = inst.Instruments()
+    instruments = chordprobook.instruments.Instruments()
     
     if args["instruments"]:
         instruments.describe()
@@ -81,19 +104,33 @@ def make_book():
     out_dir = "."
     os.makedirs(out_dir, exist_ok=True)
     instrument = None
+
+    if args["tuning"] != None:
+        name = args["instrument"] if args["instrument"] else args["tuning"]
+        instrument = chordprobook.instruments.Instrument(data={"name": name, "tuning": args['tuning']})
+        charter.generate_chord_defs(instrument, args['reach'], args['fingers'], args['unplayed'])
+        if args["chordpro"]:
+            filename = "{tuning}.chordpro.txt".format(tuning=args["tuning"])
+            with open(filename, "w") as f:
+                f.write(instrument.chart.all_to_chordpro())
+            return
     
-    if args["instrument"] != None:
+    elif args["instrument"] != None:
         instrument = instruments.get_instrument_by_name(args['instrument'])
+        name = args['instrument']
+        instrument.load_chord_chart()
+
 	
     if instrument:
-            instrument.load_chord_chart()
-            chart = instrument.chart
-            if chart:
-                if args['all']:
-                    charter.book_for_instrument(instrument, args['instrument'])
-                else:
-                    charter.page_for_instrument(instrument, args['instrument'])
-           
+        chart = instrument.chart
+        print(chart.grids)
+        if chart:
+            if args['all']:
+                charter.book_for_instrument(chart, name)
+            else:
+                charter.page_for_instrument(chart, name)
+
+    
     else:
         print("You need to supply a valid instrumment eg\n   mkchordchart --instrument 'Tenor Guitar'\nTry one of these:\n")
         instruments.describe()

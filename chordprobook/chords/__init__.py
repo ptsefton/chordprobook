@@ -15,9 +15,12 @@ import base64
 import yaml
 import chordprobook
 import chordprobook.instruments
-#import chordprobook.instruments as inst
 
 class transposer:
+    """ This should have been a static method with two parameters transpose(chord_or_note, offset)
+    NOTE: This was a very bad idea - it's too complicated. TODO get rid of this class
+
+    """
    
     __note_indicies = {"C": 0, "C#": 1, "Db": 1, "D": 2, "Eb": 3, "D#": 3,
                      "E" : 4, "F": 5, "F#": 6, "Gb": 6, "G": 7, "Ab": 8,
@@ -86,21 +89,22 @@ class ChordVoicings:
 
 
     
-class ChordChart:
+class ChordChart(object):
+    """ A set of ChordDiagrams, multiple fingerings per chord """
+    
     def __init__(self, transpose = 0,file = None):
-        """Container for a set of chord-grids"""
+        """Container for a set of ChordDiagrams"""
         self.grids = {}
         self.tuning = None
         self.transposer = transposer(transpose)
         if file != None:
             self.load_file(open(file))
         self.error = None
-        
+
+   
     def load_tuning_by_name(self, instrument_name):
         """
-        Takes a string representation of an instrument tuning, eg:
-        EADGBE (guitar) or
-        GCEA (soprano uke)
+        Load given an instrument name
 
         TODO:
         If it can't find the file will try to find a chord chart with the same
@@ -128,8 +132,13 @@ class ChordChart:
             self.grids[grid.name] = ChordVoicings(grid)
         else:
             self.grids[grid.name].push_to_front(grid)
-        
-
+    
+    def add_from_diagram(self, grid):
+        grid.name = self.normalise_chord_name(grid.name)
+        if grid.name not in self.grids:
+            self.grids[grid.name] = ChordVoicings(grid)
+        else:
+            self.grids[grid.name].push_to_front(grid)
         
     def load(self, f):
         self.load_file(f.split("\n"))
@@ -147,9 +156,11 @@ class ChordChart:
                     self.grids[grid.name] = ChordVoicings(grid)
                 else:
                     self.grids[grid.name].append(grid)
-
+        
     def normalise_chord_name(self, chord_name):
-        """ Transform chord name as used to a canonical name, means we only have to store a limited set of chords """
+        """ Transform chord name as used to a canonical name, means we only have to store a limited set of chords 
+        chord_name: a string representation of a chord
+        """
         # Allow ! for stacatto chord
         chord_name = re.sub("\!$","", chord_name)
         
@@ -157,7 +168,7 @@ class ChordChart:
         chord_name = re.sub("(/* *)*$","", chord_name)
         
         # Normalise "add" for ninths, elevenths etc - TODO sharps as well
-        chord_name = re.sub("[aA]dd(\d+)","\\1", chord_name)
+        #chord_name = re.sub("[aA]dd(\d+)","\\1", chord_name)
 
         #Get rid of maj and Maj except when its maj7
         chord_name = re.sub("maj","Maj", chord_name)
@@ -200,14 +211,21 @@ class ChordChart:
             chord.sort_by_playability()
 
     def to_chordpro(self, chord_name):
+        """ Output chordpro definitions for all know variants of a chord"""
         if chord_name in self.grids:
             chordpro = ""
             for grid in self.grids[chord_name].voicings:
                 chordpro += "%s\n" % grid.to_chordpro()
             return chordpro
-
+        
+    def all_to_chordpro(self):
+       """ Output all voicings of all chords"""
+       chordpro = ""
+       for chord_name in sorted(self.grids.keys()):
+            chordpro += "%s\n" % self.to_chordpro(chord_name)
+       return chordpro
     
-class ChordDiagram:
+class ChordDiagram(object):
     box_width =  80
     box_height = 100
     top_margin = 10 # Between chord name and zero fret
@@ -218,13 +236,22 @@ class ChordDiagram:
     dot_text_color = (256,256,256) #white
     dot_color = (0,0,0) #black
     
-    def __init__(self, name="", strings=[], draw_name=False):
+    def __init__(self, name="", strings=[], draw_name=False, offsets = None):
         """ Empty diagram. No strings, no frets, no nothin' """
         self.name = name
         self.strings = strings
-        self.draw_name = draw_name
+        #print(strings, offsets)
+        if offsets:
+            self.strings = []
+            for offset in offsets:
+                if offset == -1:
+                    offset = None
+                self.strings.append(String([Dot(offset)]))
+        
+        self.draw_name = False
         self.frets = [] #Will contain fret objects
         self.base_fret = 0
+        self.chord = Chord(name)
         self.setup()
         
     def to_data_URI(self):
@@ -277,6 +304,13 @@ class ChordDiagram:
                     dot.fret = dot.fret + self.base_fret
                     self.max_fret = max(dot.fret, self.max_fret)
                     self.min_fret = min(dot.fret, self.min_fret)
+                    
+        # Count fingers starting with the min-fret which we only count once as we assume it can be barred
+        self.fingers = 0 if self.min_fret < 100 else 0
+        for string in self.strings:
+            for dot in string.dots:
+                if dot.fret and dot.fret > self.min_fret:
+                    self.fingers += 1
                 
         # Recalculate base_fret
         if self.max_fret > ChordDiagram.default_frets and 100 > self.min_fret > 1:
@@ -309,7 +343,7 @@ class ChordDiagram:
             self.box_height = int((self.box_height / ChordDiagram.default_frets) * self.num_frets)
             
         # Unscientific algorithm for rating chords: open is best, not too high up neck good, short reach good, non_played strings not good
-        self.playability = self.open_strings * 50 - self.max_fret * 29 - (self.max_fret - self.min_fret) * 7 - self.non_played_strings * 11
+        self.playability = self.open_strings * 50  - self.max_fret * 29 - (self.max_fret - self.min_fret) * 7 - self.fingers * 8
 
         
     def draw(self):
@@ -386,7 +420,6 @@ class ChordDiagram:
 
     def parse_definition(self, definition):
         """Unpack a chordpro chord definition, trying to be as permissive as possible """
-       
         frets_re = re.compile("{define: +(\\S+?) *(base-fret (\\d+))? *(frets)? +([\\d x]+)", re.IGNORECASE)
         frets_search = re.search(frets_re, definition)
          
@@ -435,3 +468,194 @@ class ChordDiagram:
                         self.strings[string].dots.append(Dot(fret, finger))
                  
         self.setup()
+
+
+  
+
+    
+class Note:
+    """ Class for representing a note """
+    __note_indicies = {"C": 0, "C#": 1, "Db": 1, "D": 2, "Eb": 3, "D#": 3,
+                     "E" : 4, "F": 5, "F#": 6, "Gb": 6, "G": 7, "Ab": 8,
+                     "G#": 8, "A" : 9, "Bb": 10, "A#": 10, "B": 11}
+        
+    __note_names = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"]
+
+    
+    def __init__(self, note):
+        """ Get a new note object """
+        if type(note) == int:
+            self.name = Note.__note_names[note]
+            self.num = note
+        elif note in Note.__note_indicies:
+            self.num = Note.__note_indicies[note]
+            self.name = note
+        else:
+            return None
+
+    def get_note_index(self, note):
+        return Note.__note_indicies[note] if note in Note.__note_indicies else None
+
+   
+    def transpose(self, offset):   
+        new_note_num = (self.num + offset ) % 12
+        self.num = new_note_num
+        self.name = Note.__note_names[new_note_num]
+        
+
+
+        
+    
+class Chord:
+    """ Class for representing chords as a set of notes, to be used for generating chord charts automatically.
+    Will add some new code here that (TODO) can later be used in the rest of the library."""
+    def __init__(self, chord_name):
+        """Initialise chord by name
+        Parameters:
+        name: name of the chord; eg C#m 
+        Return:
+        Array of notes eg ['C#','E','Ab']
+        or None if the chord type is not known
+        """
+        chart = ChordChart()
+        # Work out what type of chord this is
+        self.name = chart.normalise_chord_name(chord_name)
+        self.flavour = re.sub("([A-G](\#|b)?)", "", chord_name)
+        self.root = Note(re.sub("([A-G](\#|b)?).*", "\\1", chord_name))
+        
+        
+    def spell(self):
+        #Lookup table of chord offsets
+        spellings = {
+        "" :  [Note("C"), Note("E"), Note("G")],
+        "m" : [Note("C"), Note("Eb"), Note("G")],
+        "7" : [Note("C"), Note("E"), Note("G"), Note("Bb")],
+        "6" : [Note("C"), Note("E"), Note("G"), Note("A")],
+        "m7" : [Note("C"), Note("Eb"), Note("G"), Note("Bb")],
+        "9":  [Note("C"), Note("E"), Note("G"), Note("B"), Note("D")],
+        "add9":  [Note("C"), Note("E"), Note("G"), Note("D")],
+        "maj7":  [Note("C"), Note("E"), Note("G"), Note("B")],
+        "aug": [Note("C"), Note("E"), Note("G#")],
+        "dim": [Note("C"), Note("Eb"), Note("Gb")],
+        "sus4":  [Note("C"), Note("E"), Note("F"), Note("G")]
+        }
+        self.notes = None
+        self.nums = None
+        if self.flavour in spellings:
+           self.notes = []
+           self.nums = []
+           for note in spellings[self.flavour]:
+               note.transpose(self.root.num)
+               self.nums.append(note.num)
+               self.notes.append(note)
+          
+        return self.nums
+
+    def find_fingerings(self, instrument, reach = 4, fingers = 4, unplayed = 0):
+        """Work out ways of playing a chord on the given instrument
+        instrument: an instrument object
+      """
+        self.spell()
+        self._fingering_array = Fingerings(self, instrument, reach, fingers, unplayed).fingerings
+
+
+    def to_chordpro(self):
+        """ Generate a chord chart just for this chord and return in chordpro format """
+        self.chart = ChordChart()
+        self.add_to_chordchart(self.chart)
+        return (self.chart.to_chordpro(self.name))
+
+    
+    def add_to_chordchart(self, chart):
+        """ Add the chords found by find_fingerings to a chord chart object)"""
+        for fingering in self._fingering_array:
+         #print(fingering)
+            diagram = ChordDiagram(offsets = fingering, name=self.name)
+            chart.add_from_diagram(diagram)
+        chart.sort_by_playability(self.name)
+        
+class Fingerings:
+    """ Class for holding and finding different ways of playinc a chord """
+
+    def __init__(self, chord, instrument, reach=4, fingers=4, max_unplayed_strings = 1):
+        """ Set up a fingerings object
+        chord = A and instance of chordprobook.chords.Chord
+        instrument = An instance of chordprobook.instruments.Instrument
+        """
+        self.chord = chord
+        notes_yet_to_find = [x.num for x in chord.notes]
+         # TODO make this a chord
+     
+        self.max_reach = reach
+        self.max_fingers = fingers
+        self.instrument = instrument
+        self.max_unplayed_strings = max_unplayed_strings
+        self.fingerings = [] # Array of working chords
+        #Start recursive search from leftmost string, initialise with no strings played
+        frets_found = [-1] * len(instrument.notes)
+        self.find_note(list(frets_found), list(notes_yet_to_find), 0,0)
+        
+        
+    def find_note(self, frets_found, notes_yet_to_find, search_string, search_fret):
+        """ Recursive search for chord fingerings, uses integer arrays for now. TODO, integrate this code with ChordDiagram
+        frets_found = array with one element per string, playable notes with be added as fret numbers eg [0,0,0,3] is a uke C
+        TODO: Finger counting, unplayed strings, barre chords
+         """
+        def chord_stats(frets_found):
+            """calculate some details about the chord
+            Returns:
+            max_fret: Highest fret position
+            min_fret: Lowest non-zero played string fret position
+            fingers: Number of fingers needed to play
+            """
+            max_fret = 0
+            min_fret = 1
+            fingers = 0
+            played_notes = [x for x in frets_found if x > 0]
+            if played_notes != []:
+                max_fret = max(played_notes)
+                min_fret = min(played_notes)
+                fingers = len(played_notes)
+                # Allow for barre by assuming one finger can play the min_fret position
+                if frets_found.count(0) == 0:
+                    fingers = fingers - frets_found.count(min_fret) + 1
+            return (max_fret, min_fret, fingers)
+         
+        # Terminate recursion when we've gone past the 11th fret, or run out of strings
+        if search_fret > 11 or search_string > len(self.instrument.notes) - 1:
+            return None
+       
+        self.find_note(list(frets_found), list(notes_yet_to_find), search_string, search_fret + 1)
+        # Left-most strings may be left uplayed so if the one to the left is, and we have enough strings left then search 
+        if  search_string < self.max_unplayed_strings and  (search_string  == 0 or frets_found[search_string - 1] == -1) and search_fret == 0 and len(frets_found) - search_string > len(notes_yet_to_find):
+            self.find_note(list(frets_found), list(notes_yet_to_find), search_string + 1, 0 )
+            
+        current_note = Note(self.instrument.notes[search_string].name)
+        
+        current_note.transpose(search_fret)
+        #print("string ", search_string, "fret", search_fret, "Is note", current_note.name, "so far", frets_found, "To find", [Note(x).name for x in notes_yet_to_find], "max", max_fret, "min", min_fret)
+       
+        if current_note.num in self.chord.nums:
+            frets_found[search_string] = search_fret
+            
+             #If chord not playable bail out
+            max_fret, min_fret, fingers = chord_stats(frets_found)
+            if fingers > self.max_fingers or max_fret - min_fret >= self.max_reach: # or (search_string == 0 and max_fret  > self.max_reach):
+                return
+            
+            if current_note.num in notes_yet_to_find: #Note index already found?
+                notes_yet_to_find.remove(current_note.num)
+                #print("Got a match:", self.chord.name, frets_found, [Note(x).name  for x in notes_yet_to_find], search_string == len(self.instrument.notes))
+            elif self.chord.nums.index(current_note.num) > 3:
+                    # This is a chord mod that's not core so don't put in more than one
+                    return
+            if len(notes_yet_to_find) == 0 and search_string == len(self.instrument.notes) - 1:
+                self.fingerings.append(frets_found)
+                
+            
+            self.find_note(list(frets_found), list(notes_yet_to_find), search_string + 1, 0)
+
+      
+        
+            
+        

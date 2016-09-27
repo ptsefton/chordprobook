@@ -70,7 +70,7 @@ def convert():
            list = sets_file.read()
        args["keep_order"] = True
        set_dir, set_name = os.path.split(args["setlist"])
-       list, bookfile = extract_book_filename(list)
+       list, bookfile = chordprobook.books.extract_book_filename(list)
        if bookfile != None and not args["book_file"]:
            #No book file passed so use the one we found in the setlist
            args["files"] = [open(os.path.join(set_dir,bookfile),'r')]

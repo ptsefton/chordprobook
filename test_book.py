@@ -1,7 +1,6 @@
 #!usr/bin/env python3
 import unittest
 import tempfile
-
 import chordprobook.books as books
 import chordprobook.chords as chords
 

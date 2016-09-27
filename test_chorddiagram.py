@@ -1,5 +1,6 @@
 #!usr/bin/env python3
 import unittest
+import chordprobook.chords
 import chordprobook.chords as chords
 import chordprobook.instruments
 
@@ -116,6 +117,7 @@ class TestChorddiagram(unittest.TestCase):
         d = chords.ChordDiagram()
         d.parse_definition(e5chord)
         d.draw()
+        d.show()
         self.assertEqual(d.num_strings, 6)
         self.assertEqual(d.strings[0].dots[0].fret, 0)
         self.assertEqual(d.strings[1].dots[0].fret, 1)
@@ -130,6 +132,7 @@ class TestChorddiagram(unittest.TestCase):
         d = chords.ChordDiagram()
         d.parse_definition(e5chord)
         d.draw()
+        d.show()
         self.assertEqual(d.num_strings, 6)
         self.assertEqual(d.strings[0].dots[0].fret, 0)
         self.assertEqual(d.strings[1].dots[0].fret, 1)
@@ -194,6 +197,30 @@ class TestChorddiagram(unittest.TestCase):
         self.assertEqual(c.get_default("F#m7").to_chordpro(), F_sharp_chord_def)
         self.assertEqual(c.get_default("F#m7//").to_chordpro(), F_sharp_chord_def)
         self.assertEqual(c.get_default("F#m7!").to_chordpro(), F_sharp_chord_def)
+        
+  def test_notes(self):
+      N = chordprobook.chords.Note
+      self.assertEqual(N("C#").num, N("Db").num)
+      self.assertEqual(N(0).name, "C")
+      self.assertEqual(N(0).num, 0)
+      self.assertEqual(N('C').name, 'C')
+      D = N('C')
+      D.transpose(2)
+      self.assertEqual(D.num, 2)
+      
+
+  def test_chord_generator(self):
+       N = chordprobook.chords.Note
+       c_chord = chordprobook.chords.Chord('C')
+       self.assertEqual(c_chord.flavour, "")
+       self.assertEqual(c_chord.root.num, N("C").num)
+       #self.assertEqual(c_chord.spell(), [note('C'),'E','G'])
+       
+       c_chord = chordprobook.chords.Chord('Cm')
+       self.assertEqual(c_chord.flavour, "m")
+       self.assertEqual(c_chord.root.num, N("C").num)
+       print(str(c_chord.spell()))
+       self.assertEqual(c_chord.spell(), [N('C').num, N('Eb').num, N('G').num])
         
 if __name__ == '__main__':
     unittest.main()

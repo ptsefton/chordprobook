@@ -1,5 +1,8 @@
 import os
+import re
+
 import yaml
+
 import chordprobook.chords
 
 class Instruments:
@@ -76,6 +79,12 @@ class Instrument:
             
         self.name = data['name']
         self.tuning = data['tuning']
+        self.notes = []
+        pattern = re.compile(r'([A-G][b#]?)')
+
+        for note in re.findall(pattern, self.tuning):
+              self.notes.append(chordprobook.chords.Note(note))
+    
         
         if 'alternate_names' in data:
             self.alternate_names = data['alternate_names']
@@ -91,7 +100,7 @@ class Instrument:
             self.transpose = int(data['transpose'])
         else:
              self.transpose = 0
-        self.chart = None
+        self.chart = chordprobook.chords.ChordChart()
         self.error = None
         
     def load_chord_chart(self):
