@@ -102,6 +102,7 @@ None
 {define: E7 base-fret 8 frets 0 1 1 1}
 
 {c: Em}
+{define: Em frets 2 0 0 2}
 {define: Em frets 5 4 5 5}
 {define: Em base-fret 7 frets 2 2 1 2}
 

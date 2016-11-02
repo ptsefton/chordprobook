@@ -19,8 +19,7 @@ where tuning is a space list of strings (in quotes) eg
 import argparse
 import re
 import subprocess
-import chordprobook.chordprobook  as chordprobook
-from chordprobook.chordprobook import ChordChart
+from chordprobook  import chords
     
 def generate_grids(chord, tuning):
     command = ["./chord/ch", "-f", "4", "-p", "4",  "-r", "3", "-i", "0",  "-t"]
@@ -33,7 +32,7 @@ def generate_grids(chord, tuning):
     return str(out.decode())
 
 def generate_defs():
-    transposer = chordprobook.transposer()
+    transposer = chords.transposer()
     parser = argparse.ArgumentParser()
     parser.add_argument('tuning',  default=None, help='tuning')
     args = vars(parser.parse_args())
@@ -43,7 +42,7 @@ def generate_defs():
         for variant in ["", "7","6","sus4","m" ,"maj7" ,"m7","Add9","dim"]:
             chord_name = transposer.get_note(note_index) + variant
             defs = generate_grids(chord_name, tuning)
-            grids = ChordChart()
+            grids = chords.ChordChart()
             grids.load(defs)
             norm_chord_name = grids.normalise_chord_name(chord_name)
             grids.sort_by_playability(norm_chord_name)
