@@ -189,8 +189,8 @@ class ChordChart(object):
                 
     def grid_as_md(self, chord_name):
         # TODO: add tests
-        chord_name = self.normalise_chord_name(chord_name)
-        chord = self.get_default(chord_name)
+        chord_name_norm = self.normalise_chord_name(chord_name)
+        chord = self.get_default(chord_name_norm)
         if chord != None:
             return chord.to_md()     
         else:
@@ -443,7 +443,6 @@ class ChordDiagram(object):
                     
             self.strings = []
             frets = frets_search.group(5).strip().split(" ")
-            
             i = 0
             for fret in frets:
                 fret = None if  fret.lower() == 'x' else int(fret)

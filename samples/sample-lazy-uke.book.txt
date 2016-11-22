@@ -1,6 +1,6 @@
 {title: Sample songs}
 {transpose: 1}
+{instrument: Ukulele}
 {dirs: .}
 {files: *.cho.txt}  
 
-{instrument: Ukulele}

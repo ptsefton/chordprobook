@@ -46,7 +46,7 @@ class TOC:
     max_songs_per_page = 50
     
     def __init__(self, book, start_page):
-       
+
         entries = []
         sets = []
         def chunked(iterable, n):
@@ -74,7 +74,6 @@ class TOC:
                 sets.append("Set: %s <span style='float:right'>%s</span>    " % ( song.title, str(page_count)))
             page_count += song.pages
       
-            
         for song in book.songs:
             if not song.blank:
                 song_count += 1
@@ -92,7 +91,7 @@ class TOC:
         #Make sure that there isn't a song on the back of a setlist
         if  (len(self.pages) + len(book.sets)) % 2 == 0:
             book.songs.insert(0, cp_song("", title="", blank=True))
-     
+
 
     def format(self):
         contents = ""
@@ -306,24 +305,24 @@ class cp_song:
         and fetching chord grids """
         if instrument_name == None:
             instrument_name = self.instrument_name
-        local_grids = None
+        self.local_grids = None
         self.grids = None
-        self.transpose = transpose
-        
-        if instrument_name != None:
-            instrument = self.grids = self.instruments.get_instrument_by_name(instrument_name)
-            if instrument != None:
-                self.grids = instrument.chart
-                if self.grids == None:
-                    instrument.load_chord_chart()
-                    self.grids = instrument.chart
-            if  self.local_instruments != None and instrument_name in self.local_instrument_names:
-                local_grids = self.local_instruments.get_instrument_by_name(instrument_name).chart
-    
-        if local_grids == None:
-            local_grids = self.grids
-            
 
+        if transpose:
+            self.transpose = transpose
+        #self.transpose = transpose        
+        if instrument_name != None:
+            instrument = self.instruments.get_instrument_by_name(instrument_name)
+            if instrument != None:
+                instrument.load_chord_chart()
+                self.grids = instrument.chart
+
+       
+            if  self.local_instruments != None and instrument_name in self.local_instrument_names:
+                self.local_grids = self.local_instruments.get_instrument_by_name(instrument_name).chart
+
+        
+        
         
         if transpose and self.original_key:
             self.key = self.transposer.transpose_chord(self.original_key)
@@ -337,9 +336,9 @@ class cp_song:
                 chord = self.transposer.transpose_chord(chord)
     
             if self.grids != None:
-                chord_normal = self.grids.normalise_chord_name(chord)
-                if not chord_normal in self.chords_used:
-                    self.chords_used.append(chord_normal)
+                #chord = self.grids.normalise_chord_name(chord)
+                if not chord in self.chords_used:
+                    self.chords_used.append(chord)
         
             return("[%s]" % chord)
                 
@@ -348,29 +347,9 @@ class cp_song:
         #Chords
         song = re.sub("\[(.*?)\]",lambda m: format_chord(m.group(1)),song)
             
-        
         if stand_alone and instrument_name != None:
             title = "%s (%s)" % (title, instrument_name)
             
-            
-        grid_md = ""
-        if self.grids != None:
-            grid_md = "<div class='grids'>"
-            chords_in_text =  (len(self.chords_used) > 12)
-            if chords_in_text:
-                song += "\n<!-- new_page -->\n"
-            for chord_name in self.chords_used:
-                md = local_grids.grid_as_md(chord_name)
-                if md == None:         
-                    md = self.grids.grid_as_md(chord_name)
-                if md != None:
-                    if chords_in_text:
-                        song += "<figure style='display: inline-block'>%s<figcaption>%s</figcaption></figure>" % (md, chord_name)
-                    else:
-                        grid_md += "%s<br>%s<br><br>" % (md, chord_name)
-            grid_md += "</div>"   
-      
-        song = "<h1 class='song-title'>%s</h1>\n%s\n<div class='song-page'><div class='song-text'>\n%s\n%s\n\n</div></div>" % ( title, grid_md, self.notes_md, song)
         self.md = song
         self.formatted_title = title
 
@@ -400,18 +379,72 @@ class cp_song:
         
     def to_html(self):
         #TODO STANDALONE
-       
+
+        # Deal with chords
+        grid_md = ""
+        chords_by_page = [[]]
+        chord_md = [] # For keeping chords that will be displayed alongside text
+
+        if self.grids != None:
+
+            # Find which chords actually have grids to display
+            for chord_name in self.chords_used:
+                md = None
+                # Have a local version of this chord?
+                if self.local_grids:
+                    md = self.local_grids.grid_as_md(chord_name)
+                if md == None:         
+                    md = self.grids.grid_as_md(chord_name)
+                
+                if md != None:
+                    chord_md.append((md, chord_name))
+
+            #Too many to show down the right margin?
+            chords_in_text =  (len(chord_md) > 12 * self.pages)
+
+            if chords_in_text:
+                self.md += "\n<!-- new_page -->\n"
+                self.pages += 1
+            else:
+                chords_per_page = len(chord_md) / self.pages
+            for md in chord_md:
+                if chords_in_text:
+                    self.md +=  "<figure style='display: inline-block'>%s<figcaption style='text-align:center'>%s</figcaption></figure>" % md
+                else:
+                    chord_string = "<p>%s</br>%s</p>" % md
+                    if len(chords_by_page[-1]) < chords_per_page:
+                        chords_by_page[-1].append(chord_string)
+                    else:
+                        chords_by_page.append([chord_string])
+                
+ 
+        song_pages = self.md.split("<!-- new_page -->")
+        song = ""
+        page_count = 0
+        for page in song_pages:
+            if page_count == 0:
+                title = "<h1 class='song-title'>%s</h1>" % self.formatted_title
+            else:
+                title = ""
+            if len(chords_by_page) > page_count:
+                grid_md =  "<div class='grids'>%s</div>" % "</br>".join(chords_by_page[page_count])
+            else:
+                grid_md = ""
+            song += "<div class='page'>%s %s <div class='song-page'><div class='song-text'>\n%s\n%s\n\n</div></div></div>" % ( title, grid_md, self.notes_md, page)
+            page_count += 1
+
         song = """
 <div class='song'>
-<div class='page'>
-
 %s
-
 </div>
-</div>
-</div>
-        """ % self.md
-        song = song.replace("<!-- new_page -->", "\n</div></div></div><div class='page'><div class='song-page'><div class='song-text'>")
+        """ % song
+      
+        
+        
+         #Split song on new page, iterate...
+        #grid_md = "<div>%s</div>" 
+        #song = song.replace("<!-- new_page -->", "\n</div></div></div><div class='page'><div class='song-page'><div class='song-text'>")
+        # TODO, split chords
         return pypandoc.convert(song, 'html', format='md')
 
     def to_stand_alone_html(self):
@@ -486,6 +519,7 @@ class cp_song_book:
         for trans in transpositions_needed:
             s = copy.deepcopy(song)
             s.transpose = trans
+            s.format()
             self.songs.append(s)
                         
     def add_song_from_file(self, file, transpose=0):
@@ -536,9 +570,11 @@ class cp_song_book:
         all_songs = self.sets_md
         if self.title == None:
             self.title = cp_song_book.default_title
+
+        # Format songs, need to know how long they are
         for song  in self.songs:
             song.format(instrument_name = instrument_name, stand_alone=False)
-            all_songs += song.to_html()
+       
             
         if instrument_name != None:
             suffix = "_%s" % instrument_name.lower().replace(" ", "_")
@@ -546,7 +582,13 @@ class cp_song_book:
         else:
             suffix = ""
             title_suffix = ""
-    
+
+
+        self.reorder(1, old=None, new_order=[], waiting=[])
+
+        toc = TOC(self, 2)
+        self.contents = toc.format()
+
         output_file += suffix
         if args['html']:
             html_path = output_file + ".html"
@@ -557,7 +599,12 @@ class cp_song_book:
             pdf_path = output_file + ".pdf"
         else:
             pdf_path = None
-        #print("Outputting html", html_path)
+
+        # Now add formatted songs to output in the right order
+        for song in self.songs:
+            all_songs += song.to_html()
+
+
         with open(html_path, 'w') as html:
             html.write( html_book.format(all_songs,
                                         title=self.title + title_suffix,
@@ -574,27 +621,14 @@ class cp_song_book:
             #subprocess.call(["open", pdf_path])
 
     def to_html_and_pdf(self,args, output_file):
-        self.contents = ""
-       
         self.sets_md = ""
-        
         for set in self.sets:
             set.format()
             self.sets_md += set.to_html()
-            
-        
-        self.reorder(1)
-        
-        toc = TOC(self, 2)
-        
-        self.contents = toc.format()
         
         if self.instrument_name_passed == None:
-            if self.default_instrument_names != []:
-                for instrument_name in [None] + self.default_instrument_names:
-                    self.__songs_to_html(instrument_name, args, output_file)
-            else:
-                self.__songs_to_html(None, args, output_file)
+            for instrument_name in  self.default_instrument_names + [None]:
+                self.__songs_to_html(instrument_name, args, output_file)
         else:
             self.__songs_to_html(self.instrument_name_passed, args, output_file)
             
@@ -723,6 +757,7 @@ class cp_song_book:
             waiting = []
             
             #Also OK to start any other song here so append head of list
+
             new_order.append(old[0])
             start_page += old[0].pages
             
@@ -736,6 +771,7 @@ class cp_song_book:
                 waiting.append(old[0])
         else:
             new_order.append(old[0])
+
             start_page += old[0].pages
             
         self.reorder(start_page, old[1:], new_order, waiting)    
@@ -944,8 +980,8 @@ p {
 </script>
 
 <style>
-.♂ {color: #0000FF; border-width: 1px; border-style: dashed; border-color: #FFFFFF #FFFFFF #0000FF #0000FF}
-.♀ {font-style: italic; color: #FF00FF; border-width: 1px;  border-style: solid; border-color: #FFFFFF  #FFFFFF  #FF00FF  #FF00FF}
+.♂ {color: #0000FF; }
+.♀ {font-style: italic; color: #FF00FF;}
 
 .♂ p, .♀ p {
     margin-top: 0;

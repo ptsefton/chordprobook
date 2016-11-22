@@ -105,11 +105,8 @@ class Instrument:
         
     def load_chord_chart(self):
         defs_file = self.chord_definitions
-       
         if defs_file != None:
             path, file = os.path.split(os.path.realpath(__file__))
-            defs_file = os.path.join(path, "..", "chords", defs_file)
-            print(defs_file)
-           
+            defs_file = os.path.join(path, "..", "chords", defs_file)           
             self.chart = chordprobook.chords.ChordChart(self.transpose, defs_file)
            
