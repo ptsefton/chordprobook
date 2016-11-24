@@ -131,7 +131,7 @@ class TestStuff(unittest.TestCase):
     one2 = "{title: 1 page}"
     two1 = "{title: 2 page}\n{new_page}\nxxx"
     two2 = "{title: 2 page}\n{new_page}\yxxx"
-   
+  
     book = books.cp_song_book()
     book.add_song_from_text(one1, "1")
     book.add_song_from_text(one2, "2")
@@ -168,6 +168,41 @@ class TestStuff(unittest.TestCase):
     self.assertEqual(song.text, "Some stuff    \n<span class='♂'>♂ Mark this up as class ♂</span>\n\n")
 
 
+
+    # Test that chords with rhythm don't get counted as separate chords
+    song = books.cp_song("""
+    {title: Test}
+    {soc}
+    {c: Chorus}
+    {instrument: Uke}
+    This [C] is the [C!] chorus [Db7 / / / /] [C!] [Db7!]
+    CHorus chorus
+    {eoc}
+    
+    After the chorus
+
+    """)
+    song.format( instrument_name="Uke")
+    # Should only be two chords in the above
+    self.assertEqual(len(song.chords_used),2)
+
+
+    # Test that chords with different names for the same thing are all counted
+    song = books.cp_song("""
+    {title: Test}
+    {soc}
+    {c: Chorus}
+    {instrument: Uke}
+    This [BbM7] is the [Bbmaj7] chorus  [A#M7] is the [A#maj7] chorus
+    CHorus chorus
+    {eoc}
+    
+    After the chorus
+
+    """)
+    song.format( instrument_name="Uke")
+    # Should be four chords in the above, all the same, but not up to us to change what the author wrote
+    self.assertEqual(len(song.chords_used),4)
     
     song = books.cp_song("""
     {title: Test}
