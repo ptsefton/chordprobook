@@ -156,23 +156,29 @@ class ChordChart(object):
                     self.grids[grid.name] = ChordVoicings(grid)
                 else:
                     self.grids[grid.name].append(grid)
+
+    def clean_chord_name(self, chord_name):
+        """ Remove characters from a chord name that are to do with timing: ! and /. """
+         # Allow ! for stacatto chord
+        chord_name = re.sub("\!$","", chord_name)
+        
+        # Allow / / / inside chord diagrams for strumming
+        chord_name = re.sub("(/* *)*$","", chord_name)
+        return chord_name
         
     def normalise_chord_name(self, chord_name):
         """ Transform chord name as used to a canonical name, means we only have to store a limited set of chords 
         chord_name: a string representation of a chord
         """
-        # Allow ! for stacatto chord
-        chord_name = re.sub("\!$","", chord_name)
-        
-        # Allow / / / inside chord diagrams for strumming
-        chord_name = re.sub("(/* *)*$","", chord_name)
-        
+        chord_name = self.clean_chord_name(chord_name)
         # Normalise "add" for ninths, elevenths etc - TODO sharps as well
         #chord_name = re.sub("[aA]dd(\d+)","\\1", chord_name)
 
         #Get rid of maj and Maj except when its maj7
         chord_name = re.sub("maj","Maj", chord_name)
         chord_name = re.sub("Maj7","maj7", chord_name)
+        chord_name = re.sub("M7","maj7", chord_name)
+
         chord_name = re.sub("Maj","", chord_name)
 
         #Min -> m

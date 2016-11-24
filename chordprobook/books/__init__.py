@@ -336,7 +336,7 @@ class cp_song:
                 chord = self.transposer.transpose_chord(chord)
     
             if self.grids != None:
-                #chord = self.grids.normalise_chord_name(chord)
+                chord = self.grids.clean_chord_name(chord)
                 if not chord in self.chords_used:
                     self.chords_used.append(chord)
         

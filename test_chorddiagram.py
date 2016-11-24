@@ -117,7 +117,7 @@ class TestChorddiagram(unittest.TestCase):
         d = chords.ChordDiagram()
         d.parse_definition(e5chord)
         d.draw()
-        d.show()
+        #d.show()
         self.assertEqual(d.num_strings, 6)
         self.assertEqual(d.strings[0].dots[0].fret, 0)
         self.assertEqual(d.strings[1].dots[0].fret, 1)
@@ -132,7 +132,7 @@ class TestChorddiagram(unittest.TestCase):
         d = chords.ChordDiagram()
         d.parse_definition(e5chord)
         d.draw()
-        d.show()
+        #d.show()
         self.assertEqual(d.num_strings, 6)
         self.assertEqual(d.strings[0].dots[0].fret, 0)
         self.assertEqual(d.strings[1].dots[0].fret, 1)
@@ -175,13 +175,23 @@ class TestChorddiagram(unittest.TestCase):
         self.assertEqual(chart.grid_as_md("F#7"), chart.grid_as_md("F#7!"))
         #chart.get_default("F#7").show()
 
-        #Check that normalisation code
+        #Check normalisation code
         self.assertEqual(chart.grid_as_md("F#7///"), chart.grid_as_md("F#7"))
-        self.assertEqual(chart.normalise_chord_name("Fadd9"), "F9")
+        
         self.assertEqual(chart.normalise_chord_name("Am7-5"), "Am7-5")
         self.assertEqual(chart.normalise_chord_name("Cmaj"), "C")
+        self.assertEqual(chart.normalise_chord_name("CM7"), "Cmaj7")
         self.assertEqual(chart.normalise_chord_name("Cmaj7"), "Cmaj7")
         self.assertEqual(chart.normalise_chord_name("C+"), "Caug")
+
+        self.assertEqual(chart.clean_chord_name("A!"), "A")
+        self.assertEqual(chart.normalise_chord_name("AM7 / / /"), "Amaj7")
+
+        # Clean removes rhythm marks but does not change chord names
+        self.assertEqual(chart.clean_chord_name("Amaj7 / / /"), "Amaj7")
+        self.assertEqual(chart.clean_chord_name("AM7 / / /"), "AM7")
+
+
 
         self.assertEqual(chart.get_default("Gbm7").to_chordpro(), chart.get_default("F#m7").to_chordpro())
 
