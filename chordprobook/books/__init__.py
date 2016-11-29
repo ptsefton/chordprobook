@@ -602,7 +602,7 @@ class cp_song_book:
                 output_file +=  version_string.replace(" ", "_")
             else:
                 version_string = self.version
-                output_file +=  self.version
+                output_file +=  self.version.replace(" ", "_")
             self.title += " " + version_string
         if args['html']:
             html_path = output_file + ".html"
