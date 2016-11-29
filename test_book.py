@@ -89,7 +89,29 @@ class TestStuff(unittest.TestCase):
       self.assertEqual(b.songs[3].title, "Universe")
       self.assertEqual(b.title, "Sample songs")
       self.assertEqual(b.default_instrument_names[0],"Ukulele")
+      
+  def test_versioned_book(self):
+      book_path = "samples/sample.book.txt"
+      sample_book_text = open(book_path).read()
+      b = books.cp_song_book(path=book_path)
+      b.load_from_text(sample_book_text)
 
+      self.assertEqual(b.version, None)
+      
+      book_path = "samples/sample_versioned.book.txt"
+      sample_book_text = open(book_path).read()
+         
+
+      b = books.cp_song_book(path=book_path)
+      b.load_from_text(sample_book_text)
+      self.assertEqual(b.version, "v1.1a")
+
+      book_path = "samples/sample_auto_versioned.book.txt"
+      sample_book_text = open(book_path).read()
+      b = books.cp_song_book(path=book_path)
+      b.load_from_text(sample_book_text)
+      self.assertEqual(b.version, 'auto')
+      
   def test_directive(self):
       d = books.directive("{title: This is my title}")
       self.assertEqual(d.type, books.directive.title)

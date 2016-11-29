@@ -15,7 +15,7 @@ import base64
 import yaml
 import chordprobook.chords as chords
 import chordprobook.instruments
-
+import datetime
 
 
 def extract_transposition(text):
@@ -114,7 +114,7 @@ class TOC:
 
 class directive:
     """Simple data structure for a directive, with name and optional value"""
-    title, subtitle, key, start_chorus, end_chorus, start_tab, end_tab, start_bridge, end_bridge, transpose, new_page, define, grids, comment, instrument, tuning, dirs, files = range(0,18)
+    title, subtitle, key, start_chorus, end_chorus, start_tab, end_tab, start_bridge, end_bridge, transpose, new_page, define, grids, comment, instrument, tuning, dirs, files, version = range(0,19)
     directives = {"t": title,
                   "title": title,
                   "st": subtitle,
@@ -144,7 +144,8 @@ class directive:
                   "instrument": instrument,
                   "tuning": tuning,
                   "dirs": dirs,
-                  "files": files}
+                  "files": files,
+                  "version": version}
     
         
     def __init__(self, line):
@@ -465,6 +466,7 @@ class cp_song_book:
     transpose_all, do_not_transpose, transpose_first = transposition_options
     default_title = 'Songbook'
     def __init__(self, keep_order = False, title=None, instruments = None, instrument_name=None, path="."):
+        self.version = None
         self.path = path
         self.dir, self.filename = os.path.split(self.path)
         self.title = title
@@ -536,7 +538,7 @@ class cp_song_book:
             if directiv.type == None:
                 if not line.startswith("#") and not line.strip() == "":
                     #Assume this is a path
-                    #Look for transpose
+                    #Look for transpose TODO: use a proper parse method
                     transpose = 0
                     if "{" in line:
                         line, direct = line.split("{")
@@ -557,6 +559,8 @@ class cp_song_book:
                     dir_list.append(directiv.value)
                 elif directiv.type == directiv.files:
                     self.__get_file_list(directiv.value, dir_list)
+                elif directiv.type == directiv.version:
+                    self.version = directiv.value
                 elif directiv.type == directive.transpose:
                     if directiv.value.lower() in cp_song_book.transposition_options:
                         self.auto_transpose = directiv.value.lower()
@@ -590,6 +594,16 @@ class cp_song_book:
         self.contents = toc.format()
 
         output_file += suffix
+        if self.version:
+            output_file += "-" 
+            version_string = ""
+            if self.version.lower() == "auto":
+                version_string = str(datetime.datetime.now())
+                output_file +=  version_string.replace(" ", "_")
+            else:
+                version_string = self.version
+                output_file +=  self.version
+            self.title += " " + version_string
         if args['html']:
             html_path = output_file + ".html"
         else:

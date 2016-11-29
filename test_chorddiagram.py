@@ -182,7 +182,7 @@ class TestChorddiagram(unittest.TestCase):
         self.assertEqual(chart.normalise_chord_name("Cmaj"), "C")
         self.assertEqual(chart.normalise_chord_name("CM7"), "Cmaj7")
         self.assertEqual(chart.normalise_chord_name("Cmaj7"), "Cmaj7")
-        self.assertEqual(chart.normalise_chord_name("C+"), "Caug")
+        self.assertEqual(chart.normalise_chord_name("C+"), "Clsaug")
 
         self.assertEqual(chart.clean_chord_name("A!"), "A")
         self.assertEqual(chart.normalise_chord_name("AM7 / / /"), "Amaj7")
