@@ -71,7 +71,7 @@ This is still experimental, but the idea is to produce HTML that fills the scree
 
 This is for people running a unix-like operating system who know how
 to install packaged software scripts and python modules.
-
+ 
 Status: Alpha / mostly works for me  on OS X 10.10.5.
 
 
@@ -169,6 +169,8 @@ Formatting / Directive         |      Description  | Rendered as
 {eot} {end_of_tab} | End of tab | Finishes the fixed-width formatting
 {book: path_to_book} | For use in setlist files, a path to a book file relative to the setlist file or an absolute path | 
 {files: } & {dirs: }| A file-glob pattern to match, eg {files: *.cho} in a space separated list of directories| For use in book files only, does a recursive search in the directories for files matching the pattern. If the song has a {transpose: } directive it will generate multiple pages, one for each transposition.
+{version: } | In book files. Put a version such as {version: v2.1}, and it will add v2.1 to the title and output filename. Or use {version: auto} for a time-stamped (to the millisecond!) version | A suffix in the title and output file name |
+
 
 ### Implementation
 
@@ -342,4 +344,9 @@ optional arguments:
 
     ```mksong -s samples/sample.setlist.md -b samples/sample.book.txt```
 
+* To version control a book, use the {version: } directive. Either
+  with a version number like {version: 12.1beta} or to get a
+  timestamp, use {version: auto}. See these samples:
 
+    ```mksong -b samples/sample_versioned. book.txt ```
+	```mksong -b samples/sample_auto_versioned. book.txt ```
