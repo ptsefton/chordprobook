@@ -133,8 +133,7 @@ def convert():
    
     #PDF is generated from HTML, BTW
     if args['one_doc']: #Assume standalone PDF
-        book.save_as_single_sheets(out_dir)
-        
+        book.save_as_single_sheets(out_dir)        
         
     elif args['html'] or args['pdf']:
         book.to_html_and_pdf(args, output_file)

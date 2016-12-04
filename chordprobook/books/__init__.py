@@ -187,7 +187,10 @@ class cp_song:
         self.transposer = chords.transposer(transpose)
         self.standard_transpositions = [0]
         self.title = ""
+        self.grids = None
         self.parse()
+        self.md = ""
+        self.formatted_title = ""
         if self.title == "":
             self.title = title
        
@@ -418,7 +421,6 @@ class cp_song:
                     else:
                         chords_by_page.append([chord_string])
                 
- 
         song_pages = self.md.split("<!-- new_page -->")
         song = ""
         page_count = 0
@@ -578,7 +580,7 @@ class cp_song_book:
         # Format songs, need to know how long they are
         for song  in self.songs:
             song.format(instrument_name = instrument_name, stand_alone=False)
-       
+
             
         if instrument_name != None:
             suffix = "_%s" % instrument_name.lower().replace(" ", "_")
@@ -731,6 +733,7 @@ class cp_song_book:
                                 new_set = False
                             if len(transpositions) > 1 and transpositions[1] != 0:
                                 current_song.format(transpose = transpositions[1])
+                            
                             if current_song.key != None:
                                 song_name = "%s (in %s)" % (song_name, current_song.key)
                             new_order.append(current_song)
@@ -745,6 +748,7 @@ class cp_song_book:
                     current_set.text +=  potential_song + "\n\n"
         
         self.songs = new_order
+ 
        
         
     def reorder(self, start_page, old = None, new_order=[], waiting = []):
