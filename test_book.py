@@ -111,6 +111,31 @@ class TestStuff(unittest.TestCase):
       b = books.cp_song_book(path=book_path)
       b.load_from_text(sample_book_text)
       self.assertEqual(b.version, 'auto')
+
+
+def test_setlist(self):
+      book_path = "samples/sample.setlist.md"
+
+      
+      sample_book_text = open(book_path).read()
+      b = books.cp_song_book(path=book_path)
+      b.load_from_text(sample_book_text)
+
+      self.assertEqual(b.version, None)
+      
+      book_path = "samples/sample_versioned.book.txt"
+      sample_book_text = open(book_path).read()
+         
+
+      b = books.cp_song_book(path=book_path)
+      b.load_from_text(sample_book_text)
+      self.assertEqual(b.version, "v1.1a")
+
+      book_path = "samples/sample_auto_versioned.book.txt"
+      sample_book_text = open(book_path).read()
+      b = books.cp_song_book(path=book_path)
+      b.load_from_text(sample_book_text)
+      self.assertEqual(b.version, 'auto')
       
   def test_directive(self):
       d = books.directive("{title: This is my title}")
@@ -179,7 +204,6 @@ class TestStuff(unittest.TestCase):
     song = books.cp_song("{title: A Song!}\nSome stuff\n{key: C#}\n#A comment\n#or two", transpose=3)
     self.assertEqual(song.key, "E")
     song.format()
-    print(song.to_html())
     self.assertEqual(song.to_html().replace("\n",''), '<div class="song"><div class="page"><h1 class="song-title">A Song! (E)</h1><div class="grids"></div><div class="song-page"><div class="song-text"><p>Some stuff</p></div></div></div></div>')
 
 

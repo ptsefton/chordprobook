@@ -605,7 +605,7 @@ class cp_song_book:
             else:
                 version_string = self.version
                 output_file +=  self.version.replace(" ", "_")
-            self.title += " " + version_string
+            #self.title += " " + version_string
         if args['html']:
             html_path = output_file + ".html"
         else:
@@ -623,7 +623,7 @@ class cp_song_book:
 
         with open(html_path, 'w') as html:
             html.write( html_book.format(all_songs,
-                                        title=self.title + title_suffix,
+                                        title=self.title + title_suffix + version_string,
                                         for_print = args['a4'],
                                         contents=pypandoc.convert(self.contents,
                                                                     "html",
@@ -1053,7 +1053,7 @@ padding: 0cm;
 margin: 0cm;
 border-style: solid;
 border-width: 1px;
-overflow: hidden;
+oflow: hidden;
 border-color: #FFFFF;
 page-break-inside: avoid;
 font-size: 26px;
