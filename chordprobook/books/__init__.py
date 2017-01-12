@@ -596,9 +596,10 @@ class cp_song_book:
         self.contents = toc.format()
 
         output_file += suffix
+        version_string = ""
+
         if self.version:
             output_file += "-" 
-            version_string = ""
             if self.version.lower() == "auto":
                 version_string = str(datetime.datetime.now())
                 output_file +=  version_string.replace(" ", "_")
