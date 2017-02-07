@@ -3,6 +3,7 @@ import unittest
 import tempfile
 import chordprobook.books as books
 import chordprobook.chords as chords
+import os
 
 class TestStuff(unittest.TestCase):
   def test_chord_markup_normaliser(self):
@@ -18,9 +19,12 @@ class TestStuff(unittest.TestCase):
       #Check that we can build a table of contents and split it across multiple pages when necessary
       book_text = ""
       slotmachine = "samples/slot_machine_baby.cho.txt\n"
+      
       book_text += slotmachine * 30
       b = books.cp_song_book()
       b.load_from_text(book_text)
+      for song in b.songs:
+          song.format()
       toc = books.TOC(b, 3)
       self.assertEqual(len(toc.pages), 1)
       self.assertEqual(len(b.songs),30)
@@ -64,26 +68,20 @@ class TestStuff(unittest.TestCase):
       
   def test_book(self):
       book_path = "samples/sample.book.txt"
-      sample_book_text = open(book_path).read()
       b = books.cp_song_book(path=book_path)
-      b.load_from_text(sample_book_text)
       self.assertEqual(len(b.songs), 4)
       self.assertEqual(b.songs[1].key, "C")
       self.assertEqual(b.songs[2].key, "Bb")
       
       book_path="samples/sample-lazy.book.txt"
-      """This one has auto-transpose turned on"""
-      sample_book_text = open(book_path).read()
+   
       b = books.cp_song_book( path=book_path)
-      b.load_from_text(sample_book_text)
       self.assertEqual(len(b.songs), 8)
       self.assertEqual(b.title, "Sample songs")
      
       book_path="samples/sample-lazy-uke.book.txt"
-      sample_book_text = open(book_path).read()
       b = books.cp_song_book(path=book_path)
-      b.load_from_text(sample_book_text)
-     
+      
       self.assertEqual(len(b.songs), 4)
       #self.assertEqual(b.songs[3].transpose, -3)
       self.assertEqual(b.songs[3].title, "Universe")
@@ -92,49 +90,64 @@ class TestStuff(unittest.TestCase):
       
   def test_versioned_book(self):
       book_path = "samples/sample.book.txt"
-      sample_book_text = open(book_path).read()
       b = books.cp_song_book(path=book_path)
-      b.load_from_text(sample_book_text)
 
       self.assertEqual(b.version, None)
-      
-      book_path = "samples/sample_versioned.book.txt"
-      sample_book_text = open(book_path).read()
-         
-
+      book_path = "samples/sample_versioned.book.txt"         
       b = books.cp_song_book(path=book_path)
-      b.load_from_text(sample_book_text)
       self.assertEqual(b.version, "v1.1a")
-
+      
       book_path = "samples/sample_auto_versioned.book.txt"
-      sample_book_text = open(book_path).read()
       b = books.cp_song_book(path=book_path)
-      b.load_from_text(sample_book_text)
       self.assertEqual(b.version, 'auto')
 
-
-def test_setlist(self):
+      
+  def test_setlist(self):
+   
+      #This is our setlist
       book_path = "samples/sample.setlist.md"
+      b = books.cp_song_book()
+
+      #Now use the setlist to order the book - should find the {book directive}
+      b.order_by_setlist(book_path)
 
       
-      sample_book_text = open(book_path).read()
-      b = books.cp_song_book(path=book_path)
-      b.load_from_text(sample_book_text)
+      self.assertEqual(len(b.songs), 4)
+      self.assertEqual(len(b.sets), 2)
+ 
+      b.format()
+      
+      keys = ["C","A","G","Bb"]
+      actual_keys = [s.key for s in b.songs]
+      self.assertEqual(keys, actual_keys)
 
+      original_keys = ["C","C","G","C"]
+      actual_keys = [s.original_key for s in b.songs]
+      self.assertEqual(original_keys, actual_keys)
+
+
+      
+  def test_versioned_setlist(self):
+      book_path = "samples/sample.setlist.md"
+      sample_book_text = open(book_path).read()
+      # This is cumbersome, but if you want to pass a string to setlist
+      # you need to set the path first
+      b = books.cp_song_book()
+      b.set_path(book_path)
+      b.order_by_setlist(sample_book_text)
       self.assertEqual(b.version, None)
+
       
-      book_path = "samples/sample_versioned.book.txt"
-      sample_book_text = open(book_path).read()
-         
+      
+      book_path = "samples/sample_versioned.setlist.md"
+      b = books.cp_song_book()
+      b.order_by_setlist(book_path)
+      self.assertEqual(b.version, "32b")
 
-      b = books.cp_song_book(path=book_path)
-      b.load_from_text(sample_book_text)
-      self.assertEqual(b.version, "v1.1a")
 
-      book_path = "samples/sample_auto_versioned.book.txt"
-      sample_book_text = open(book_path).read()
-      b = books.cp_song_book(path=book_path)
-      b.load_from_text(sample_book_text)
+      book_path = "samples/sample_auto_versioned.setlist.md"
+      b = books.cp_song_book()
+      b.order_by_setlist(book_path)
       self.assertEqual(b.version, 'auto')
       
   def test_directive(self):
@@ -148,11 +161,11 @@ def test_setlist(self):
       d = books.directive("{grids}")
       self.assertEqual(d.type, books.directive.grids)
       
-      #Allow extra space
+      # Allow extra space
       d = books.directive(" {grids}   ")
       self.assertEqual(d.type, books.directive.grids)
       
-      #Allow things to have values, or not
+      #A llow things to have values, or not
       d = books.directive(" {grids: C#7}   ")
       self.assertEqual(d.type, books.directive.grids)
       self.assertEqual(d.value, "C#7")
@@ -196,7 +209,41 @@ def test_setlist(self):
       song1 =  books.cp_song("{title: 1 page}\n{key: C}\n{transpose: +2 -3}")
       self.assertEqual(song1.standard_transpositions, [0, 2, -3])
 
-      
+  def test_numbered_chords(self):
+    # Check that nashville/numbered chords are working
+    song = books.cp_song("{title: A Song!}\nSome stuff\n{key: C}\n[C] [F] [G]", nashville=True)
+    song.format()
+    self.assertTrue("[I]" in song.md)
+    self.assertTrue("[IV]" in song.md)
+    self.assertTrue("[V]" in song.md)
+
+    # Lowercase for minors
+    song = books.cp_song("{title: A Song!}\nSome stuff\n{key: Cm}\n[Cm] [Fm] [G]", nashville=True)
+    song.format()
+    self.assertTrue("[i]" in song.md)
+    self.assertTrue("[iv]" in song.md)
+    self.assertTrue("[V]" in song.md)
+
+    # Check that charts are working
+    song = books.cp_song("{title: A Song!}\nSome stuff\n{key: Cm}\n[Cm] [Fm] [G]", nashville=True, major_chart=True)
+    song.format()
+    self.assertTrue("[vi]" in song.md)
+    self.assertTrue("[ii]" in song.md)
+    self.assertTrue("[III]" in song.md)
+
+
+    # Check that we can change keys
+    song = books.cp_song("{title: A Song!}\nSome stuff\n{key: C}\n[C] [F] [G]\n{key: G}\n [C] [F] [G]", nashville=True)
+    song.format()
+    self.assertTrue("[I]" in song.md)
+    self.assertTrue("[IV]" in song.md)
+    self.assertTrue("[V]" in song.md)
+    
+    # Should be variants for these cos of the key change
+    self.assertTrue("[IV]" in song.md)
+    self.assertTrue("[♭VII]" in song.md)
+    self.assertTrue("[I]" in song.md)
+    
   def test_parse(self):
     song = books.cp_song("{title: A Song!}\nSome stuff\n{key: C#}\n")
     self.assertEqual(song.key, "C#")
@@ -366,7 +413,6 @@ After the chorus
 
 
 """
-    # TODO TEST IS MISSING!
     song = books.cp_song("{instrument: Thongaphone}") 
     self.assertEqual( "Thongaphone", song.local_instruments.get_instrument_by_name("Thongaphone").name)
     self.assertEqual( "Thongaphone", song.local_instruments.get_instrument_by_name("Thongaphone").name)
@@ -383,20 +429,7 @@ After the chorus
 
 
     
-  def test_transpose(self):
-    c = chords.transposer(2)
-    self.assertEqual(c.transpose_note("C"), "D")
-    c = chords.transposer(1)
-    self.assertEqual(c.transpose_note("B"), "C")
-    c = chords.transposer(2)
-    self.assertEqual(c.transpose_chord("C"), "D")
-    c = chords.transposer(1)
-    self.assertEqual(c.transpose_chord("C7"), "C#7")
-    c = chords.transposer(1)
-    self.assertEqual(c.transpose_chord("Asus4"), "Bbsus4")
-    c = chords.transposer(-1)
-    self.assertEqual(c.transpose_chord("C#7"), "C7")
-    self.assertEqual(c.transpose_chord("Cm"), "Bm")
-    self.assertEqual(c.transpose_chord("G#m/B"), "Gm/Bb")
+
+    
 if __name__ == '__main__':
     unittest.main()

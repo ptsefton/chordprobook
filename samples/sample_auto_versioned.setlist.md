@@ -1,6 +1,7 @@
 {Title: Gig number 1,000}
+{version: auto}
 
-{book: sample-lazy-no-transpose.book.txt}
+{book: sample-lazy.book.txt}
 
 # Set 1
 

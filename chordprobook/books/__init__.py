@@ -167,7 +167,7 @@ def normalize_chord_markup(line):
 
 class cp_song:
     """ Represents a song, with the text, key, chord grids etc"""
-    def __init__(self, song, title="Song", transpose=0, blank = False, path = None, instruments = None, instrument_name=None):
+    def __init__(self, song, title="Song", transpose=0, blank = False, path = None, instruments = None, instrument_name=None, nashville=False, major_chart=False):
         self.blank = blank
         if instruments == None:
             self.instruments = chordprobook.instruments.Instruments()
@@ -183,7 +183,9 @@ class cp_song:
         self.original_key = None
         self.path = path
         self.notes_md = ""
-        self.transpose = transpose
+        self.nashville = nashville
+        self.major_chart = nashville and major_chart
+        self.transpose = transpose if not nashville else False
         self.transposer = chords.transposer(transpose)
         self.standard_transpositions = [0]
         self.title = ""
@@ -246,8 +248,11 @@ class cp_song:
                     new_text += "\n**%s**\n" % dir.value
                     
                 elif dir.type == directive.key:
-                    self.original_key = dir.value
-                    self.key = self.transposer.transpose_chord(self.original_key)
+                    if self.original_key:
+                         new_text += "%s\n" % line
+                    else:
+                        self.original_key = dir.value
+                        self.key = self.transposer.transpose_chord(self.original_key)
                     
                 elif dir.type == directive.transpose:
                     trans = dir.value.split(" ")
@@ -333,23 +338,49 @@ class cp_song:
 
         key_string = self.get_key_string()
         title = "%s %s" % (self.title, key_string)
+        
+        
+            
         self.chords_used = []
-          
+
+        # TODO Move this to a stand-alone-function
+        nv = chordprobook.chords.ChordChart() if self.nashville and self.original_key else None
+        
         def format_chord(chord):
-            if self.transposer.offset != 0:
-                chord = self.transposer.transpose_chord(chord)
+            if nv:
+               chord = nv.nashvillize(chord,key=key, major_chart=self.major_chart)
+            else:
+                if self.transposer.offset != 0:
+                    chord = self.transposer.transpose_chord(chord)
     
-            if self.grids != None:
-                clean_chord = self.grids.clean_chord_name(chord)
-                if not clean_chord in self.chords_used:
-                    self.chords_used.append(clean_chord)
+                if self.grids != None:
+                    clean_chord = self.grids.clean_chord_name(chord)
+                    if not clean_chord in self.chords_used:
+                        self.chords_used.append(clean_chord)
         
             return("[%s]" % chord)
-                
-        song =  self.text
-        
-        #Chords
-        song = re.sub("\[(.*?)\]",lambda m: format_chord(m.group(1)),song)
+
+        key = self.original_key
+        song =  ""
+        tr = chordprobook.chords.transposer(key=key, major_chart=self.major_chart)
+
+        if tr.minor and self.major_chart:
+            song += "*NOTE: Chart is for relative major key* \n"
+
+        for line in self.text.split("\n"):
+            dir = directive(line)
+            if dir.type == directive.key:
+                key = dir.value.strip()
+                if self.original_key:
+                    # TODO fix minors
+                    tr = chordprobook.chords.transposer(key=key)
+                    minor = "(minor)" if tr.minor else ""
+                    if self.nashville:
+                        song += "\n### MOD: %+d semitones %s \n" % (tr.offset - tr.get_note_index(self.original_key) % 12, minor)
+                    else:
+                        song += "\n### Change key to %s\n" % key
+            else:
+                song += re.sub("\[(.*?)\]",lambda m: format_chord(m.group(1)), line) + "\n"
             
         if stand_alone and instrument_name != None:
             title = "%s (%s)" % (title, instrument_name)
@@ -359,7 +390,9 @@ class cp_song:
 
     def save_as_single_sheet(self, instrument_name, trans, out_dir):
         self.format(transpose = trans, instrument_name=instrument_name)
-        if self.key != None:
+        if self.nashville:
+            suffix_string = "_nashville"
+        elif self.key != None:
             suffix_string = "_key_%s" % self.key
         else:
             suffix_string = "_" + str(trans) if trans != 0 else ""
@@ -442,12 +475,7 @@ class cp_song:
 </div>
         """ % song
       
-        
-        
-         #Split song on new page, iterate...
-        #grid_md = "<div>%s</div>" 
-        #song = song.replace("<!-- new_page -->", "\n</div></div></div><div class='page'><div class='song-page'><div class='song-text'>")
-        # TODO, split chords
+    
         return pypandoc.convert(song, 'html', format='md')
 
     def to_stand_alone_html(self):
@@ -467,10 +495,8 @@ class cp_song_book:
     transposition_options = ("all","0","1")
     transpose_all, do_not_transpose, transpose_first = transposition_options
     default_title = 'Songbook'
-    def __init__(self, keep_order = False, title=None, instruments = None, instrument_name=None, path="."):
+    def __init__(self, keep_order = False, title=None, instruments = None, instrument_name=None, path=".", nashville=False, major_chart=False):
         self.version = None
-        self.path = path
-        self.dir, self.filename = os.path.split(self.path)
         self.title = title
         self.songs = [] #songs
         self.default_instrument_names = []
@@ -479,18 +505,27 @@ class cp_song_book:
         else:
             self.instruments = instruments 
         self.instrument_name_passed = instrument_name
+        self.nashville = nashville
+        self.major_chart = nashville and major_chart
         self.text = ""
         self.keep_order = keep_order
         self.sets = [] #Song-like objects to hold rip-out-able set lists
         self.auto_transpose = cp_song_book.do_not_transpose
-       
+        #If we're passed a file, load it
+        self.set_path(path)
+        if os.path.isfile(path):
+            with open(path) as p:
+                self.load_from_text(p.read(), relative_to=self.dir)
+        
     
-    def set_path(self,path):
+    def set_path(self, path="."):
         self.path = path
-        self.dir, self.filename = os.path.split(self.path)
+        self.dir, self.filename = os.path.split(path)
         
     def sort_alpha(self):
-        self.songs.sort(key= lambda song: re.sub("(?i)^(the|a|\(.*?\)) ", "", song.title.lower()))
+        #self.songs.sort(key= lambda song: re.sub("(?i)^(the|a|\(.*?\)) ", "", song.title.lower()))
+        self.songs.sort(key= lambda song: song.title.lower())
+
         
     def to_md(self):
         """ Generate Markdown version of a book """
@@ -510,14 +545,15 @@ class cp_song_book:
                         self.add_song_from_file(open(os.path.join(root, filename)))
 
     def add_song_from_text(self, text, name, transpose=0):
-        song = cp_song(text , path=name, transpose=transpose, instruments = self.instruments, instrument_name=self.instrument_name_passed)
-        if self.auto_transpose == cp_song_book.transpose_all:
-            transpositions_needed = song.standard_transpositions
-        elif self.auto_transpose == cp_song_book.transpose_first and len(song.standard_transpositions) > 1:
-            transpositions_needed = [song.standard_transpositions[1]]
+        song = cp_song(text , path=name, transpose=transpose, instruments = self.instruments, instrument_name=self.instrument_name_passed, nashville=self.nashville, major_chart=self.major_chart)
+        transpositions_needed = []
+        if not self.nashville and self.auto_transpose == cp_song_book.transpose_all:
+                transpositions_needed = song.standard_transpositions
+        elif  not self.nashville and self.auto_transpose == cp_song_book.transpose_first and len(song.standard_transpositions) > 1:
+                transpositions_needed = [song.standard_transpositions[1]]
         else:
             self.songs.append(song)
-            transpositions_needed = []
+            
             
         #Add transposed versions of songs
         for trans in transpositions_needed:
@@ -533,12 +569,15 @@ class cp_song_book:
            
         
     def load_from_text(self, text, relative_to="."):
+        """ Reads a book in from a sting containing paths or directives """
+        
         self.text = text
         dir_list = []
         for line in self.text.split("\n"):
+            line = line.strip()
             directiv = directive(line)
             if directiv.type == None:
-                if not line.startswith("#") and not line.strip() == "":
+                if not line.startswith("#") and not line == "":
                     #Assume this is a path
                     #Look for transpose TODO: use a proper parse method
                     transpose = 0
@@ -551,7 +590,10 @@ class cp_song_book:
                             transpositions += [int(x) for x in trans]
                             transpose = transpositions[0]
                     song_path = os.path.join(self.dir, line.strip())
-                    self.add_song_from_file(open(song_path), transpose)                    
+                    if os.path.isfile(song_path):
+                        self.add_song_from_file(open(song_path), transpose)
+                    else:
+                        print("Can't find song %s" % song_path)
             else:
                 if directiv.type == directive.title and self.title == None:
                     self.title = directiv.value
@@ -568,26 +610,16 @@ class cp_song_book:
                         self.auto_transpose = directiv.value.lower()
 
                   
-                        
-                        
-
-
-    def __songs_to_html(self, instrument_name, args, output_file):
-        all_songs = self.sets_md
+    def format(self, instrument_name=None):
+        
         if self.title == None:
             self.title = cp_song_book.default_title
 
         # Format songs, need to know how long they are
         for song  in self.songs:
             song.format(instrument_name = instrument_name, stand_alone=False)
-
             
-        if instrument_name != None:
-            suffix = "_%s" % instrument_name.lower().replace(" ", "_")
-            title_suffix = " (for&nbsp;%s)" % instrument_name
-        else:
-            suffix = ""
-            title_suffix = ""
+
 
 
         self.reorder(1, old=None, new_order=[], waiting=[])
@@ -595,18 +627,33 @@ class cp_song_book:
         toc = TOC(self, 2)
         self.contents = toc.format()
 
+
+        #self.title += " " + version_string
+            
+
+        
+
+    def __songs_to_html(self, instrument_name, args, output_file):
+        self.format(instrument_name=instrument_name)
+        all_songs = self.sets_md
+
+        if instrument_name != None:
+            suffix = "_%s" % instrument_name.lower().replace(" ", "_")
+            title_suffix = " (for&nbsp;%s)" % instrument_name
+        else:
+            suffix = ""
+            title_suffix = ""
         output_file += suffix
         version_string = ""
 
         if self.version:
             output_file += "-" 
             if self.version.lower() == "auto":
-                version_string = str(datetime.datetime.now())
+                version_string = "\n" + str(datetime.datetime.now())
                 output_file +=  version_string.replace(" ", "_")
             else:
-                version_string = self.version
+                version_string = "\n" + self.version
                 output_file +=  self.version.replace(" ", "_")
-            #self.title += " " + version_string
         if args['html']:
             html_path = output_file + ".html"
         else:
@@ -619,7 +666,7 @@ class cp_song_book:
 
         # Now add formatted songs to output in the right order
         for song in self.songs:
-            all_songs += song.to_html()
+            all_songs += song.to_html() 
 
 
         with open(html_path, 'w') as html:
@@ -637,6 +684,8 @@ class cp_song_book:
             subprocess.call(command)
             #subprocess.call(["open", pdf_path])
 
+            
+
     def to_html_and_pdf(self,args, output_file):
         self.sets_md = ""
         for set in self.sets:
@@ -644,8 +693,11 @@ class cp_song_book:
             self.sets_md += set.to_html()
         
         if self.instrument_name_passed == None:
-            for instrument_name in  self.default_instrument_names + [None]:
-                self.__songs_to_html(instrument_name, args, output_file)
+            if self.nashville:
+                self.__songs_to_html(None, args, output_file)
+            else:
+                for instrument_name in  self.default_instrument_names + [None]:
+                    self.__songs_to_html(instrument_name, args, output_file)
         else:
             self.__songs_to_html(self.instrument_name_passed, args, output_file)
             
@@ -677,6 +729,8 @@ class cp_song_book:
                         
     def order_by_setlist(self, setlist):
         """
+        setlist: A string or path
+
         Use a setlist to order the book. Setlist will already have {title: } and {book: }
         directives removed by this point.
 
@@ -693,16 +747,33 @@ class cp_song_book:
 
         ...
         """
+        if os.path.exists(setlist):
+            self.set_path(setlist)
+            with open(setlist) as s:
+                setlist = s.read()
+            
+        #First-up, do we already have songs in this book, if not look for some
+        if self.songs == []:
+            setlist, book_filename = extract_book_filename(setlist)
+            if book_filename:
+                book_path = os.path.join(self.dir, book_filename)
+                with open(book_path) as b:
+                    self.load_from_text(b.read())
+            
         new_order = []
         current_set = None
         new_set = False
         current_song = None
+        self.version = None
         for potential_song in setlist.split("\n"):
-            if potential_song.strip() != "":
+            potential_song = potential_song.strip()
+            if potential_song != "":
                 if potential_song.startswith("{") and potential_song.endswith("}"):
                     dir = directive(potential_song)
                     if dir.type == directive.title:
                         self.title = dir.value
+                    elif dir.type == directive.version:
+                        self.version = dir.value
                 potential_song = re.sub("\s+", " ", potential_song)        
                 if potential_song.startswith("# "):
                     potential_song = potential_song.replace("# ","").strip()
@@ -715,13 +786,12 @@ class cp_song_book:
                     new_set = True
 
                 elif potential_song.startswith("## "): # A song
-                    
                     song_name = potential_song.replace("## ", "").strip()
                     song_name, transpositions = extract_transposition(song_name)
+                    song_name = song_name.strip()
                     restring = song_name.replace(" +", ".*?").lower()
                     regex = re.compile(restring)
                     found_song = False
-               
                     for song in self.songs:
                         if re.search(regex, song.title.lower()) != None:
                             #Copy the song in case it is in the setlist twice with different treatment, such as keys or notes
@@ -740,6 +810,7 @@ class cp_song_book:
                             new_order.append(current_song)
                             current_set.text +=  "## %s\n" % song_name
                             found_song = True
+                            break
                             
                     if not found_song:
                         new_order.append(cp_song("{title: %s (not found)}" % song_name))

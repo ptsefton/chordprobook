@@ -28,12 +28,8 @@ class TestChorddiagram(unittest.TestCase):
     #'Normal' chord, diagram should have 5 frets
     self.assertEqual(d.num_frets, 5)
 
-   
-      
-   
     #d.show()
 
-    
     d= chords.ChordDiagram( name="G", strings=[chords.String([chords.Dot(0)]),chords.String([chords.Dot(2,1)]),chords.String([chords.Dot(3,3)]),chords.String([chords.Dot(2, 2)])])
     d.draw()
 
@@ -163,17 +159,46 @@ class TestChorddiagram(unittest.TestCase):
         d.parse_definition(stupid)        
         d.draw()
         self.assertEqual(d.non_played_strings, 1)
-        
-    
-       
-        
-        
 
-  def test_grid(self):
+  def test_transpose(self):
+    c = chords.transposer(2)
+    self.assertEqual(c.transpose_note("C"), "D")
+    c = chords.transposer(1)
+    self.assertEqual(c.transpose_note("B"), "C")
+    c = chords.transposer(2)
+    self.assertEqual(c.transpose_chord("C"), "D")
+    c = chords.transposer(1)
+    self.assertEqual(c.transpose_chord("C7"), "C#7")
+    c = chords.transposer(1)
+    self.assertEqual(c.transpose_chord("Asus4"), "Bbsus4")
+    c = chords.transposer(-1)
+    self.assertEqual(c.transpose_chord("C#7"), "C7")
+    self.assertEqual(c.transpose_chord("Cm"), "Bm")
+    self.assertEqual(c.transpose_chord("G#m/B"), "Gm/Bb")
+
+  def test_nashvillization(self):
+      #TODO refactor code so this is no longer hanging off the ChordChart class
+      chart = chords.ChordChart()
+      self.assertEqual(chart.nashvillize("C","C"), "I")
+      self.assertEqual(chart.nashvillize("C7","C"), "I⁷")
+      self.assertEqual(chart.nashvillize("Cm","C"), "i")
+      self.assertEqual(chart.nashvillize("Bb","Bb"), "I")
+      self.assertEqual(chart.nashvillize("G/F#","C"), "V/♭5")
+      self.assertEqual(chart.nashvillize("Bb/A","Bb"), "I/7")
+      self.assertEqual(chart.nashvillize("Bb/A","Bb"), "I/7")
+      self.assertEqual(chart.nashvillize("Am","Am"), "i")
+      self.assertEqual(chart.nashvillize("Am/G","Am"), "i/7")
+      self.assertEqual(chart.nashvillize("Am/C","Am"), "i/3")
+
+      self.assertEqual(chart.nashvillize("Am/C","Am", major_chart=True), "vi/1")
+      self.assertEqual(chart.nashvillize("Am","Am", major_chart=True), "vi")
+
+      self.assertEqual(chart.nashvillize("C","C", major_chart=True), "I")
+      self.assertEqual(chart.nashvillize("Cmaj7","C", major_chart=True), "IΔ")
+      
+  def test_normalisation(self):
         chart = chords.ChordChart()
         chart.load_tuning_by_name("Soprano Uke")
-        self.assertEqual(chart.grid_as_md("F#7"), chart.grid_as_md("F#7!"))
-        #chart.get_default("F#7").show()
 
         #Check normalisation code
         self.assertEqual(chart.grid_as_md("F#7///"), chart.grid_as_md("F#7"))
@@ -182,7 +207,7 @@ class TestChorddiagram(unittest.TestCase):
         self.assertEqual(chart.normalise_chord_name("Cmaj"), "C")
         self.assertEqual(chart.normalise_chord_name("CM7"), "Cmaj7")
         self.assertEqual(chart.normalise_chord_name("Cmaj7"), "Cmaj7")
-        self.assertEqual(chart.normalise_chord_name("C+"), "Clsaug")
+        self.assertEqual(chart.normalise_chord_name("C+"), "Caug")
 
         self.assertEqual(chart.clean_chord_name("A!"), "A")
         self.assertEqual(chart.normalise_chord_name("AM7 / / /"), "Amaj7")
@@ -190,8 +215,12 @@ class TestChorddiagram(unittest.TestCase):
         # Clean removes rhythm marks but does not change chord names
         self.assertEqual(chart.clean_chord_name("Amaj7 / / /"), "Amaj7")
         self.assertEqual(chart.clean_chord_name("AM7 / / /"), "AM7")
-
-
+        
+  def test_grid(self):
+        chart = chords.ChordChart()
+        chart.load_tuning_by_name("Soprano Uke")
+        self.assertEqual(chart.grid_as_md("F#7"), chart.grid_as_md("F#7!"))
+        #chart.get_default("F#7").show()
 
         self.assertEqual(chart.get_default("Gbm7").to_chordpro(), chart.get_default("F#m7").to_chordpro())
 

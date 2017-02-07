@@ -18,7 +18,7 @@ import chordprobook.instruments
 
 class transposer:
     """ This should have been a static method with two parameters transpose(chord_or_note, offset)
-    NOTE: This was a very bad idea - it's too complicated. TODO get rid of this class
+    NOTE: This was a very bad idea - it's too complicated. TODO get rid of this class and move functionality to note
 
     """
    
@@ -27,15 +27,45 @@ class transposer:
                      "G#": 8, "A" : 9, "Bb": 10, "A#": 10, "B": 11}
         
     __notes = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"]
+
+    __numbers = ["1", "♭2", "2", "♭3", "3", "4", "♭5", "5", "♭6", "6", "♭7", "7"]
+
+    __numbers_minor = ["1", "♭2", "2", "3", "♯3", "4", "♭5", "5", "♭6", "6", "7", "♯7"]
+
+    __romans = ["I", "♭II", "II", "♭III", "III", "IV", "♭V", "V", "♭VI", "VI", "♭VII", "VII"]
+
+    __romans_minor = ["I", "♭II", "II", "III", "♯III", "IV", "♭V", "V", "♭VI", "VI", "VII", "♯VII"]
+
+    __superscripts = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
     
-    def __init__(self, offset = 0):
-        self.offset = offset
+    def __init__(self, offset = 0, key = None, major_chart = False):
+        self.minor = False
+        if key:
+            if key.endswith("m"):
+                key = key.replace("m","")
+                self.minor = True
+            self.offset = self.__note_indicies[key]
+            if self.minor and major_chart:
+                self.offset = (self.offset + 3) % 12
+                self.minor = False
+        else:
+            self.offset = offset
     
     def transpose_chord(self, chord_string, offset=None):
         if offset:
             self.offset = offset
         return re.sub("([A-G](\#|b)?)",(lambda x: self.transpose_note(x.group())), chord_string)
-
+    
+    def transpose_chord_nashville(self, chord_string, offset=None):
+        if offset:
+            self.offset = offset
+        parts = chord_string.split("/")
+        chord_name =  re.sub("^([A-G](\#|b)?)",(lambda x: self.transpose_note_to_roman(x.group())), parts[0])
+        
+        chord_name = chord_name.translate(self.__superscripts)
+        if len(parts) > 1:
+            chord_name += "/" + re.sub("([A-G](\#|b)?)",(lambda x: self.transpose_note_to_num(x.group())), parts[1])
+        return chord_name
                
     def get_note_index(self, note):
         return self.__note_indicies[note] if note in self.__note_indicies else none
@@ -43,15 +73,27 @@ class transposer:
     def get_note(self, index):
         return transposer.__notes[index]
    
-    def transpose_note(self, note):   
+    def transpose_note(self, note):
         note_index = self.get_note_index(note)
         new_note = (note_index + self.offset ) % 12
-        return self.__notes[new_note] if  note_index != None else note
+        return self.__notes[new_note]
+
+    def transpose_note_to_roman(self, note):
+        note_index = self.get_note_index(note)
+        new_note = (note_index - self.offset ) % 12
+        roman = self.__romans_minor[new_note] if self.minor  else self.__romans[new_note] 
+        return roman
+    
+    def transpose_note_to_num(self, note):
+        note_index = self.get_note_index(note)
+        new_note = (note_index - self.offset ) % 12
+        num = self.__numbers_minor[new_note] if self.minor else self.__numbers[new_note]
+        return num  # if  note_index != None else note
 
 class Dot:
     """
     Class to represent a single dot in the diagram ie a finger on a fret
-    use None To say 'don't play'
+    use None To say 'don't play'        
     0 for open string'
     """
     def __init__(self, fret, finger = None):
@@ -178,20 +220,38 @@ class ChordChart(object):
         chord_name = re.sub("maj","Maj", chord_name)
         chord_name = re.sub("Maj7","maj7", chord_name)
         chord_name = re.sub("M7","maj7", chord_name)
-
         chord_name = re.sub("Maj","", chord_name)
 
         #Min -> m
         chord_name = re.sub("[mM]in","m", chord_name)
-
+        
         # + -> aug
         chord_name = re.sub("\+","aug", chord_name)
-
-
-        
         tr = transposer(0)
         chord_name = tr.transpose_chord(chord_name)
         return chord_name
+
+    def nashvillize(self, chord_name, key, major_chart = False):
+        """ Transform a chord name into a numeric name (given the key), Nashville Numbering style
+
+        TODO - handle "/"
+        """
+        
+        tr = transposer(key=key, major_chart=major_chart)
+        chord_name= self.normalise_chord_name(chord_name)
+        
+         
+        #Min -> m
+        chord_name = re.sub("maj7","Δ", chord_name)
+        chord_name = re.sub("dim","°", chord_name)
+        chord_name = re.sub("aug", "⁺", chord_name)
+        
+        # + -> aug
+        chord_name = re.sub("\+","aug", chord_name)
+        chord_name = tr.transpose_chord_nashville(chord_name)
+        chord_name = re.sub("(((I|V)+)m)",lambda x: x.group(2).lower(), chord_name)
+        return chord_name
+
                 
     def grid_as_md(self, chord_name):
         # TODO: add tests
@@ -246,7 +306,6 @@ class ChordDiagram(object):
         """ Empty diagram. No strings, no frets, no nothin' """
         self.name = name
         self.strings = strings
-        #print(strings, offsets)
         if offsets:
             self.strings = []
             for offset in offsets:
@@ -479,7 +538,10 @@ class ChordDiagram(object):
 
     
 class Note:
-    """ Class for representing a note """
+    """ Class for representing a note 
+    Todo - move some of the transpose functionality into here
+
+    """
     __note_indicies = {"C": 0, "C#": 1, "Db": 1, "D": 2, "Eb": 3, "D#": 3,
                      "E" : 4, "F": 5, "F#": 6, "Gb": 6, "G": 7, "Ab": 8,
                      "G#": 8, "A" : 9, "Bb": 10, "A#": 10, "B": 11}

@@ -25,12 +25,15 @@ def convert():
     parser.add_argument('-p', '--pdf', action='store_true', help='Output pdf', default=True)
     parser.add_argument('-r', '--reference-docx', default = None, help="Reference docx file to use (eg with Heading 1 having a page-break before)")
     parser.add_argument('-o','--one-doc', action='store_true', help='Output a single document per song: assumes you want A4 PDF')
+    parser.add_argument('-n','--nashville', action='store_true', help='Use Nashville Numbering (actually Roman chord numbers rather than letter-names)')
+    parser.add_argument('-m','--major-chart', action='store_true', help='When using (Nashville/Roman) chord numbers, chart minor keys in the relative major')
+
     parser.add_argument('-b',
                         '--book-file',
-                        action='store_true',
-                        help ="""First file contains a list of files, each line optionally followed by a transposition (+|-)\d\d?
+                       default=None,
+                        help ="""File containing a list of files, each line optionally followed by a transposition {transpose: (+|-)\d\d?}
                                  eg to transpose up one tone:
-                                 song-file.cho +2, you can also add a title line: {title: Title of book}""")
+                                 song-file.cho {transpose: +2}, you can also add a title line: {title: Title of book}""")
     parser.add_argument('-s',
                         '--setlist',
                         default=None,
@@ -46,6 +49,8 @@ def convert():
     if args["instruments"]:
         instruments.describe()
         exit()
+
+        
     out_dir = args["directory"]
     output_file =  args["file_stem"]
 
@@ -62,53 +67,27 @@ def convert():
         else:
             print("No such instrument on file. Try typing ./mksong --instruments to get a list")
 
-    #Is there a setlist file?
-    if args["setlist"] == None:
-        list = None
-    else:
-       with open(args["setlist"]) as sets_file:
-           list = sets_file.read()
-       args["keep_order"] = True
-       set_dir, set_name = os.path.split(args["setlist"])
-       list, bookfile = chordprobook.books.extract_book_filename(list)
-       if bookfile != None and not args["book_file"]:
-           #No book file passed so use the one we found in the setlist
-           args["files"] = [open(os.path.join(set_dir,bookfile),'r')]
-           args["book_file"] = True
-           
-       
     
-    if args["files"] != None:
-       book = books.cp_song_book(keep_order = args['keep_order'], title=args["title"],instruments = instruments, instrument_name=args["instrument"])
-       if args["book_file"]:
-            book_file = args["files"][0]
-            book.set_path(book_file.name)
-            book_dir, book_name = os.path.split(book_file.name)
-            #base output path on book unless user passed a different name
-            if args["file_stem"] == default_output_file:
-                output_file, _ = os.path.splitext(book_name)
-                output_file = os.path.join(book_dir, out_dir, output_file)
-            text = book_file.read()
-            book.load_from_text(text)
+    book = books.cp_song_book(path = args["book_file"] or ".", keep_order = args['keep_order'] and not args['setlist'], title=args["title"],instruments = instruments,
+                                 instrument_name=args["instrument"], nashville=args["nashville"], major_chart=args["major_chart"])
+
+    if args["book_file"]:
+        #base output path on book unless user passed a different name
+        book_dir, book_name = os.path.split(args["book_file"])
+        output_file = os.path.join(book_dir, out_dir, book_name)
+        if not args["files"]:
+            print ("Read book file, ignored other files passed")
             
-       else:
-           output_file = os.path.join(out_dir, output_file)
-           for f in args['files']:
-                book.add_song_from_file(f)
-    else:
-        print("ERROR: You need to pass one or more files to process")
-  
-    # Make all the input files into a book object
-   
+    elif args["files"] != None:
+       output_file = os.path.join(out_dir, output_file)
+       for f in args['files']:
+            book.add_song_from_file(f)
+
     
-    # If there's a setlist file use it
-    if args["setlist"] != None:
-       #Let the setlist override titles set elsewere
-       book.order_by_setlist(list)
-       if args["book_file"] or args["file_stem"] == default_output_file:
-            set_dir, set_name = os.path.split(args["setlist"])
-            
-            output_file = os.path.join(set_dir, out_dir, set_name)
+    if args["setlist"]:
+         book.order_by_setlist(args["setlist"])
+         set_dir, set_name = os.path.split(args["setlist"])
+         output_file = os.path.join(set_dir, out_dir, set_name)
 
     if args["alphabetically"]:
         book.sort_alpha()
