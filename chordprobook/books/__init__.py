@@ -77,8 +77,8 @@ class TOC:
         for song in book.songs:
             if not song.blank:
                 song_count += 1
+                page_count += song.pages
                 entries.append("%s %s <span style='float:right'> %s</span>    " % (song.title, song.get_key_string(), str(page_count)))
-            page_count += song.pages
 
         entries.sort(key= lambda title: re.sub("(?i)^(the|a|\(.*?\)) ", "", title))
         entries = sets + entries
@@ -363,8 +363,7 @@ class cp_song:
         key = self.original_key
         song =  ""
         tr = chordprobook.chords.transposer(key=key, major_chart=self.major_chart)
-        print(key)
-        print(tr.offset)
+
         if self.major_chart:
             song += "*NOTE: Chart is for relative major key* \n"
 
