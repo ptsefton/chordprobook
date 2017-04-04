@@ -204,8 +204,8 @@ class ChordChart(object):
          # Allow ! for stacatto chord
         chord_name = re.sub("\!$","", chord_name)
 
-        # Allow / / / inside chord diagrams for strumming
-        chord_name = re.sub("(/* *)*$","", chord_name)
+        # Allow / / / ,, - inside chords for strumming
+        chord_name = re.sub("([/,-]* *)*$","", chord_name)
         return chord_name
 
     def normalise_chord_name(self, chord_name):
@@ -227,8 +227,8 @@ class ChordChart(object):
 
         # + -> aug
         chord_name = re.sub("\+","aug", chord_name)
-        #tr = transposer(0)
-        #chord_name = tr.transpose_chord(chord_name)
+        tr = transposer(0)
+        chord_name = tr.transpose_chord(chord_name)
         return chord_name
 
     def nashvillize(self, chord_name, key, major_chart = False):
