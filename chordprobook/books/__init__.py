@@ -74,11 +74,17 @@ class TOC:
                 sets.append("Set: %s <span style='float:right'>%s</span>    " % ( song.title, str(page_count)))
             page_count += song.pages
 
+
+        # Make sure we don't have a song on the back of a setlist (so you can rip out the setlist)
+        if len(book.sets) > 0 and  (self.target_num_pages + len(book.sets)) % 2 == 0:
+            book.songs.insert(0, cp_song("", title="", blank=True))
+            page_count += 1
+
         for song in book.songs:
             if not song.blank:
                 song_count += 1
-                page_count += song.pages
                 entries.append("%s %s <span style='float:right'> %s</span>    " % (song.title, song.get_key_string(), str(page_count)))
+                page_count += song.pages
 
         entries.sort(key= lambda title: re.sub("(?i)^(the|a|\(.*?\)) ", "", title))
         entries = sets + entries
@@ -88,9 +94,8 @@ class TOC:
         else:
             self.pages = [entries]
 
-        #Make sure that there isn't a song on the back of a setlist
-        if  (len(self.pages) + len(book.sets)) % 2 == 0:
-            book.songs.insert(0, cp_song("", title="", blank=True))
+
+
 
 
     def format(self):
@@ -525,8 +530,8 @@ class cp_song_book:
         self.dir, self.filename = os.path.split(path)
 
     def sort_alpha(self):
-        #self.songs.sort(key= lambda song: re.sub("(?i)^(the|a|\(.*?\)) ", "", song.title.lower()))
-        self.songs.sort(key= lambda song: song.title.lower())
+        self.songs.sort(key= lambda song: re.sub("(?i)^(the|a|\(.*?\)) ", "", song.title.lower()))
+        #self.songs.sort(key= lambda song: song.title.lower())
 
 
     def to_md(self):
