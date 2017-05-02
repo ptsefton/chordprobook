@@ -820,7 +820,9 @@ class cp_song_book:
                             break
 
                     if not found_song:
-                        new_order.append(cp_song("{title: %s (not found)}" % song_name))
+                        current_song = cp_song("{title: %s (not found)}" % song_name)
+                        new_order.append(current_song)
+                        current_set.text +=  "## %s (NO CHART)\n" % song_name
 
                 elif current_song != None:
                     current_song.notes_md += potential_song + "\n\n"
