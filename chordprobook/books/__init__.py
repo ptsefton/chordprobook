@@ -119,7 +119,7 @@ class TOC:
 
 class directive:
     """Simple data structure for a directive, with name and optional value"""
-    title, subtitle, key, start_chorus, end_chorus, start_tab, end_tab, start_bridge, end_bridge, transpose, new_page, define, grids, comment, instrument, tuning, dirs, files, version = range(0,19)
+    title, subtitle, key, start_chorus, end_chorus, start_tab, end_tab, start_bridge, end_bridge, transpose, new_page, define, grids, comment, instrument, tuning, dirs, files, version, page_image = range(0,20)
     directives = {"t": title,
                   "title": title,
                   "st": subtitle,
@@ -150,7 +150,9 @@ class directive:
                   "tuning": tuning,
                   "dirs": dirs,
                   "files": files,
-                  "version": version}
+                  "version": version,
+                  "page_image": page_image,
+                  "pi": page_image}
 
 
     def __init__(self, line):
@@ -187,6 +189,10 @@ class cp_song:
         self.pages = 1
         self.original_key = None
         self.path = path
+        self.dir = "."
+        if self.path:
+            self.dir, _ = os.path.split(self.path)
+
         self.notes_md = ""
         self.nashville = nashville
         self.major_chart = nashville and major_chart
@@ -204,7 +210,6 @@ class cp_song:
 
     def parse(self):
         """ Deal with directives and turn song into markdown"""
-        in_chorus = False
         in_tab = False
         in_block = False
         new_text = ""
@@ -214,9 +219,7 @@ class cp_song:
             if dir.type == None:
                 if not line.startswith('#'):
                     line = normalize_chord_markup(line)
-                    if in_chorus:
-                        #">" is Markdown for blockquote
-                        new_text += "> "
+                  
 
                     if in_tab:
                         #Four spaces in Markdown means preformatted
@@ -240,11 +243,9 @@ class cp_song:
                         if classs:
                             in_block = True
                             new_text += "<div class='%s'>" % classs
-                    if in_chorus:
-                        #">" is Markdown for blockquote
-                        new_text += "\n> **%s**\n" % dir.value
-                    else:
-                        new_text += "\n**%s**\n" % dir.value
+                    
+                    
+                    new_text += "\n**%s**\n" % dir.value
 
                 elif dir.type == directive.title:
                     self.title += dir.value
@@ -263,12 +264,14 @@ class cp_song:
                     trans = dir.value.split(" ")
                     self.standard_transpositions += [int(x) for x in trans]
 
-                elif dir.type in [directive.start_chorus, directive.start_bridge]:
-                    #Treat bridge and chorus formatting the same
-                    in_chorus = True
+                elif dir.type  == directive.start_chorus:
+                    new_text += "<blockquote class='chorus'>\n"
+                
+                elif dir.type  == directive.start_bridge:
+                    new_text += "<blockquote class='bridge'>\n"
 
                 elif dir.type in [directive.end_chorus, directive.end_bridge]:
-                    in_chorus = False
+                    new_text += "</blockquote>\n"
 
                 elif dir.type == directive.start_tab and not in_tab:
                     in_tab = True
@@ -285,6 +288,14 @@ class cp_song:
                         in_block = False
                     new_text +=  "\n<!-- new_page -->\n"
                     self.pages += 1
+
+                elif dir.type == directive.page_image:
+                    if in_block:
+                        new_text += "</div>\n"
+                        in_block = False
+                    new_text += "<img src='file://%s/%s' width='680'/>"  % (self.dir, dir.value)
+                    print(new_text)
+
 
                 elif dir.type == directive.instrument:
                     inst_name = dir.value
@@ -552,7 +563,8 @@ class cp_song_book:
                         self.add_song_from_file(open(os.path.join(root, filename)))
 
     def add_song_from_text(self, text, name, transpose=0):
-        song = cp_song(text , path=name, transpose=transpose, instruments = self.instruments, instrument_name=self.instrument_name_passed, nashville=self.nashville, major_chart=self.major_chart)
+        path = os.path.join(self.dir, name)
+        song = cp_song(text , path=path, transpose=transpose, instruments = self.instruments, instrument_name=self.instrument_name_passed, nashville=self.nashville, major_chart=self.major_chart)
         transpositions_needed = []
         if not self.nashville and self.auto_transpose == cp_song_book.transpose_all:
                 transpositions_needed = song.standard_transpositions
@@ -572,7 +584,7 @@ class cp_song_book:
     def add_song_from_file(self, file, transpose=0):
         """ Adds a song from a file to a book and works out how many transposed versions to add """
         with file as f:
-           self.add_song_from_text(f.read(), f.name, transpose)
+           self.add_song_from_text(f.read(), os.path.abspath(f.name), transpose)
 
 
     def load_from_text(self, text, relative_to="."):
@@ -675,7 +687,7 @@ class cp_song_book:
         for song in self.songs:
             all_songs += song.to_html()
 
-
+        html_path = "test.html"
         with open(html_path, 'w') as html:
             html.write( html_book.format(all_songs,
                                         title=self.title + title_suffix + version_string,
@@ -684,7 +696,7 @@ class cp_song_book:
                                                                     "html",
                                                                     format="md")))
         if pdf_path != None:
-            print("Outputting PDF:", pdf_path)
+            print("Outputting PDF:", pdf_path, html_path)
             command = ['wkhtmltopdf', '-s','A4', '--enable-javascript', '--print-media-type', '--outline',
                        '--outline-depth', '1','--header-right', "[page]/[toPage]",
                        '--header-line', '--header-left', "%s" % self.title, html_path, pdf_path]
@@ -1096,11 +1108,18 @@ p, blockquote {
      -webkit-margin-after: .6em;
 }
 
-blockquote {
+blockquote.chorus {
   border-left: 5px solid #c00;
   padding-left: 5px;
   margin-left: 0em;
 }
+
+blockquote.bridge {
+  border-left: 5px dotted #00b;
+  padding-left: 5px;
+  margin-left: 0em;
+}
+
 
 .page {
 width: 20cm;

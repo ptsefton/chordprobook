@@ -14,12 +14,12 @@ class TestStuff(unittest.TestCase):
      self.assertEqual(books.normalize_chord_markup("[A7]xxxxxxx[A]yyyy[A9]"), "[A7] xxxxxxx[A]yyyy [A9]")
      self.assertEqual(books.normalize_chord_markup("When he chucked me off the[D] pier at Woolloomoo[G]loo [C] [G]"), "When he chucked me off the [D] pier at Woolloomoo[G]loo [C] [G]")
 
-      
+
   def test_TOC(self):
       #Check that we can build a table of contents and split it across multiple pages when necessary
       book_text = ""
       slotmachine = "samples/slot_machine_baby.cho.txt\n"
-      
+
       book_text += slotmachine * 30
       b = books.cp_song_book()
       b.load_from_text(book_text)
@@ -28,8 +28,8 @@ class TestStuff(unittest.TestCase):
       toc = books.TOC(b, 3)
       self.assertEqual(len(toc.pages), 1)
       self.assertEqual(len(b.songs),30)
-      
-      
+
+
       book_text += slotmachine * 60
       b = books.cp_song_book()
       b.load_from_text(book_text)
@@ -42,14 +42,14 @@ class TestStuff(unittest.TestCase):
       b.load_from_text(book_text)
       toc = books.TOC(b, 3)
       self.assertEqual(len(toc.pages), 4)
-      self.assertEqual(len(b.songs), 131)
-      
+      self.assertEqual(len(b.songs), 130)
+
       book_text += slotmachine * 80
       b = books.cp_song_book()
       b.load_from_text(book_text)
       toc = books.TOC(b, 3)
       self.assertEqual(len(toc.pages), 6)
-      self.assertEqual(len(b.songs), 211)
+      self.assertEqual(len(b.songs), 210)
 
   def test_single_song_multitple_pdf(self):
       b = books.cp_song_book()
@@ -64,46 +64,46 @@ class TestStuff(unittest.TestCase):
           result = b.save_as_single_sheets(tmp)
       self.assertEqual(len(result), 3)
       self.assertEqual(result[1]["title"], "This is a second song! (D)")
-      
-      
+
+
   def test_book(self):
       book_path = "samples/sample.book.txt"
       b = books.cp_song_book(path=book_path)
       self.assertEqual(len(b.songs), 4)
       self.assertEqual(b.songs[1].key, "C")
       self.assertEqual(b.songs[2].key, "Bb")
-      
+
       book_path="samples/sample-lazy.book.txt"
-   
+
       b = books.cp_song_book( path=book_path)
       self.assertEqual(len(b.songs), 8)
       self.assertEqual(b.title, "Sample songs")
-     
+
       book_path="samples/sample-lazy-uke.book.txt"
       b = books.cp_song_book(path=book_path)
-      
+
       self.assertEqual(len(b.songs), 4)
       #self.assertEqual(b.songs[3].transpose, -3)
       self.assertEqual(b.songs[3].title, "Universe")
       self.assertEqual(b.title, "Sample songs")
       self.assertEqual(b.default_instrument_names[0],"Ukulele")
-      
+
   def test_versioned_book(self):
       book_path = "samples/sample.book.txt"
       b = books.cp_song_book(path=book_path)
 
       self.assertEqual(b.version, None)
-      book_path = "samples/sample_versioned.book.txt"         
+      book_path = "samples/sample_versioned.book.txt"
       b = books.cp_song_book(path=book_path)
       self.assertEqual(b.version, "v1.1a")
-      
+
       book_path = "samples/sample_auto_versioned.book.txt"
       b = books.cp_song_book(path=book_path)
       self.assertEqual(b.version, 'auto')
 
-      
+
   def test_setlist(self):
-   
+
       #This is our setlist
       book_path = "samples/sample.setlist.md"
       b = books.cp_song_book()
@@ -111,12 +111,12 @@ class TestStuff(unittest.TestCase):
       #Now use the setlist to order the book - should find the {book directive}
       b.order_by_setlist(book_path)
 
-      
+
       self.assertEqual(len(b.songs), 4)
       self.assertEqual(len(b.sets), 2)
- 
+
       b.format()
-      
+
       keys = ["C","A","G","Bb"]
       actual_keys = [s.key for s in b.songs]
       self.assertEqual(keys, actual_keys)
@@ -126,7 +126,7 @@ class TestStuff(unittest.TestCase):
       self.assertEqual(original_keys, actual_keys)
 
 
-      
+
   def test_versioned_setlist(self):
       book_path = "samples/sample.setlist.md"
       sample_book_text = open(book_path).read()
@@ -137,8 +137,8 @@ class TestStuff(unittest.TestCase):
       b.order_by_setlist(sample_book_text)
       self.assertEqual(b.version, None)
 
-      
-      
+
+
       book_path = "samples/sample_versioned.setlist.md"
       b = books.cp_song_book()
       b.order_by_setlist(book_path)
@@ -149,23 +149,23 @@ class TestStuff(unittest.TestCase):
       b = books.cp_song_book()
       b.order_by_setlist(book_path)
       self.assertEqual(b.version, 'auto')
-      
+
   def test_directive(self):
       d = books.directive("{title: This is my title}")
       self.assertEqual(d.type, books.directive.title)
-      
+
       self.assertEqual(d.value, "This is my title")
       d = books.directive("{st: This: is my: subtitle}")
       self.assertEqual(d.type, books.directive.subtitle)
-      
+
       d = books.directive("{grids}")
       self.assertEqual(d.type, books.directive.grids)
-      
+
       # Allow extra space
       d = books.directive(" {grids}   ")
       self.assertEqual(d.type, books.directive.grids)
-      
-      #A llow things to have values, or not
+
+      #Allow things to have values, or not
       d = books.directive(" {grids: C#7}   ")
       self.assertEqual(d.type, books.directive.grids)
       self.assertEqual(d.value, "C#7")
@@ -177,21 +177,22 @@ class TestStuff(unittest.TestCase):
       d = books.directive(" {grids: C#7 Bbsus4   } {title: ASDASD}   ")
       self.assertEqual(d.value, "C#7 Bbsus4   } {title: ASDASD")
 
-      
+
       # These are not directives
       d = books.directive("{title: This is my title ")
       self.assertEqual(d.type, None)
       d = books.directive("{{title: This is my title} ")
       self.assertEqual(d.type, None)
-      
-    
+
+      d = books.directive("{page_image: test.png}")
+      self.assertEqual(d.type, books.directive.page_image)
 
   def test_reorder(self):
     one1 = "{title: 1 page}"
     one2 = "{title: 1 page}"
     two1 = "{title: 2 page}\n{new_page}\nxxx"
     two2 = "{title: 2 page}\n{new_page}\yxxx"
-  
+
     book = books.cp_song_book()
     book.add_song_from_text(one1, "1")
     book.add_song_from_text(one2, "2")
@@ -238,12 +239,25 @@ class TestStuff(unittest.TestCase):
     self.assertTrue("[I]" in song.md)
     self.assertTrue("[IV]" in song.md)
     self.assertTrue("[V]" in song.md)
-    
+
     # Should be variants for these cos of the key change
     self.assertTrue("[IV]" in song.md)
     self.assertTrue("[♭VII]" in song.md)
     self.assertTrue("[I]" in song.md)
-    
+
+
+
+  def test_page_image_formatting(self):
+     import re
+     song = books.cp_song("""
+          {page_image: test.png}
+          """, path="/this/is/my/path/song.cho.txt")
+
+
+     print("TEST", song.text)
+     self.assertTrue(song.text, re.search("<img src='file:///.*?' width='680'>", song.text))
+
+
   def test_parse(self):
     song = books.cp_song("{title: A Song!}\nSome stuff\n{key: C#}\n")
     self.assertEqual(song.key, "C#")
@@ -271,7 +285,7 @@ class TestStuff(unittest.TestCase):
     This [C] is the [C!] chorus [Db7 / / / /] [C!] [Db7!]
     CHorus chorus
     {eoc}
-    
+
     After the chorus
 
     """)
@@ -289,30 +303,32 @@ class TestStuff(unittest.TestCase):
     This [BbM7] is the [Bbmaj7] chorus  [A#M7] is the [A#maj7] chorus
     CHorus chorus
     {eoc}
-    
+
     After the chorus
 
     """)
     song.format( instrument_name="Uke")
     # Should be four chords in the above, all the same, but not up to us to change what the author wrote
     self.assertEqual(len(song.chords_used),4)
-    
+
     song = books.cp_song("""
     {title: Test}
     {soc}
     {c: Chorus}
     This is the chorus
-    CHorus chorus
+    Chorus chorus
     {eoc}
-    
+
     After the chorus
 
     """)
     result = """
+<blockquote class='chorus'>
 
-> **Chorus**    
-> This is the chorus    
-> CHorus chorus
+**Chorus**    
+This is the chorus    
+Chorus chorus    
+</blockquote>
 
 After the chorus
 
@@ -334,21 +350,24 @@ After the tab
 
     """)
     result = """
-```    
-This is where some    
-    Preformatted    
-    Tab goes    
-    --5---5----5    
-    1---2--2--2-    
-    3-3-3-3-3-3-    
-    --9--9--9-9-    
-```    
+```
+This is where some
+    Preformatted
+    Tab goes
+    --5---5----5
+    1---2--2--2-
+    3-3-3-3-3-3-
+    --9--9--9-9-
+```
 After the tab
 
 
 """
-
-    self.assertEqual(song.text, result)
+    #normalise space at end of line as that's not what we're testing here
+    import re
+    txt = re.sub(" ","", song.text)
+    result = re.sub(" ","", result)
+    self.assertEqual(txt, result)
 
     song = books.cp_song("""
 {title: Test}
@@ -365,19 +384,24 @@ This is where some
 Where someone forgot to close the tab
 {eoc}""")
     result = """
-```    
-This is where some    
-    Preformatted    
-    Tab goes    
-    --5---5----5    
-    1---2--2--2-    
-    3-3-3-3-3-3-    
+```
+This is where some
+    Preformatted
+    Tab goes
+    --5---5----5
+    1---2--2--2-
+    3-3-3-3-3-3-
     --9--9--9-9-
+<blockquote class='chorus'>
 
-> **Chorus**    
-> Where someone forgot to close the tab
+**Chorus**
+Where someone forgot to close the tab
+</blockquote>
 """
-    self.assertEqual(song.text, result)
+    txt = re.sub(" ","", song.text)
+    result = re.sub(" ","", result)
+ 
+    self.assertEqual(txt, result)
 
 
     song = books.cp_song("""
@@ -400,36 +424,36 @@ After the chorus
     """)
     result = """
 
-> **Here's a chorus with tab in it**    
->     This is where some    
->         Preformatted    
->         Tab goes    
->         --5---5----5    
->         1---2--2--2-    
->         3-3-3-3-3-3-    
->         --9--9--9-9-    
-> Still in the chorus    
+> **Here's a chorus with tab in it**
+>     This is where some
+>         Preformatted
+>         Tab goes
+>         --5---5----5
+>         1---2--2--2-
+>         3-3-3-3-3-3-
+>         --9--9--9-9-
+> Still in the chorus
 After the chorus
 
 
 """
-    song = books.cp_song("{instrument: Thongaphone}") 
+    song = books.cp_song("{instrument: Thongaphone}")
     self.assertEqual( "Thongaphone", song.local_instruments.get_instrument_by_name("Thongaphone").name)
     self.assertEqual( "Thongaphone", song.local_instruments.get_instrument_by_name("Thongaphone").name)
 
     song = books.cp_song("{instrument: Thongaphone}\n{define: C#7 frets 0 1 0 1 0 1 0 1}\n{define: C#7-5 frets 0 1 0 1 0 1 0 1}")
     #song.instruments.get_instrument_by_name("Thongaphone").chart.get_default("C#7-5").show()
     self.assertEqual("{define: C#7-5 frets 0 1 0 1 0 1 0 1}", song.local_instruments.get_instrument_by_name("Thongaphone").chart.get_default("C#7-5").to_chordpro())
-   
+
     song = books.cp_song("{instrument: Uke}\n{define: C frets 12 12 12 15}")
     #song.instruments.get_instrument_by_name("Soprano Ukulele").chart.get_default("C").show()
     song.format(instrument_name = "Nope!")
-    
+
     self.assertEqual("{define: C base-fret 11 frets 1 1 1 4}", song.local_instruments.get_instrument_by_name("Soprano Ukulele").chart.get_default("C").to_chordpro())
 
 
-    
 
-    
+
+
 if __name__ == '__main__':
     unittest.main()
