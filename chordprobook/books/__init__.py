@@ -457,7 +457,6 @@ class cp_song:
 
             #Too many to show down the right margin?
             chords_in_text =  (len(chord_md) > 12 * self.pages)
-            print("Chords", len(chord_md), chords_in_text )
 
             if chords_in_text:
                 self.md += "\n<!-- new_page -->\n"
