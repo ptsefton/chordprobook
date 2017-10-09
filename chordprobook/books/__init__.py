@@ -328,6 +328,7 @@ class cp_song:
         Create a markdown version of the song, transposed if necessary,
         does the last-minute formatting on the song incuding transposition
         and fetching chord grids """
+        self.pages = 1
         if instrument_name == None:
             instrument_name = self.instrument_name
         self.local_grids = None
@@ -456,12 +457,14 @@ class cp_song:
 
             #Too many to show down the right margin?
             chords_in_text =  (len(chord_md) > 12 * self.pages)
+            print("Chords", len(chord_md), chords_in_text )
 
             if chords_in_text:
                 self.md += "\n<!-- new_page -->\n"
                 self.pages += 1
             else:
                 chords_per_page = len(chord_md) / self.pages
+                
             for md in chord_md:
                 if chords_in_text:
                     self.md +=  "<figure style='display: inline-block'>%s<figcaption style='text-align:center'>%s</figcaption></figure>" % md
