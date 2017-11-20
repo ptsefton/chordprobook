@@ -253,12 +253,14 @@ class ChordChart(object):
         return chord_name
 
 
-    def grid_as_md(self, chord_name):
+    def grid_as_md(self, chord_name, display_name=False):
         # TODO: add tests
         chord_name_norm = self.normalise_chord_name(chord_name)
+        if display_name:
+            display_name = chord_name
         chord = self.get_default(chord_name_norm)
         if chord != None:
-            return chord.to_md()
+            return chord.to_md(display_name=display_name)
         else:
             return(None)
 
@@ -319,16 +321,18 @@ class ChordDiagram(object):
         self.chord = Chord(name)
         self.setup()
 
-    def to_data_URI(self):
+    def to_data_URI(self, display_name=None):
         """Convert pic binary data to a data URI for use in web pages"""
-        self.draw()
+        self.draw(display_name=display_name)
         output = BytesIO()
         self.img.save(output, format='PNG')
         im_data = output.getvalue()
         return('data:image/png;base64,' + base64.b64encode(im_data).decode())
 
-    def to_md(self):
-        return("<img width='%s' height='%s' alt='%s' src='%s' />" % (self.box_width, self.box_height, self.name, self.to_data_URI()))
+    def to_md(self, display_name=None):
+        return("<img width='%s' height='%s' alt='%s' src='%s' />" % 
+                                            (self.box_width, self.box_height, 
+                                             self.name, self.to_data_URI(display_name)))
 
     def to_chordpro(self):
         """ Turn into {define: declaration. Warning! Not finished! See tests for current functionality. """
@@ -411,7 +415,7 @@ class ChordDiagram(object):
         self.playability = self.open_strings * 50  - self.max_fret * 29 - (self.max_fret - self.min_fret) * 7 - self.fingers * 8
 
 
-    def draw(self):
+    def draw(self, display_name=None):
         """
         Render the chord.
         """
@@ -421,13 +425,13 @@ class ChordDiagram(object):
 
         w, h = draw.textsize(self.name)
         top_margin = ChordDiagram.top_margin
-        if not self.draw_name:
-            (w, h) = (0, 0)
-
-
+       
         # Look, I can write my own name
-        if self.draw_name:
-            draw.text(((self.box_width - w) / 2, 0),self.name, (0,0,0))
+        if display_name or self.draw_name:
+            name = display_name if display_name else self.name
+            draw.text(((self.box_width - w) / 2, 0), name, (0,0,0))
+        else:
+            (w, h) = (0, 0)
 
         # Draw plenty of strings evenly placed across the diagram, instrument agnostic,
         self.string_top = h + top_margin

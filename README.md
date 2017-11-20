@@ -52,14 +52,14 @@ put on the floor, like a real rock n roll band.
 * **Produces a PDF table of contents** which works well on tablets for navigation.
 
 
-### Word output (.docx)
+### Word output (.docx / .odt)
 
-* Gives you a start on creating a word document (via pandoc) from a set of chordpro files. Each song begins on a new page.
+* Gives you a start on creating a Word or OpenOffice document (via pandoc) from a set of chordpro files. Each song begins with a Heading 1 on a new page.
 * You can change the styles in the included ```reference.docx``` to your taste. At the moment it does not auto-scale the text to fit the page
 
 ### HTML output
 
-This is still experimental, but the idea is to produce HTML that fills the screen for use on tablets, phones, etc with swipe navigation.
+The HTML output is currently set up to create an A4 page per song (with optional multi-page songs using {new_page}). This HTML is used to generate a PDF, but it may be useful on its own.
 
 
 ### Probably won't do
@@ -75,7 +75,7 @@ to install packaged software scripts and python modules.
 Status: Alpha / mostly works for me  on OS X 10.10.5.
 
 
-## Installation on OS X (you're on your own on other platforms)
+## Installation on OS X 
 
 Requires pandoc 1.15.0.6 or later  and wkhtmltopdf installed on on
 your path.
@@ -116,6 +116,22 @@ environment.
     ```pip3 install .```
 
 * To check that you have a commandline client now, type ```mksong --help```
+
+
+## Installation on other *nix platforms
+
+Some installation notes courtesy of [lpinner](https://github.com/lpinner):
+>Just sharing some installation instructions that worked for me on Linux (and would possibly work on Win/MacOS as well)
+>
+> *  Install conda (miniconda will do).
+> *  Create a conda environment, activate it and pip install chordprobook from github:
+>
+>```conda create -c conda-forge -n chordprobook python=3 pypandoc wkhtmltopdf pillow pyaml```
+> ```source activate chordprobook```
+> ```pip install git+https://github.com/ptsefton/chordprobook.git```
+>
+> Note: conda-forge channel is needed for wkhtmltopdf
+
 
 ## The local dialect of Chordpro format
 
@@ -176,7 +192,7 @@ Formatting / Directive         |      Description  | Rendered as
 
 This implementation will:
 
-* Look for one directive per line (Except in setlists)
+* Look for one directive per line (Except in setlists, where you can add {transpose: } to the end of a line)
 * Accept leading and trailing space before and after directives.
 
 I am still undecided about:
@@ -221,9 +237,10 @@ mksong --help
 And you'll see this:
 
 ```
+./mksong --help
 usage: mksong [-h] [-a] [-d DIRECTORY] [-i INSTRUMENT] [--instruments] [-k]
-              [--a4] [-e] [-f FILE_STEM] [--html] [-w] [-p]
-              [-r REFERENCE_DOCX] [-o] [-b] [-s SETLIST] [--title TITLE]
+              [-e] [-f FILE_STEM] [--html] [-x] [-t] [-p] [-r REFERENCE_DOCX]
+              [-o] [-n] [-m] [-b BOOK_FILE] [-s SETLIST] [--title TITLE]
               [files [files ...]]
 
 positional arguments:
@@ -245,24 +262,28 @@ optional arguments:
                         the --instument option
   -k, --keep-order      Preserve song order for playing as a setlist (inserts
                         blank pages to keep multi page songs on facing pages
-  --a4                  Format for printing (web page output)
   -e, --epub            Output epub book
   -f FILE_STEM, --file-stem FILE_STEM
                         Base file name, without extension, for output files
-  --html                Output HTML book, defaults to screen-formatting use
-                        --a4 option for printing (PDF generation not working
-                        unless you chose --a4 for now
-  -w, --word            Output .docx format
-  -p, --pdf             Output pdf
+  --html                Output HTML book, defaults to a4 at the moment
+  -x, --docx            Output .docx format
+  -t, --odt             Output .odt format
+  -p, --pdf             Output PDF this is the default
   -r REFERENCE_DOCX, --reference-docx REFERENCE_DOCX
                         Reference docx file to use (eg with Heading 1 having a
                         page-break before)
   -o, --one-doc         Output a single document per song: assumes you want A4
                         PDF
-  -b, --book-file       First file contains a list of files, each line
-                        optionally followed by a transposition (+|-)\d\d? eg
-                        to transpose up one tone: song-file.cho +2, you can
-                        also add a title line: {title: Title of book}
+  -n, --nashville       Use Nashville Numbering (actually Roman chord numbers
+                        rather than letter-names)
+  -m, --major-chart     When using (Nashville/Roman) chord numbers, chart
+                        minor keys in the relative major
+  -b BOOK_FILE, --book-file BOOK_FILE
+                        File containing a list of files, each line optionally
+                        followed by a transposition {transpose: (+|-)\d\d?} eg
+                        to transpose up one tone: song-file.cho {transpose:
+                        +2}, you can also add a title line: {title: Title of
+                        book}
   -s SETLIST, --setlist SETLIST
                         Use a setlist file in markdown format to filter the
                         book, one song per line, and keep facing pages
@@ -287,7 +308,7 @@ optional arguments:
 
     Which is equivalent to:
 
-    ```mksong --pdf --a4  samples/*.cho.txt```
+    ```mksong --pdf  samples/*.cho.txt```
 
 *  To add a file name and a title to the book.
  

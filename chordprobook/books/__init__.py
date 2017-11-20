@@ -219,7 +219,7 @@ class cp_song:
             if dir.type == None:
                 if not line.startswith('#'):
                     line = normalize_chord_markup(line)
-                  
+
 
                     if in_tab:
                         #Four spaces in Markdown means preformatted
@@ -243,8 +243,8 @@ class cp_song:
                         if classs:
                             in_block = True
                             new_text += "<div class='%s'>" % classs
-                    
-                    
+
+
                     new_text += "\n**%s**\n" % dir.value
 
                 elif dir.type == directive.title:
@@ -266,7 +266,7 @@ class cp_song:
 
                 elif dir.type  == directive.start_chorus:
                     new_text += "<blockquote class='chorus'>\n"
-                
+
                 elif dir.type  == directive.start_bridge:
                     new_text += "<blockquote class='bridge'>\n"
 
@@ -294,7 +294,6 @@ class cp_song:
                         new_text += "</div>\n"
                         in_block = False
                     new_text += "<img src='file://%s/%s' width='680'/>"  % (self.dir, dir.value)
-                    print(new_text)
 
 
                 elif dir.type == directive.instrument:
@@ -409,7 +408,18 @@ class cp_song:
         self.md = song
         self.formatted_title = title
 
-    def save_as_single_sheet(self, instrument_name, trans, out_dir):
+    def to_final_md(self):
+        """ Generate a markdown doc with chords, used by word processor export"""
+        md = ""
+        md += "# %s (%s)\n\n" % (self.title, self.key)
+        if self.chord_md_with_name:
+            for m in self.chord_md_with_name:
+                md += " %s " % m
+            md += "\n\n"
+        md += self.md
+        return md
+
+    def save_as_single_sheet(self, instrument_name, trans, out_dir, args):
         self.format(transpose = trans, instrument_name=instrument_name)
         if self.nashville:
             suffix_string = "_nashville"
@@ -426,14 +436,29 @@ class cp_song:
         with open(html_path, 'w') as html:
             html.write(self.to_stand_alone_html())
         path, filename = os.path.split(self.path)
-        pdf_file = "%s%s.pdf" % (filename, suffix_string )
-        pdf_dir = os.path.join(path, out_dir)
-        os.makedirs(pdf_dir, exist_ok=True)
-        pdf_path = os.path.join(pdf_dir, pdf_file)
-        print("Saving to %s" % (pdf_path))
-        command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', html_path, pdf_path]
-        subprocess.call(command)
-        return pdf_path
+
+        out_dir = os.path.join(path, out_dir)
+        os.makedirs(out_dir, exist_ok=True)
+        if args['pdf']:
+            pdf_file = "%s%s.pdf" % (filename, suffix_string )
+            pdf_path = os.path.join(out_dir, pdf_file)
+            print("Saving to %s" % (pdf_path))
+            command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', html_path, pdf_path]
+            subprocess.call(command)
+        if args['docx'] or args['odt']:
+            if args['docx']:
+                ext = 'docx'
+            else:
+                ext = 'odt'
+            word_file = "%s%s.%s" % (filename, suffix_string, ext)
+            word_path = os.path.join(out_dir, word_file)
+            xtra = ["--data-dir=.", "--self-contained"]
+            if args["reference_docx"] != None:
+                xtra.append('--reference-docx=%s' % args["reference_docx"])
+
+            print("Writing doc", word_path)
+            pypandoc.convert(self.to_final_md(), "html", format="markdown", outputfile=html_path, extra_args=xtra)
+            pypandoc.convert(html_path, ext, format="html", outputfile=word_path, extra_args=xtra)
 
     def to_html(self):
         #TODO STANDALONE
@@ -441,7 +466,8 @@ class cp_song:
         # Deal with chords
         grid_md = ""
         chords_by_page = [[]]
-        chord_md = [] # For keeping chords that will be displayed alongside text
+        self.chord_md = [] # For keeping chords that will be displayed alongside text
+        self.chord_md_with_name = [] # For keeping chords with names on the picture
         if self.grids != None:
             # Find which chords actually have grids to display
             for chord_name in self.chords_used:
@@ -449,22 +475,26 @@ class cp_song:
                 # Have a local version of this chord?
                 if self.local_grids:
                     md = self.local_grids.grid_as_md(chord_name)
+                    md_name = self.local_grids.grid_as_md(chord_name, display_name=True)
                 if md == None:
                     md = self.grids.grid_as_md(chord_name)
+                    md_name = self.grids.grid_as_md(chord_name, display_name=True)
 
                 if md != None:
-                    chord_md.append((md, chord_name))
+                    self.chord_md.append((md, chord_name))
+                    self.chord_md_with_name.append((md_name))
+
 
             #Too many to show down the right margin?
-            chords_in_text =  (len(chord_md) > 12 * self.pages)
+            chords_in_text =  (len(self.chord_md) > 12 * self.pages)
 
             if chords_in_text:
                 self.md += "\n<!-- new_page -->\n"
                 self.pages += 1
             else:
-                chords_per_page = len(chord_md) / self.pages
-                
-            for md in chord_md:
+                chords_per_page = len(self.chord_md) / self.pages
+
+            for md in self.chord_md:
                 if chords_in_text:
                     self.md +=  "<figure style='display: inline-block'>%s<figcaption style='text-align:center'>%s</figcaption></figure>" % md
                 else:
@@ -495,7 +525,7 @@ class cp_song:
 </div>
         """ % song
 
-
+        self.formatted_md = song
         return pypandoc.convert(song, 'html', format='md')
 
     def to_stand_alone_html(self):
@@ -551,11 +581,11 @@ class cp_song_book:
         """ Generate Markdown version of a book """
         md = "---\ntitle: %s\n---\n" % self.title
         for song in self.songs:
-            md += song.md
+            md += song.to_md()
         return md
 
     def __get_file_list(self, files, dir_list):
-        """Returns a list of files as speciifed in list of dirs and file-glob passed in files"""
+        """Returns a list of files as in list of dirs and file-glob passed in files"""
         if dir_list == []:
             dir_list = ['.']
         for dir in dir_list:
@@ -654,7 +684,7 @@ class cp_song_book:
 
 
 
-    def __songs_to_html(self, instrument_name, args, output_file):
+    def __save(self, instrument_name, args, output_file):
         self.format(instrument_name=instrument_name)
         all_songs = self.sets_md
 
@@ -675,39 +705,69 @@ class cp_song_book:
             else:
                 version_string = "\n" + self.version
                 output_file +=  self.version.replace(" ", "_")
+                
+       
         if args['html']:
             html_path = output_file + ".html"
         else:
             temp_file = tempfile.NamedTemporaryFile(suffix=".html")
             html_path = temp_file.name
-        if args['pdf']:
-            pdf_path = output_file + ".pdf"
-        else:
-            pdf_path = None
+
+
 
         # Now add formatted songs to output in the right order
         for song in self.songs:
             all_songs += song.to_html()
-
-        html_path = "test.html"
+        title = self.title + title_suffix + version_string
         with open(html_path, 'w') as html:
             html.write( html_book.format(all_songs,
-                                        title=self.title + title_suffix + version_string,
+                                        title=title,
                                         for_print = args['a4'],
                                         contents=pypandoc.convert(self.contents,
                                                                     "html",
                                                                     format="md")))
-        if pdf_path != None:
+        if args['pdf']:
+            pdf_path = output_file + ".pdf"
             print("Outputting PDF:", pdf_path, html_path)
             command = ['wkhtmltopdf', '-s','A4', '--enable-javascript', '--print-media-type', '--outline',
                        '--outline-depth', '1','--header-right', "[page]/[toPage]",
-                       '--header-line', '--header-left', "%s" % self.title, html_path, pdf_path]
+                       '--header-line', '--header-left', self.title, html_path, pdf_path]
             subprocess.call(command)
-            #subprocess.call(["open", pdf_path])
+
+        if args['docx'] or args['odt'] or args['epub']:
+            exts = []
+            if args['docx']:
+                exts.append('docx')
+            if args['odt']:
+                exts.append('odt')
+            if args['epub']:
+                exts.append('epub')
+            print("EXTENSIONS", exts)
+            for ext in exts:
+                out_path = output_file + "." + ext
+                if ext in ["docx","odt"]:
+                    xtra = ["--toc", "--data-dir=.", "--toc-depth=1", "--self-contained"]
+                else:
+                    xtra =[ "--toc-depth=1","--epub-chapter-level=1"] #, "--epub-stylesheet=songbook.css"]
+                    
+                if args["reference_docx"] != None:
+                    xtra.append('--reference-docx=%s' % args["reference_docx"])
 
 
 
-    def to_html_and_pdf(self,args, output_file):
+                h = "% " + title + "\n\n"
+                for song in self.songs:
+                    h += song.to_final_md()
+
+                
+
+                print("Writing output doc", out_path)
+                #Convert to HTML and then the word processor format (needed for images to work)
+                pypandoc.convert(h, "html", format="markdown", outputfile=html_path, extra_args=xtra)
+                pypandoc.convert(html_path, ext, format="html", outputfile=out_path, extra_args=xtra)
+
+
+    def output(self, args, output_file):
         self.sets_md = ""
         for set in self.sets:
             set.format()
@@ -715,20 +775,20 @@ class cp_song_book:
 
         if self.instrument_name_passed == None:
             if self.nashville:
-                self.__songs_to_html(None, args, output_file)
+                self.__save(None, args, output_file)
             else:
                 for instrument_name in  self.default_instrument_names + [None]:
-                    self.__songs_to_html(instrument_name, args, output_file)
+                    self.__save(instrument_name, args, output_file)
         else:
-            self.__songs_to_html(self.instrument_name_passed, args, output_file)
+            self.__save(self.instrument_name_passed, args, output_file)
 
 
 
 
 
-    def save_as_single_sheets(self, out_dir):
+    def save_as_single_sheets(self, out_dir, args):
         """
-        Saves version of a song as PDF files - one for each key/instrument combo
+        Saves a song as exported files - one for each key/instrument combo
         Returns a list of converted songs [{title, path}]
         """
         converted_songs = []
@@ -742,9 +802,9 @@ class cp_song_book:
                          instruments = song.local_instrument_names
 
                     for instrument_name in instruments:
-                        song.save_as_single_sheet(instrument_name, trans, out_dir)
+                        song.save_as_single_sheet(instrument_name, trans, out_dir, args)
 
-                    path = song.save_as_single_sheet(None, trans, out_dir)
+                    path = song.save_as_single_sheet(None, trans, out_dir, args)
                     converted_songs.append({"title" : song.formatted_title, "path" : path})
         return converted_songs
 
@@ -816,8 +876,9 @@ class cp_song_book:
                     for song in self.songs:
                         if re.search(regex, song.title.lower()) != None:
                             #Copy the song in case it is in the setlist twice with different treatment, such as keys or notes
-                            prev_song = current_song
+                            prev_song = copy.deepcopy(current_song)
                             current_song = copy.deepcopy(song)
+
                             if transpositions == [0]:
                                 transpositions = current_song.standard_transpositions
                             if new_set:
@@ -828,6 +889,7 @@ class cp_song_book:
 
                             if current_song.key != None:
                                 song_name = "%s (in %s)" % (song_name, current_song.key)
+
                             new_order.append(current_song)
                             current_set.text +=  "## %s\n" % song_name
                             found_song = True

@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 import argparse
+import pypandoc
 import os
 import chordprobook
 from chordprobook import books
@@ -17,12 +18,14 @@ def convert():
                         '--keep-order',
                         action='store_true',
                         help='Preserve song order for playing as a setlist (inserts blank pages to keep multi page songs on facing pages')
-    parser.add_argument('--a4', action='store_true', default=True, help='Format for printing (web page output)')
+    #parser.add_argument('--a4', action='store_true', default=True, help='Format for printing (web page output)')
     parser.add_argument('-e', '--epub', action='store_true', help='Output epub book')
     parser.add_argument('-f', '--file-stem', default=default_output_file, help='Base file name, without extension, for output files')
-    parser.add_argument( '--html', action='store_true', default=False, help='Output HTML book, defaults to screen-formatting use --a4 option for printing (PDF generation not working unless you chose --a4 for now')
-    parser.add_argument('-w', '--word', action='store_true', help='Output .docx format')
-    parser.add_argument('-p', '--pdf', action='store_true', help='Output pdf', default=True)
+    parser.add_argument( '--html', action='store_true', default=False, help='Output HTML book, defaults to a4 at the moment')
+    parser.add_argument('-x', '--docx', action='store_true', help='Output .docx format')
+    parser.add_argument('-t', '--odt', action='store_true', help='Output .odt format')
+
+    parser.add_argument('-p', '--pdf', action='store_true', help='Output PDF this is the default')
     parser.add_argument('-r', '--reference-docx', default = None, help="Reference docx file to use (eg with Heading 1 having a page-break before)")
     parser.add_argument('-o','--one-doc', action='store_true', help='Output a single document per song: assumes you want A4 PDF')
     parser.add_argument('-n','--nashville', action='store_true', help='Use Nashville Numbering (actually Roman chord numbers rather than letter-names)')
@@ -39,10 +42,11 @@ def convert():
                         default=None,
                         help ="Use a setlist file in markdown format to filter the book, one song per line, and keep facing pages together. Setlist lines can be one or more words from the song title starting with '## ', with '# ' for the names of sets and other markdown as you require in between you can also add a setlist line: {title: Title of setlist}")
     parser.add_argument('--title', default=None, help='Title to use for the book, if there is no title in a book file or setlist file')
-
-
-
     args = vars(parser.parse_args())
+    if not(args['html'] or args['odt'] or args['docx'] or args['epub']):
+        args['pdf'] = True # Default to PDF if no other options given
+
+    
     #Need to be able to pass this into songs now
     instruments = inst.Instruments()
 
@@ -76,7 +80,7 @@ def convert():
         book_dir, book_name = os.path.split(args["book_file"])
         output_file = os.path.join(book_dir, out_dir, book_name)
         if not args["files"]:
-            print ("Read book file, ignored other files passed")
+            print ("Read book file (%s), ignored other files passed" % args["book_file"])
 
     elif args["files"] != None:
        output_file = os.path.join(out_dir, output_file)
@@ -95,27 +99,21 @@ def convert():
     title = args['title']
 
     #TODO: Make this into separate methods
-    if  args['epub']:
-        epub_path = output_file + ".epub"
-        xtra =[ "--toc-depth=1","--epub-chapter-level=1"] #, "--epub-stylesheet=songbook.css"]
-        pypandoc.convert(book.to_md(), "epub", format="md", outputfile=epub_path, extra_args=xtra)
-        #subprocess.call(["open", epub_path])
+    # if  args['epub']:
+    #     epub_path = output_file + ".epub"
+    #     xtra =[ "--toc-depth=1","--epub-chapter-level=1"] #, "--epub-stylesheet=songbook.css"]
+    #     pypandoc.convert(book.to_md(), "epub", format="md", outputfile=epub_path, extra_args=xtra)
+    #     #subprocess.call(["open", epub_path])
 
-    if  args["word"]:
-        word_path = output_file + ".docx"
-        xtra = ["--toc", "--data-dir=.", "--toc-depth=1"]
-        if args["reference_docx"] != None:
-            xtra.append('--reference-docx=%s' % args["reference_docx"])
-        pypandoc.convert(book.to_md(), "docx", format="md", outputfile=word_path, extra_args=xtra)
-        #subprocess.call(["open", word_path])
+        
 
 
     #PDF is generated from HTML, BTW
-    if args['one_doc']: #Assume standalone PDF
-        book.save_as_single_sheets(out_dir)
+    if args['one_doc']: #Assume standalone sheets
+        book.save_as_single_sheets(out_dir, args)
 
-    elif args['html'] or args['pdf']:
-        book.to_html_and_pdf(args, output_file)
+    elif args['html'] or args['pdf'] or args['docx'] or args['odt'] or args['epub']:
+        book.output(args, output_file)
 
 if __name__ == "__main__":
     convert()
