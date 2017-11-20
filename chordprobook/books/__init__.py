@@ -706,33 +706,33 @@ class cp_song_book:
                 version_string = "\n" + self.version
                 output_file +=  self.version.replace(" ", "_")
                 
-       
-        if args['html']:
-            html_path = output_file + ".html"
-        else:
-            temp_file = tempfile.NamedTemporaryFile(suffix=".html")
-            html_path = temp_file.name
+        # TODO - only generate this if HTML 
+        if args['html'] or args['pdf']:
+            if args['html']:
+                html_path = output_file + ".html" #Save for the use
+            else: #Use a temp dir 
+                temp_file = tempfile.NamedTemporaryFile(suffix=".html")
+                html_path = temp_file.name
 
 
-
-        # Now add formatted songs to output in the right order
-        for song in self.songs:
-            all_songs += song.to_html()
-        title = self.title + title_suffix + version_string
-        with open(html_path, 'w') as html:
-            html.write( html_book.format(all_songs,
-                                        title=title,
-                                        for_print = args['a4'],
-                                        contents=pypandoc.convert(self.contents,
-                                                                    "html",
-                                                                    format="md")))
-        if args['pdf']:
-            pdf_path = output_file + ".pdf"
-            print("Outputting PDF:", pdf_path, html_path)
-            command = ['wkhtmltopdf', '-s','A4', '--enable-javascript', '--print-media-type', '--outline',
-                       '--outline-depth', '1','--header-right', "[page]/[toPage]",
-                       '--header-line', '--header-left', self.title, html_path, pdf_path]
-            subprocess.call(command)
+            # Now add formatted songs to output in the right order
+            for song in self.songs:
+                all_songs += song.to_html()
+            title = self.title + title_suffix + version_string
+            with open(html_path, 'w') as html:
+                html.write( html_book.format(all_songs,
+                                            title=title,
+                                            for_print = args['a4'],
+                                            contents=pypandoc.convert(self.contents,
+                                                                        "html",
+                                                                        format="md")))
+            if args['pdf']:
+                pdf_path = output_file + ".pdf"
+                print("Outputting PDF:", pdf_path, html_path)
+                command = ['wkhtmltopdf', '-s','A4', '--enable-javascript', '--print-media-type', '--outline',
+                           '--outline-depth', '1','--header-right', "[page]/[toPage]",
+                           '--header-line', '--header-left', self.title, html_path, pdf_path]
+                subprocess.call(command)
 
         if args['docx'] or args['odt'] or args['epub']:
             exts = []
@@ -742,7 +742,7 @@ class cp_song_book:
                 exts.append('odt')
             if args['epub']:
                 exts.append('epub')
-            print("EXTENSIONS", exts)
+
             for ext in exts:
                 out_path = output_file + "." + ext
                 if ext in ["docx","odt"]:
@@ -752,9 +752,8 @@ class cp_song_book:
                     
                 if args["reference_docx"] != None:
                     xtra.append('--reference-docx=%s' % args["reference_docx"])
-
-
-
+                
+                # Format some markdown for the non-PDF output
                 h = "% " + title + "\n\n"
                 for song in self.songs:
                     h += song.to_final_md()
@@ -786,10 +785,12 @@ class cp_song_book:
 
 
 
-    def save_as_single_sheets(self, out_dir, args):
+    def save_as_single_sheets(self, out_dir, args={'pdf': True,
+                                                   'docx':False,
+                                                   'odt': False,
+                                                   'epub': False}):
         """
         Saves a song as exported files - one for each key/instrument combo
-        Returns a list of converted songs [{title, path}]
         """
         converted_songs = []
         for song in self.songs:
