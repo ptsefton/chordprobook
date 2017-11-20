@@ -707,18 +707,19 @@ class cp_song_book:
                 output_file +=  self.version.replace(" ", "_")
                 
         # TODO - only generate this if HTML 
+        
+        # Need to run this whatever the output_file# Now add formatted songs to output in the right order
+        for song in self.songs:
+            all_songs += song.to_html()
+        title = self.title + title_suffix + version_string
+        if args['html']:
+             html_path = output_file + ".html" #Save for the use
+        else: #Use a temp dir 
+             temp_file = tempfile.NamedTemporaryFile(suffix=".html")
+             html_path = temp_file.name
+
+        
         if args['html'] or args['pdf']:
-            if args['html']:
-                html_path = output_file + ".html" #Save for the use
-            else: #Use a temp dir 
-                temp_file = tempfile.NamedTemporaryFile(suffix=".html")
-                html_path = temp_file.name
-
-
-            # Now add formatted songs to output in the right order
-            for song in self.songs:
-                all_songs += song.to_html()
-            title = self.title + title_suffix + version_string
             with open(html_path, 'w') as html:
                 html.write( html_book.format(all_songs,
                                             title=title,
@@ -746,9 +747,9 @@ class cp_song_book:
             for ext in exts:
                 out_path = output_file + "." + ext
                 if ext in ["docx","odt"]:
-                    xtra = ["--toc", "--data-dir=.", "--toc-depth=1", "--self-contained"]
+                    xtra = ["--toc","--toc-depth=1", "--data-dir=.", "--self-contained"]
                 else:
-                    xtra =[ "--toc-depth=1","--epub-chapter-level=1"] #, "--epub-stylesheet=songbook.css"]
+                    xtra =["--toc", "--toc-depth=1","--epub-chapter-level=1"] #, "--epub-stylesheet=songbook.css"]
                     
                 if args["reference_docx"] != None:
                     xtra.append('--reference-docx=%s' % args["reference_docx"])
@@ -762,7 +763,7 @@ class cp_song_book:
 
                 print("Writing output doc", out_path)
                 #Convert to HTML and then the word processor format (needed for images to work)
-                pypandoc.convert(h, "html", format="markdown", outputfile=html_path, extra_args=xtra)
+                pypandoc.convert(h, "html", format="markdown", outputfile=html_path, extra_args=["--self-contained"])
                 pypandoc.convert(html_path, ext, format="html", outputfile=out_path, extra_args=xtra)
 
 

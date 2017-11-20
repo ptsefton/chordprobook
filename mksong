@@ -18,7 +18,7 @@ def convert():
                         '--keep-order',
                         action='store_true',
                         help='Preserve song order for playing as a setlist (inserts blank pages to keep multi page songs on facing pages')
-    #parser.add_argument('--a4', action='store_true', default=True, help='Format for printing (web page output)')
+    parser.add_argument('--a4', action='store_true', default=True, help='Format for printing (web page output)')
     parser.add_argument('-e', '--epub', action='store_true', help='Output epub book')
     parser.add_argument('-f', '--file-stem', default=default_output_file, help='Base file name, without extension, for output files')
     parser.add_argument( '--html', action='store_true', default=False, help='Output HTML book, defaults to a4 at the moment')
