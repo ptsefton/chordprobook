@@ -26,7 +26,8 @@ def convert():
     parser.add_argument('-t', '--odt', action='store_true', help='Output .odt format')
 
     parser.add_argument('-p', '--pdf', action='store_true', help='Output PDF this is the default')
-    parser.add_argument('-r', '--reference-docx', default = None, help="Reference docx file to use (eg with Heading 1 having a page-break before)")
+    parser.add_argument('--reference-docx', default = None, help="Reference docx file to use (eg with Heading 1 having a page-break before)")
+    parser.add_argument('--reference-odt', default = None, help="Reference odt file to use (eg with Heading 1 having a page-break before)")
     parser.add_argument('-o','--one-doc', action='store_true', help='Output a single document per song: assumes you want A4 PDF')
     parser.add_argument('-n','--nashville', action='store_true', help='Use Nashville Numbering (actually Roman chord numbers rather than letter-names)')
     parser.add_argument('-m','--major-chart', action='store_true', help='When using (Nashville/Roman) chord numbers, chart minor keys in the relative major')
@@ -46,7 +47,13 @@ def convert():
     if not(args['html'] or args['odt'] or args['docx'] or args['epub']):
         args['pdf'] = True # Default to PDF if no other options given
 
-    
+    this_path, _ = os.path.split(os.path.realpath(__file__))
+    if args['docx'] and not args['reference_docx'] and os.path.exists(os.path.join(this_path, 'data', 'reference.docx')):
+         args['reference_docx'] = os.path.join(this_path, 'data', 'reference.docx')
+    if args['odt'] and not args['reference_odt'] and os.path.exists(os.path.join(this_path, 'data', 'reference.odt')):
+         args['reference_odt'] = os.path.join(this_path, 'data', 'reference.odt')
+   
+    print("TEMPLTE", args['reference_odt'])
     #Need to be able to pass this into songs now
     instruments = inst.Instruments()
 

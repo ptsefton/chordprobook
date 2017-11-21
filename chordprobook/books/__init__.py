@@ -751,15 +751,15 @@ class cp_song_book:
                 else:
                     xtra =["--toc", "--toc-depth=1","--epub-chapter-level=1"] #, "--epub-stylesheet=songbook.css"]
                     
-                if args["reference_docx"] != None:
-                    xtra.append('--reference-docx=%s' % args["reference_docx"])
-                
+                if args['docx'] and args["reference_docx"] != None:
+                    xtra.append('--reference-doc=%s' % args["reference_docx"])
+                    
+                if args['odt'] and args["reference_odt"] != None:
+                    xtra.append('--reference-doc=%s' % args["reference_odt"])
                 # Format some markdown for the non-PDF output
                 h = "% " + title + "\n\n"
                 for song in self.songs:
                     h += song.to_final_md()
-
-                
 
                 print("Writing output doc", out_path)
                 #Convert to HTML and then the word processor format (needed for images to work)

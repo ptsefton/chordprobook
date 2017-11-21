@@ -4,8 +4,10 @@ setup(
     #py_modules =[ 'chordprobook', 'chordprobook.books', 'chordprobook.instruments', 'chordprobook.chords'],
     package_data={   
     'chordprobook.instruments': ['instruments.yaml'],
-    'chordprobook.chords' : ['chord_data/*.cho'] 
+    'chordprobook.chords' : ['chord_data/*.cho']
      },
+    data_files = [ ('data', ['data/reference.odt']),
+                   ('data', ['data/reference.docx'])],
     version = "0.1",
     description = "Chordpro songsheet and book generator",
     author = "Peter Sefton",
