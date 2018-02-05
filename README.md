@@ -237,63 +237,7 @@ mksong --help
 And you'll see this:
 
 ```
-./mksong --help
-usage: mksong [-h] [-a] [-d DIRECTORY] [-i INSTRUMENT] [--instruments] [-k]
-              [-e] [-f FILE_STEM] [--html] [-x] [-t] [-p] [-r REFERENCE_DOCX]
-              [-o] [-n] [-m] [-b BOOK_FILE] [-s SETLIST] [--title TITLE]
-              [files [files ...]]
 
-positional arguments:
-  files                 List of files
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -a, --alphabetically  Sort songs alphabetically
-  -d DIRECTORY, --directory DIRECTORY
-                        Directory in which to put the output, relative to the
-                        book, setlist or indivudal file. If you want to put
-                        files somwhere specific, use a full path starting with
-                        "/": defaults to "."
-  -i INSTRUMENT, --instrument INSTRUMENT
-                        Show chord grids for the given instrument. Eg
-                        --instrument "Soprano Ukulele"
-  --instruments         List known instruments and their alises then quit. You
-                        use any of the names or aliases listed under AKA with
-                        the --instument option
-  -k, --keep-order      Preserve song order for playing as a setlist (inserts
-                        blank pages to keep multi page songs on facing pages
-  -e, --epub            Output epub book
-  -f FILE_STEM, --file-stem FILE_STEM
-                        Base file name, without extension, for output files
-  --html                Output HTML book, defaults to a4 at the moment
-  -x, --docx            Output .docx format
-  -t, --odt             Output .odt format
-  -p, --pdf             Output PDF this is the default
-  -r REFERENCE_DOCX, --reference-docx REFERENCE_DOCX
-                        Reference docx file to use (eg with Heading 1 having a
-                        page-break before)
-  -o, --one-doc         Output a single document per song: assumes you want A4
-                        PDF
-  -n, --nashville       Use Nashville Numbering (actually Roman chord numbers
-                        rather than letter-names)
-  -m, --major-chart     When using (Nashville/Roman) chord numbers, chart
-                        minor keys in the relative major
-  -b BOOK_FILE, --book-file BOOK_FILE
-                        File containing a list of files, each line optionally
-                        followed by a transposition {transpose: (+|-)\d\d?} eg
-                        to transpose up one tone: song-file.cho {transpose:
-                        +2}, you can also add a title line: {title: Title of
-                        book}
-  -s SETLIST, --setlist SETLIST
-                        Use a setlist file in markdown format to filter the
-                        book, one song per line, and keep facing pages
-                        together. Setlist lines can be one or more words from
-                        the song title starting with '## ', with '# ' for the
-                        names of sets and other markdown as you require in
-                        between you can also add a setlist line: {title: Title
-                        of setlist}
-  --title TITLE         Title to use for the book, if there is no title in a
-                        book file or setlist file
 
 ```
 
@@ -320,6 +264,9 @@ optional arguments:
 
 * To add chord grids for soprano ukulele:
 	```mksong -a --file-stem=my_book --title="My book"	--instrument Uke samples/*.cho.txt```
+  
+* To add chord grids for left-handed soprano ukulele:
+	```mksong -a -l --file-stem=my_book --title="My book" --instrument Uke samples/*.cho.txt```
 
 * To find out what instruments are supported:
 	```mksong.py --instruments```
