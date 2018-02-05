@@ -134,14 +134,16 @@ class ChordVoicings:
 class ChordChart(object):
     """ A set of ChordDiagrams, multiple fingerings per chord """
 
-    def __init__(self, transpose = 0,file = None):
+    def __init__(self, transpose = 0,file = None, lefty=False):
         """Container for a set of ChordDiagrams"""
         self.grids = {}
         self.tuning = None
         self.transposer = transposer(transpose)
+        self.error = None
+        self.lefty = lefty
         if file != None:
             self.load_file(open(file))
-        self.error = None
+        
 
 
     def load_tuning_by_name(self, instrument_name):
@@ -167,7 +169,7 @@ class ChordChart(object):
             self.error = "Instrument not found"
 
     def add_grid(self, definition):
-        grid = ChordDiagram()
+        grid = ChordDiagram(lefty=self.lefty)
         grid.parse_definition(definition)
         grid.name = self.normalise_chord_name(grid.name)
         if grid.name not in self.grids:
@@ -186,10 +188,11 @@ class ChordChart(object):
         self.load_file(f.split("\n"))
 
     def load_file(self, f):
+        
         self.transposer.offset = 12 - self.transposer.offset
         for line in f:
             if line.startswith("{define:"):
-                grid = ChordDiagram()
+                grid = ChordDiagram(lefty=self.lefty)
                 grid.parse_definition(line)
                 grid.name = self.normalise_chord_name(grid.name)
                 if self.transposer.offset > 0:
@@ -304,10 +307,11 @@ class ChordDiagram(object):
     dot_text_color = (256,256,256) #white
     dot_color = (0,0,0) #black
 
-    def __init__(self, name="", strings=[], draw_name=False, offsets = None):
+    def __init__(self, name="", strings=[], draw_name=False, offsets = None, lefty= False):
         """ Empty diagram. No strings, no frets, no nothin' """
         self.name = name
         self.strings = strings
+        self.lefty = lefty
         if offsets:
             self.strings = []
             for offset in offsets:
@@ -328,8 +332,10 @@ class ChordDiagram(object):
         self.img.save(output, format='PNG')
         im_data = output.getvalue()
         return('data:image/png;base64,' + base64.b64encode(im_data).decode())
+        
 
     def to_md(self, display_name=None):
+        """ Markdown version of chord (actually it's HTML anyway) """
         return("<img width='%s' height='%s' alt='%s' src='%s' />" % 
                                             (self.box_width, self.box_height, 
                                              self.name, self.to_data_URI(display_name)))
@@ -475,6 +481,10 @@ class ChordDiagram(object):
                         draw.text((x - w / 2 ,y - h /2 ),
                                   str(dot.finger),
                                   ChordDiagram.dot_text_color)
+                                  
+                                  
+                                  
+                                  
         #Write in base fret if present
         if self.base_fret != 0:
             w, h = draw.textsize(str(self.base_fret))
@@ -506,7 +516,8 @@ class ChordDiagram(object):
             fingers_re = re.compile("fingers +([\\d ]+)", re.IGNORECASE)
             fingers_search = re.search(fingers_re, definition)
             fingers = None
-            if fingers_search != None:
+            # Don't use fingerings if we're doing left handed chords
+            if not self.lefty and fingers_search != None:
                 fingers = fingers_search.group(1).strip().split(" ")
                 definition = re.sub(fingers_re, "", definition)
 
@@ -534,6 +545,8 @@ class ChordDiagram(object):
                     finger = int(add_search.group(3))
                     if string <= len(frets) and fret > 0:
                         self.strings[string].dots.append(Dot(fret, finger))
+            if self.lefty:
+                self.strings.reverse()
 
         self.setup()
 
@@ -580,7 +593,7 @@ class Note:
 class Chord:
     """ Class for representing chords as a set of notes, to be used for generating chord charts automatically.
     Will add some new code here that (TODO) can later be used in the rest of the library."""
-    def __init__(self, chord_name):
+    def __init__(self, chord_name, lefty = False):
         """Initialise chord by name
         Parameters:
         name: name of the chord; eg C#m
@@ -588,7 +601,9 @@ class Chord:
         Array of notes eg ['C#','E','Ab']
         or None if the chord type is not known
         """
-        chart = ChordChart()
+        self.lefty=lefty
+
+        chart = ChordChart(lefty=lefty)
         # Work out what type of chord this is
         self.name = chart.normalise_chord_name(chord_name)
         self.flavour = re.sub("([A-G](\#|b)?)", "", chord_name)
@@ -632,7 +647,7 @@ class Chord:
 
     def to_chordpro(self):
         """ Generate a chord chart just for this chord and return in chordpro format """
-        self.chart = ChordChart()
+        self.chart = ChordChart(lefty=self.lefty)
         self.add_to_chordchart(self.chart)
         return (self.chart.to_chordpro(self.name))
 
@@ -640,8 +655,7 @@ class Chord:
     def add_to_chordchart(self, chart):
         """ Add the chords found by find_fingerings to a chord chart object)"""
         for fingering in self._fingering_array:
-         #print(fingering)
-            diagram = ChordDiagram(offsets = fingering, name=self.name)
+            diagram = ChordDiagram(offsets = fingering, name=self.name, lefty=self.lefty)
             chart.add_from_diagram(diagram)
         chart.sort_by_playability(self.name)
 

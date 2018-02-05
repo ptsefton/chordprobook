@@ -14,6 +14,7 @@ def convert():
     parser.add_argument('-d', '--directory', default='.', help='Directory in which to put the output, relative to the book, setlist or indivudal file. If you want to put files somwhere specific, use a full path starting with "/": defaults to "." ')
     parser.add_argument('-i', '--instrument', default=None, help='Show chord grids for the given instrument. Eg --instrument "Soprano Ukulele"')
     parser.add_argument('--instruments', action='store_true', help='List known instruments and their alises then quit. You use any of the names or aliases listed under AKA with the --instument option')
+    parser.add_argument('-l','--left-handed', action='store_true', help='Draw the chords for --instrument (or instruments specified in the document) left-handed, in mirror image')
     parser.add_argument('-k',
                         '--keep-order',
                         action='store_true',
@@ -53,7 +54,6 @@ def convert():
     if args['odt'] and not args['reference_odt'] and os.path.exists(os.path.join(this_path, 'data', 'reference.odt')):
          args['reference_odt'] = os.path.join(this_path, 'data', 'reference.odt')
    
-    print("TEMPLTE", args['reference_odt'])
     #Need to be able to pass this into songs now
     instruments = inst.Instruments()
 
@@ -71,16 +71,22 @@ def convert():
     if args["instrument"] != None:
         instrument = instruments.get_instrument_by_name(args['instrument'])
         if instrument != None:
-            instrument.load_chord_chart()
+            instrument.load_chord_chart(lefty=True)
+            print("Loaded", args['instrument'])
             chart = instrument.chart
             if chart == None:
                 print(instrument.error)
         else:
             print("No such instrument on file. Try typing ./mksong --instruments to get a list")
 
-
-    book = books.cp_song_book(path = args["book_file"] or ".", keep_order = args['keep_order'] or args['setlist'], title=args["title"],instruments = instruments,
-                                 instrument_name=args["instrument"], nashville=args["nashville"], major_chart=args["major_chart"])
+    book = books.cp_song_book(path = args["book_file"] or ".", 
+                             keep_order = args['keep_order'] or args['setlist'], 
+                             title=args["title"],instruments = instruments,
+                             instrument_name=args["instrument"], 
+                             nashville=args["nashville"], 
+                             major_chart=args["major_chart"],
+                             lefty = args["left_handed"])
+                           
 
     if args["book_file"]:
         #base output path on book unless user passed a different name

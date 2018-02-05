@@ -43,6 +43,17 @@ class TestChorddiagram(unittest.TestCase):
       self.assertTrue(s.string_x > string_x)
       string_x = s.string_x
       self.assertTrue(string_x < d.box_width)
+      
+      
+  def test_lefty(self):
+       achord = "{define: A frets 2 1 0 0 fingers 2 1 0 0}"
+       d = chords.ChordDiagram(lefty = True)
+       d.parse_definition(achord)
+       self.assertEqual(d.to_chordpro(), "{define: A frets 0 0 1 2}")
+       self.assertEqual(d.strings[3].dots[0].fret, 2)
+       self.assertEqual(d.strings[3].dots[0].finger, None) # No fingers on left-handed chords
+       #d.show()
+      
 
   def test_parse(self):
         #Simple chord
@@ -151,7 +162,6 @@ class TestChorddiagram(unittest.TestCase):
         self.assertEqual(d.strings[1].dots[0].fret, 2)
         self.assertEqual(d.strings[2].dots[0].fret, 2)
         self.assertEqual(d.strings[3].dots[0].fret, 5)
-
 
         # Stupid chord requiring 7 fingers and 8 strings
         stupid = "{define: F#stupid base-fret 22 frets 1 2 3 x 4 5 6 7 8 9 10 11 fingers 11 10 9 8 0 7 6 5 4 3 2 1}"

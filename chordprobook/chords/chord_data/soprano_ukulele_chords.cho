@@ -41,7 +41,7 @@
 {define: B frets 4 3 2 2 fingers 3 2 1 1}
 {define: Bm frets 4 2 2 2 fingers 3 1 1 1 add: string 1 fret 2 finger 1}
 {define: Bm6 frets 1 2 2 2 fingers 1 2 3 4}
-{define: B7 frets 2 3 2 2 fingers 1 2 1 1 add: string 2 fret 2 finger 1}
+{define: B7 frets 4 3 2 0 fingers 3 2 1 0}
 {define: B7sus4 frets 2 4 2 2 fingers 1 3 1 1 add: string 2 fret 2 finger 1}
 {define: Bm7 frets 2 2 2 2 fingers 1 1 1 1}
 {define: Bdim frets 1 2 1 2 fingers 1 3 2 4}

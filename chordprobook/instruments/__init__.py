@@ -72,8 +72,9 @@ class Instruments:
             print("")   
         
 class Instrument:
-    def __init__(self, data = None, name = ""):
+    def __init__(self, data = None, name = "", lefty=False):
         """ Simple data structure for instruments"""
+        self.lefty = lefty
         if data == None:
             data = {"name": name, "tuning": "unknown"}
             
@@ -103,10 +104,12 @@ class Instrument:
         self.chart = chordprobook.chords.ChordChart()
         self.error = None
         
-    def load_chord_chart(self):
+    def load_chord_chart(self, lefty=False):
         defs_file = self.chord_definitions
+        if lefty:
+            self.lefty = True
         if defs_file != None:
             path, file = os.path.split(os.path.realpath(__file__))
             defs_file = os.path.join(path, "..", "chords", defs_file)           
-            self.chart = chordprobook.chords.ChordChart(self.transpose, defs_file)
+            self.chart = chordprobook.chords.ChordChart(self.transpose, defs_file, lefty=self.lefty)
            

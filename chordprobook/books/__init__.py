@@ -174,12 +174,23 @@ def normalize_chord_markup(line):
 
 class cp_song:
     """ Represents a song, with the text, key, chord grids etc"""
-    def __init__(self, song, title="Song", transpose=0, blank = False, path = None, instruments = None, instrument_name=None, nashville=False, major_chart=False):
+    def __init__(self, song, 
+                 title="Song", 
+                 transpose=0, 
+                 blank = False, 
+                 path = None, 
+                 instruments = None, 
+                 instrument_name=None, 
+                 nashville=False, 
+                 major_chart=False,
+                 lefty= False):
         self.blank = blank
+        self.lefty = lefty
         if instruments == None:
             self.instruments = chordprobook.instruments.Instruments()
         else:
             self.instruments = instruments
+            
         self.local_instruments = None
         # Look-up
         self.instrument_name = instrument_name
@@ -304,7 +315,8 @@ class cp_song:
                     self.local_instrument_names.append(inst_name)
                     if current_instrument == None:
                         current_instrument = chordprobook.instruments.Instrument(name = inst_name)
-                        current_instrument.chart = chords.ChordChart()
+                        console.log("Loading lefty instrument", inst_name)
+                        current_instrument.chart = chords.ChordChart(lefty=self.lefty)
                         self.local_instruments.add_instrument(current_instrument)
                     else:
                         current_instrument.load_chord_chart()
@@ -339,7 +351,7 @@ class cp_song:
         if instrument_name != None:
             instrument = self.instruments.get_instrument_by_name(instrument_name)
             if instrument != None:
-                instrument.load_chord_chart()
+                instrument.load_chord_chart(lefty=self.lefty)
                 self.grids = instrument.chart
 
 
@@ -403,7 +415,7 @@ class cp_song:
                 song += re.sub("\[(.*?)\]",lambda m: format_chord(m.group(1)), line) + "\n"
 
         if stand_alone and instrument_name != None:
-            title = "%s (%s)" % (title, instrument_name)
+            title = "%s (%s %s)" % (title, "Left-handed" if self.lefty else "", instrument_name)
 
         self.md = song
         self.formatted_title = title
@@ -545,8 +557,12 @@ class cp_song_book:
     transposition_options = ("all","0","1")
     transpose_all, do_not_transpose, transpose_first = transposition_options
     default_title = 'Songbook'
-    def __init__(self, keep_order = False, title=None, instruments = None, instrument_name=None, path=".", nashville=False, major_chart=False):
+    def __init__(self, keep_order = False, title=None, 
+                 instruments = None, instrument_name=None, 
+                 path=".", nashville=False, major_chart=False,
+                 lefty=False):
         self.version = None
+        self.lefty = lefty
         self.title = title
         self.songs = [] #songs
         self.default_instrument_names = []
@@ -596,7 +612,13 @@ class cp_song_book:
 
     def add_song_from_text(self, text, name, transpose=0):
         path = os.path.join(self.dir, name)
-        song = cp_song(text , path=path, transpose=transpose, instruments = self.instruments, instrument_name=self.instrument_name_passed, nashville=self.nashville, major_chart=self.major_chart)
+        song = cp_song(text , path=path, 
+                       transpose=transpose, 
+                       instruments = self.instruments, 
+                       instrument_name=self.instrument_name_passed, 
+                       nashville=self.nashville, 
+                       major_chart=self.major_chart,
+                       lefty = self.lefty)
         transpositions_needed = []
         if not self.nashville and self.auto_transpose == cp_song_book.transpose_all:
                 transpositions_needed = song.standard_transpositions
@@ -689,8 +711,8 @@ class cp_song_book:
         all_songs = self.sets_md
 
         if instrument_name != None:
-            suffix = "_%s" % instrument_name.lower().replace(" ", "_")
-            title_suffix = " (for&nbsp;%s)" % instrument_name
+            suffix = "%s_%s" % ("_lefty" if self.lefty else "", instrument_name.lower().replace(" ", "_"))
+            title_suffix = " (for %s &nbsp;%s)" % ("Left-handed" if self.lefty else "", instrument_name)
         else:
             suffix = ""
             title_suffix = ""
@@ -700,10 +722,10 @@ class cp_song_book:
         if self.version:
             output_file += "-"
             if self.version.lower() == "auto":
-                version_string = "\n" + str(datetime.datetime.now())
+                version_string = str(datetime.datetime.now())
                 output_file +=  version_string.replace(" ", "_")
             else:
-                version_string = "\n" + self.version
+                version_string = self.version
                 output_file +=  self.version.replace(" ", "_")
                 
         # TODO - only generate this if HTML 
@@ -711,7 +733,8 @@ class cp_song_book:
         # Need to run this whatever the output_file# Now add formatted songs to output in the right order
         for song in self.songs:
             all_songs += song.to_html()
-        title = self.title + title_suffix + version_string
+            
+        title = self.title + title_suffix + " " + version_string
         if args['html']:
              html_path = output_file + ".html" #Save for the use
         else: #Use a temp dir 

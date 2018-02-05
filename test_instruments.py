@@ -23,6 +23,13 @@ class TestIntruments(unittest.TestCase):
     chord = p.chart.get_default("C7")
     self.assertEqual(chord.to_chordpro(),"{define: C7 frets 3 0 0 0}")
 
+  def test_lefty(self):
+    instruments = inst.Instruments()
+    uke = instruments.get_instrument_by_name("Uke")
+    uke.load_chord_chart(lefty=True)
+    chord = uke.chart.get_default("C7")
+    self.assertEqual(chord.to_chordpro(),"{define: C7 frets 1 0 0 0}") 
+
       
 if __name__ == '__main__':
     print (dir(inst))
