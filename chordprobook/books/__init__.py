@@ -692,15 +692,9 @@ class cp_song_book:
         for song  in self.songs:
             song.format(instrument_name = instrument_name, stand_alone=False)
 
-
-
-
         self.reorder(1, old=None, new_order=[], waiting=[])
-
         toc = TOC(self, 2)
         self.contents = toc.format()
-
-
         #self.title += " " + version_string
 
 
