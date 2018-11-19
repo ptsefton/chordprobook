@@ -8,7 +8,7 @@
 {define: F7 frets 2 3 1 3 frets fingers 2 3 1 4}
 
 {st: Copyright 2018 Peter Sefton}
-<a href="https://youtu.be/qS6bOdjSmfw">Take a look at demo on Youtube</a>
+<a href="https://youtu.be/qS6bOdjSmfw">Take a look at demo on Youtube https://youtu.be/qS6bOdjSmfw</a>
 
 [C] Gimme a *U* Gimme a *K*  Gimme an *E*
 [F7] Gimme four short strings and three sweet chords in the key of [C] C
