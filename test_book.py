@@ -74,17 +74,16 @@ class TestStuff(unittest.TestCase):
       self.assertEqual(b.songs[2].key, "Bb")
 
       book_path="samples/sample-lazy.book.txt"
-
+      
       b = books.cp_song_book( path=book_path)
-      self.assertEqual(len(b.songs), 8)
+
+      self.assertEqual(len(b.songs), 9)
       self.assertEqual(b.title, "Sample songs")
 
       book_path="samples/sample-lazy-uke.book.txt"
       b = books.cp_song_book(path=book_path)
 
-      self.assertEqual(len(b.songs), 4)
-      #self.assertEqual(b.songs[3].transpose, -3)
-      self.assertEqual(b.songs[3].title, "Universe")
+      self.assertEqual(len(b.songs), 5)
       self.assertEqual(b.title, "Sample songs")
       self.assertEqual(b.default_instrument_names[0],"Ukulele")
 

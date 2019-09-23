@@ -300,6 +300,7 @@ class cp_song:
                     new_text +=  "\n<!-- new_page -->\n"
                     self.pages += 1
 
+
                 elif dir.type == directive.page_image:
                     if in_block:
                         new_text += "</div>\n"
@@ -315,7 +316,6 @@ class cp_song:
                     self.local_instrument_names.append(inst_name)
                     if current_instrument == None:
                         current_instrument = chordprobook.instruments.Instrument(name = inst_name)
-                        console.log("Loading lefty instrument", inst_name)
                         current_instrument.chart = chords.ChordChart(lefty=self.lefty)
                         self.local_instruments.add_instrument(current_instrument)
                     else:
@@ -339,7 +339,7 @@ class cp_song:
         Create a markdown version of the song, transposed if necessary,
         does the last-minute formatting on the song incuding transposition
         and fetching chord grids """
-        self.pages = 1
+        #self.pages = 1
         if instrument_name == None:
             instrument_name = self.instrument_name
         self.local_grids = None
@@ -942,8 +942,8 @@ class cp_song_book:
                 make_blank()
             self.songs = new_order + waiting
             return
-
         if  start_page % 2 == 0:
+
             #We're on an even page so can output all the two-or-more-page songs
             for s in waiting:
                 new_order.append(s)
@@ -958,6 +958,7 @@ class cp_song_book:
         elif old[0].pages % 2 == 0:
             # Have a two page spread, so save it
             if self.keep_order:
+
                 make_blank()
                 new_order.append(old[0])
                 start_page += 1
@@ -965,7 +966,6 @@ class cp_song_book:
                 waiting.append(old[0])
         else:
             new_order.append(old[0])
-
             start_page += old[0].pages
 
         self.reorder(start_page, old[1:], new_order, waiting)
