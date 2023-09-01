@@ -457,6 +457,7 @@ class cp_song:
             print("Saving to %s" % (pdf_path))
             command = ['wkhtmltopdf', '--enable-javascript', '--print-media-type', html_path, pdf_path]
             subprocess.call(command)
+            return(pdf_path)
         if args['docx'] or args['odt']:
             if args['docx']:
                 ext = 'docx'
@@ -642,7 +643,7 @@ class cp_song_book:
 
 
     def load_from_text(self, text, relative_to="."):
-        """ Reads a book in from a sting containing paths or directives """
+        """ Reads a book in from a string containing paths or directives """
 
         self.text = text
         dir_list = []
@@ -746,11 +747,16 @@ class cp_song_book:
                                                                         format="md")))
             if args['pdf']:
                 pdf_path = output_file + ".pdf"
+                out_dir, _ = os.path.split(pdf_path)
+                os.makedirs(out_dir, exist_ok=True)
+
                 print("Outputting PDF:", pdf_path, html_path)
                 command = ['wkhtmltopdf', '-s','A4', '--enable-javascript', '--print-media-type', '--outline',
                            '--outline-depth', '1','--header-right', "[page]/[toPage]",
                            '--header-line', '--header-left', self.title, html_path, pdf_path]
                 subprocess.call(command)
+                #print("Returning", pdf_path)
+                return pdf_path
 
         if args['docx'] or args['odt'] or args['epub']:
             exts = []
@@ -789,15 +795,18 @@ class cp_song_book:
         for set in self.sets:
             set.format()
             self.sets_md += set.to_html()
-
+        pdfs = []
         if self.instrument_name_passed == None:
             if self.nashville:
-                self.__save(None, args, output_file)
+               pdfs.append({"path" : self.__save(None, args, output_file)})
             else:
                 for instrument_name in  self.default_instrument_names + [None]:
-                    self.__save(instrument_name, args, output_file)
+                    pdfs.append({"path" : self.__save(instrument_name, args, output_file)})
         else:
-            self.__save(self.instrument_name_passed, args, output_file)
+            pdfs.append({"path" : self.__save(self.instrument_name_passed, args, output_file)})
+
+        print("Returning pdfs", pdfs)
+        return pdfs
 
 
 
@@ -821,7 +830,8 @@ class cp_song_book:
                          instruments = song.local_instrument_names
 
                     for instrument_name in instruments:
-                        song.save_as_single_sheet(instrument_name, trans, out_dir, args)
+                        p = song.save_as_single_sheet(instrument_name, trans, out_dir, args)
+                        converted_songs.append({"title" : song.formatted_title, "path" : p})
 
                     path = song.save_as_single_sheet(None, trans, out_dir, args)
                     converted_songs.append({"title" : song.formatted_title, "path" : path})
@@ -847,6 +857,7 @@ class cp_song_book:
 
         ...
         """
+        print("Looking for setlist", setlist)
         if os.path.exists(setlist):
             self.set_path(setlist)
             with open(setlist) as s:
@@ -859,7 +870,6 @@ class cp_song_book:
                 book_path = os.path.join(self.dir, book_filename)
                 with open(book_path) as b:
                     self.load_from_text(b.read())
-
         new_order = []
         current_set = None
         new_set = False

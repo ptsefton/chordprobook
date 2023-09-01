@@ -14,7 +14,7 @@ class Instruments:
     def __init__(self):
         path, file = os.path.split(os.path.realpath(__file__))
         f = open(os.path.join(path,"instruments.yaml"))
-        instrument_data = yaml.load(f)
+        instrument_data = yaml.full_load(f)
         self.tuning_lookup = {}
         self.name_lookup = {}
         self.instruments = []
