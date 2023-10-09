@@ -135,9 +135,8 @@ Some installation notes courtesy of [lpinner](https://github.com/lpinner):
 
 ## The local dialect of Chordpro format
 
-Chordpro format has no formal definition, and many different
-implementations. This implementation is designed to be relaxed and
-pragmatic about what it accepts.
+The Chordpro format is defined on https://www.chordpro.org/chordpro/ChordPro-Directives.html.
+This implementation is designed to be relaxed and pragmatic about what it accepts.
 
 Chordpro files are plain-text files with chords
 inline in square brackets, eg [C]. It uses formatting 'directives'.
