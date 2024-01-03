@@ -429,7 +429,8 @@ class ChordDiagram(object):
         self.img = Image.new("RGB", (self.box_width, self.box_height), ChordDiagram.bgcolor)
         draw = ImageDraw.Draw(self.img)
 
-        w, h = draw.textsize(self.name)
+        #w, h = draw.textsize(self.name)
+        _, _, w, h = ImageDraw.Draw(self.img).textbbox((0, 0), self.name)
         top_margin = ChordDiagram.top_margin
        
         # Look, I can write my own name
@@ -467,9 +468,10 @@ class ChordDiagram(object):
                 # who knows, maybe there are two or three people fretting the thing
                 # (And Hi 13 to our alien overlords!)
                 if dot.finger != None:
-                    w, h = draw.textsize(str(dot.finger))
-                else:
-                    w, h = draw.textsize("8")
+                    #w, h = draw.textsize(str(dot.finger))
+                     _, _, w, h = draw.textbbox((0, 0), str(dot.finger or 8))
+
+               
                 r = w
 
                 if dot.fret == None:

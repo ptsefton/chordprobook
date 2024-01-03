@@ -1083,8 +1083,6 @@ $(function() {
     height: 100%%;
     width: 100%%;
     font-size: 12pt;
-    border-style: solid;
-    border-width: 1px;
     overflow: hidden;
     -webkit-column-count: 2;
     border-bottom: thick dotted #ff0000;
@@ -1219,8 +1217,6 @@ width: 20cm;
 height: 29cm;
 padding: 0cm;
 margin: 0cm;
-border-style: solid;
-border-width: 1px;
 border-color: #FFFFFF;
 page-break-inside: avoid;
 position: relative;
