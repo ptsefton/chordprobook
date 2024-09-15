@@ -429,14 +429,24 @@ class ChordDiagram(object):
         self.img = Image.new("RGB", (self.box_width, self.box_height), ChordDiagram.bgcolor)
         draw = ImageDraw.Draw(self.img)
 
+        # Load a sans-serif font that supports UTF and emoji
+        font_path = os.path.join(os.path.dirname(__file__), 'fonts', 'NotoSans-Regular.ttf')
+
+
+        font_size = 20  # Adjust the font size as needed
+        
+        font = ImageFont.truetype(font_path, font_size)
+       
+
         #w, h = draw.textsize(self.name)
-        _, _, w, h = ImageDraw.Draw(self.img).textbbox((0, 0), self.name)
+        _, _, w, h = ImageDraw.Draw(self.img).textbbox((0, 0), self.name, font = font)
         top_margin = ChordDiagram.top_margin
        
         # Look, I can write my own name
+        #self.name = str(self.name.encode('unicode_escape'))
         if display_name or self.draw_name:
             name = display_name if display_name else self.name
-            draw.text(((self.box_width - w) / 2, 0), name, (0,0,0))
+            draw.text(((self.box_width - w) / 2, 0), name, (0,0,0), font = font)
         else:
             (w, h) = (0, 0)
 
@@ -486,12 +496,12 @@ class ChordDiagram(object):
                                   
                                   
                                   
-                                  
+                            
         #Write in base fret if present
         if self.base_fret != 0:
-            w, h = draw.textsize(str(self.base_fret))
+            #w, h = draw.textsize(str(self.base_fret))
             draw.text((0,self.string_top - h/2), str(self.base_fret), ChordDiagram.dot_color)
-
+            
 
     def show(self):
         """Pop up a chord diagram. Usueful for debugging"""

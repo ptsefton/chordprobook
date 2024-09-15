@@ -86,7 +86,7 @@ class TOC:
                 entries.append("%s %s <span style='float:right'> %s</span>    " % (song.title, song.get_key_string(), str(page_count)))
                 page_count += song.pages
 
-        entries.sort(key= lambda title: re.sub("(?i)^(the|a|\(.*?\)) ", "", title))
+        entries.sort(key= lambda title: re.sub(r"(?i)^(the|a|\(.*?\)) ", "", title))
         entries = sets + entries
 
         if num_entries > TOC.max_songs_per_page:
@@ -168,8 +168,8 @@ class directive:
 
 def normalize_chord_markup(line):
         """ Put space around chords before and after word boundaries but not within words """
-        line = re.sub("(\w)(\[[^\]]*?\])( |$)","\\1 \\2\\3", line)
-        line = re.sub("(^| )(\[[^\]]*?\])(\w)","\\1\\2 \\3", line)
+        line = re.sub(r"(\w)(\[[^\]]*?\])( |$)","\\1 \\2\\3", line)
+        line = re.sub(r"(^| )(\[[^\]]*?\])(\w)","\\1\\2 \\3", line)
         return line
 
 class cp_song:
@@ -238,9 +238,9 @@ class cp_song:
                     else:
                         #Highlight chords
                         line = line.replace("][","] [").strip()
-                        line = re.sub("\[(.*?)\]","**[\\1]**",line)
+                        line = re.sub(r"\[(.*?)\]","**[\\1]**",line)
                         if line.startswith("."):
-                            line = re.sub("^\.(.*?) (.*)","<span class='\\1'>\\1 \\2</span>", line)
+                            line = re.sub(r"^\.(.*?) (.*)","<span class='\\1'>\\1 \\2</span>", line)
                     new_text += "%s\n" % line
             else:
 
@@ -329,7 +329,7 @@ class cp_song:
 
             self.text = new_text
             #Add four spaces to mid-stanza line ends to force Markdown to add breaks
-            self.text = re.sub("(.)\n(.)", "\\1    \\n\\2", self.text)
+            self.text = re.sub(r"(.)\n(.)", "\\1    \\n\\2", self.text)
 
 
 
@@ -412,7 +412,7 @@ class cp_song:
                     else:
                         song += "\n### Change key to %s\n" % self.transposer.transpose_chord(key)
             else:
-                song += re.sub("\[(.*?)\]",lambda m: format_chord(m.group(1)), line) + "\n"
+                song += re.sub(r"\[(.*?)\]",lambda m: format_chord(m.group(1)), line) + "\n"
 
         if stand_alone and instrument_name != None:
             title = "%s (%s %s)" % (title, "Left-handed" if self.lefty else "", instrument_name)
@@ -590,7 +590,7 @@ class cp_song_book:
         self.dir, self.filename = os.path.split(path)
 
     def sort_alpha(self):
-        self.songs.sort(key= lambda song: re.sub("(?i)^(the|a|\(.*?\)) ", "", song.title.lower()))
+        self.songs.sort(key= lambda song: re.sub(r"(?i)^(the|a|\(.*?\)) ", "", song.title.lower()))
         #self.songs.sort(key= lambda song: song.title.lower())
 
 
@@ -884,7 +884,7 @@ class cp_song_book:
                         self.title = dir.value
                     elif dir.type == directive.version:
                         self.version = dir.value
-                potential_song = re.sub("\s+", " ", potential_song)
+                potential_song = re.sub(r"\s+", " ", potential_song)
                 if potential_song.startswith("# "):
                     potential_song = potential_song.replace("# ","").strip()
                     # Use songs to represent sets, so each set gets a single page up front of the book
