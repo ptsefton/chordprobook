@@ -36,7 +36,7 @@ def convert():
     parser.add_argument('-b',
                         '--book-file',
                        default=None,
-                        help ="""File containing a list of files, each line optionally followed by a transposition {transpose: (+|-)\d\d?}
+                        help = r"""File containing a list of files, each line optionally followed by a transposition {transpose: (+|-)\d\d?}
                                  eg to transpose up one tone:
                                  song-file.cho {transpose: +2}, you can also add a title line: {title: Title of book}""")
     parser.add_argument('-s',

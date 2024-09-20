@@ -1216,7 +1216,7 @@ blockquote.bridge {
 width: 20cm;
 height: 29cm;
 padding: 0cm;
-margin: 0cm;
+margin: 1cm;
 border-color: #FFFFFF;
 page-break-inside: avoid;
 position: relative;
