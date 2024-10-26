@@ -168,6 +168,7 @@ class TestChorddiagram(unittest.TestCase):
         d = chords.ChordDiagram()
         d.parse_definition(stupid)
         d.draw()
+        #d.show()
         self.assertEqual(d.non_played_strings, 1)
 
   def test_transpose(self):

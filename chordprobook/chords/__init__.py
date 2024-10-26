@@ -448,7 +448,9 @@ class ChordDiagram(object):
             name = display_name if display_name else self.name
             draw.text(((self.box_width - w) / 2, 0), name, (0,0,0), font = font)
         else:
-            (w, h) = (0, 0)
+            _, _, w, h = ImageDraw.Draw(self.img).textbbox((0, 0), self.name, font = font)
+
+
 
         # Draw plenty of strings evenly placed across the diagram, instrument agnostic,
         self.string_top = h + top_margin
@@ -477,13 +479,10 @@ class ChordDiagram(object):
                 # OK so I put this in so that fingers > 9 work.
                 # who knows, maybe there are two or three people fretting the thing
                 # (And Hi 13 to our alien overlords!)
-                if dot.finger != None:
-                    #w, h = draw.textsize(str(dot.finger))
-                     _, _, w, h = draw.textbbox((0, 0), str(dot.finger or 8))
+                _, _, w, h = draw.textbbox((0, 0), str(dot.finger or 8))
 
-               
+                 
                 r = w
-
                 if dot.fret == None:
                     draw.text((x - w/2, self.string_top - h), "x", self.dot_color)
                 elif dot.fret != 0:
@@ -493,7 +492,6 @@ class ChordDiagram(object):
                         draw.text((x - w / 2 ,y - h /2 ),
                                   str(dot.finger),
                                   ChordDiagram.dot_text_color)
-                                  
                                   
                                   
                             
